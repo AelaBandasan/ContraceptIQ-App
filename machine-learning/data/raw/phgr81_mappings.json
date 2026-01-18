@@ -1,0 +1,1405 @@
+{
+  "PIDX": {
+    "1:20": null
+  },
+  "V006": {
+    "1:12": null
+  },
+  "V007": {
+    "2022": null
+  },
+  "NOTAPPL,Special": {
+    "0": "Never",
+    "1": "Often",
+    "2": "Sometimes",
+    "3": "Yes, but not in the last 12 months",
+    "4": "Yes, but frequency in last 12 months missing",
+    "9": "Missing",
+    " ": "Not applicable"
+  },
+  "V015": {
+    "1": "Completed",
+    "2": "Not at home",
+    "3": "Postponed",
+    "4": "Refused",
+    "5": "Partially completed",
+    "6": "Respondent incapacitated",
+    "7": "Other"
+  },
+  "V016": {
+    "1:31": null
+  },
+  "V018": {
+    "0": "No calendar",
+    "1:20": null
+  },
+  "V019": {
+    "0": "No calendar",
+    "61:80": null
+  },
+  "V020": {
+    "0": "All woman sample",
+    "1": "Ever married sample"
+  },
+  "V024": {
+    "1": "Region I - Ilocos",
+    "2": "Region II - Cagayan Valley",
+    "3": "Region III - Central Luzon",
+    "4": "Region IVA - Calabarzon",
+    "5": "Region V - Bicol",
+    "6": "Region VI - Western Visayas",
+    "7": "Region VII - Central Visayas",
+    "8": "Region VIII - Eastern Visayas",
+    "9": "Region IX - Zamboanga Peninsula",
+    "10": "Region X - Northern Mindanao",
+    "11": "Region XI - Davao",
+    "12": "Region XII - SOCCSKSARGEN",
+    "13": "National Capital Region",
+    "14": "CAR - Cordillera",
+    "15": "BARMM - Bangsamoro Autonomous Region in Muslim Mindanao",
+    "16": "Caraga",
+    "17": "MIMAROPA"
+  },
+  "V025": {
+    "1": "Urban",
+    "2": "Rural"
+  },
+  "MISSING,Special": {
+    "0": "No",
+    "1": "Yes",
+    "9": "Missing"
+  },
+  "V045A": {
+    "1": "English",
+    "2": "Tagalog",
+    "3": "Ilocano",
+    "4": "Bikol",
+    "5": "Waray",
+    "6": "Hiligaynon",
+    "7": "Cebuano"
+  },
+  "V045B": {
+    "1": "English",
+    "2": "Tagalog",
+    "3": "Ilocano",
+    "4": "Bikol",
+    "5": "Waray",
+    "6": "Hiligaynon",
+    "7": "Cebuano",
+    "96": "Other"
+  },
+  "V045C": {
+    "1": "English",
+    "2": "Tagalog",
+    "3": "Ilocano",
+    "4": "Bikol",
+    "5": "Waray",
+    "6": "Hiligaynon",
+    "7": "Cebuano",
+    "96": "Other"
+  },
+  "V046": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V101": {
+    "1": "Region I - Ilocos",
+    "2": "Region II - Cagayan Valley",
+    "3": "Region III - Central Luzon",
+    "4": "Region IVA - Calabarzon",
+    "5": "Region V - Bicol",
+    "6": "Region VI - Western Visayas",
+    "7": "Region VII - Central Visayas",
+    "8": "Region VIII - Eastern Visayas",
+    "9": "Region IX - Zamboanga Peninsula",
+    "10": "Region X - Northern Mindanao",
+    "11": "Region XI - Davao",
+    "12": "Region XII - SOCCSKSARGEN",
+    "13": "National Capital Region",
+    "14": "CAR - Cordillera",
+    "15": "BARMM - Bangsamoro Autonomous Region in Muslim Mindanao",
+    "16": "Caraga",
+    "17": "MIMAROPA"
+  },
+  "V102": {
+    "1": "Urban",
+    "2": "Rural"
+  },
+  "V130": {
+    "1": "Roman Catholic",
+    "2": "Protestant",
+    "3": "Iglesia ni Cristo",
+    "4": "Aglipay",
+    "5": "Islam",
+    "6": "Other Christian (not otherwise categorisable)",
+    "95": "No religion",
+    "96": "Other"
+  },
+  "V131": {
+    "1": "Tagalog",
+    "2": "Cebuano",
+    "3": "Ilokano",
+    "4": "Hiligaynon/Ilonggo",
+    "5": "Bikolano",
+    "6": "Kapampangan",
+    "7": "Maranao",
+    "8": "Tausog",
+    "9": "Waray",
+    "10": "Aeta",
+    "11": "Badjao",
+    "23": "Akeanon",
+    "26": "Ayangan",
+    "27": "Blaan",
+    "33": "Bantoanon",
+    "35": "Boholano",
+    "43": "Cuyonon/Cuyone",
+    "48": "Higaonon",
+    "49": "Ibaloi/Ibaloy",
+    "50": "Ibanag",
+    "52": "Ifugao",
+    "53": "Iranon/Iranun/Iraynon",
+    "55": "Isneg/Isnag/Apayao",
+    "58": "Ivatan",
+    "62": "Kalibugan/Kolibugan",
+    "63": "Kalinga",
+    "64": "Kankanaey",
+    "67": "Manobo",
+    "68": "Subanen/Subanon",
+    "69": "Surigaonon",
+    "71": "Maguindanao",
+    "73": "Mandaya",
+    "77": "Masbateño/ Masbatenon",
+    "80": "Pangasinan/ Paggalato",
+    "82": "Sama /Bangingi / Badajo/ Laut/ Samal",
+    "84": "Tagakaulo",
+    "85": "Tuwali",
+    "86": "Yakan",
+    "87": "Zambageño - Chavacano",
+    "88": "Other Nationality",
+    "96": "Other"
+  },
+  "V151": {
+    "1": "Male",
+    "2": "Female"
+  },
+  "V172": {
+    "1": "Region I - Ilocos",
+    "2": "Region II - Cagayan Valley",
+    "3": "Region III - Central Luzon",
+    "4": "Region IVA - Calabarzon",
+    "5": "Region V - Bicol",
+    "6": "Region VI - Western Visayas",
+    "7": "Region VII - Central Visayas",
+    "8": "Region VIII - Eastern Visayas",
+    "9": "Region IX - Zamboanga Peninsula",
+    "10": "Region X - Northern Mindanao",
+    "11": "Region XI - Davao",
+    "12": "Region XII - SOCCSKSARGEN",
+    "13": "National Capital Region",
+    "14": "CAR - Cordillera",
+    "15": "BARMM - Bangsamoro Autonomous Region in Muslim Mindanao",
+    "16": "Caraga",
+    "17": "MIMAROPA",
+    "96": "Outside of the Philippines"
+  },
+  "V173": {
+    "1": "China",
+    "2": "Spain",
+    "3": "Indonesia",
+    "4": "India",
+    "5": "Iran, Islamic Republic of",
+    "6": "Italy",
+    "7": "Japan",
+    "8": "Cambodia",
+    "9": "Kuwait",
+    "10": "Malaysia",
+    "11": "Qatar",
+    "12": "Saudi Arabia",
+    "13": "United States of America"
+  },
+  "V174M": {
+    "1:12": null,
+    "98": "Don't know month"
+  },
+  "V174Y": {
+    "2017:2022": null,
+    "9998": "Don't know year"
+  },
+  "V175": {
+    "1": "Employment",
+    "2": "Education/training",
+    "3": "Marriage formation",
+    "4": "Family reunification/other family-related reason",
+    "5": "Forced displacement",
+    "96": "Other"
+  },
+  "V176": {
+    "1": "Very good",
+    "2": "Good",
+    "3": "Moderate",
+    "4": "Bad",
+    "5": "Very bad"
+  },
+  "V177": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V201": {
+    "0:20": null
+  },
+  "V202": {
+    "0:20": null
+  },
+  "V203": {
+    "0:20": null
+  },
+  "V204": {
+    "0:20": null
+  },
+  "V205": {
+    "0:20": null
+  },
+  "V206": {
+    "0:20": null
+  },
+  "V207": {
+    "0:20": null
+  },
+  "V208": {
+    "0": "No births",
+    "1:6": null
+  },
+  "V209": {
+    "0": "No births",
+    "1:4": null
+  },
+  "V210": {
+    "0:4": null
+  },
+  "V213": {
+    "0": "No or unsure",
+    "1": "Yes"
+  },
+  "V218": {
+    "0:20": null
+  },
+  "V219": {
+    "0:20": null
+  },
+  "V220": {
+    "0:5": null,
+    "6": "6+"
+  },
+  "V224": {
+    "0:20": null
+  },
+  "V238": {
+    "0:4": null
+  },
+  "V245": {
+    "0:20": null
+  },
+  "V246": {
+    "0:20": null
+  },
+  "V248": {
+    "0": "No",
+    "1": "Yes",
+    "2": "Away from home during last menstrual period"
+  },
+  "V249": {
+    "6:49": null,
+    "96": "Never menstruated",
+    "98": "Don't know"
+  },
+  "V361": {
+    "1": "Currently using",
+    "2": "Used since last birth",
+    "3": "Used before last birth",
+    "4": "Never used"
+  },
+  "V364": {
+    "1": "Using modern method",
+    "2": "Using traditional method",
+    "3": "Non-user - intends to use later",
+    "4": "Does not intend to use",
+    "5": "Never had sex"
+  },
+  "V3A10": {
+    "1": "Yes, respondent sterilized only",
+    "2": "Yes, partner sterilized only",
+    "3": "Yes, both sterilized",
+    "4": "No, neither sterilized"
+  },
+  "V3A11": {
+    "1": "DMPA-SC/Sayana press",
+    "2": "Needle and syringe",
+    "8": "Don't know"
+  },
+  "V3A12": {
+    "1": "Self-injection",
+    "2": "Injection given by health care provider",
+    "8": "Don't know"
+  },
+  "V3A13": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V3A14": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V404": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V405": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V406": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "V417": {
+    "0:6": null
+  },
+  "V418": {
+    "0:6": null
+  },
+  "V418A": {
+    "0:6": null
+  },
+  "V419": {
+    "0:6": null
+  },
+  "V447A": {
+    "15:49": null
+  },
+  "V513": {
+    "0": "Never married",
+    "1": "0-4",
+    "2": "5-9",
+    "3": "10-14",
+    "4": "15-19",
+    "5": "20-24",
+    "6": "25-29",
+    "7": "30+"
+  },
+  "V542": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "V544": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "V614": {
+    "0:5": null,
+    "6": "6+",
+    "7": "Non-numeric response"
+  },
+  "V635": {
+    "1": "More important",
+    "2": "Equally important",
+    "3": "Less important"
+  },
+  "V636": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "PIDXB": {
+    "0": "Termination (not in birth history)",
+    "1:20": null
+  },
+  "PORD": {
+    "1:20": null
+  },
+  "P0": {
+    "0": "Single birth",
+    "1": "1st of multiple",
+    "2": "2nd of multiple",
+    "3": "3rd of multiple",
+    "4": "4th of multiple",
+    "5": "5th of multiple"
+  },
+  "P1": {
+    "1:12": null
+  },
+  "P2": {
+    "1982:2022": null
+  },
+  "P4": {
+    "1": "Male",
+    "2": "Female"
+  },
+  "P5": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "P10": {
+    "0": "Month, year and day",
+    "1": "Month and year - information complete",
+    "2": "Month and age - year imputed",
+    "3": "Year and age - month imputed",
+    "4": "Year and age - year ignored",
+    "5": "Year - age/month imputed",
+    "6": "Age - year/month imputed",
+    "7": "Month - age/year imputed",
+    "8": "None - all imputed"
+  },
+  "P17": {
+    "1:31": null
+  },
+  "P30": {
+    "1": "Born alive",
+    "2": "Born dead",
+    "3": "Miscarriage",
+    "4": "Abortion"
+  },
+  "P31": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "P32": {
+    "1": "Born alive",
+    "2": "Born dead",
+    "3": "Miscarriage",
+    "4": "Abortion"
+  },
+  "MIDX": {
+    "0": "Not a live birth",
+    "1:6": null
+  },
+  "MIDXP": {
+    "1:6": null
+  },
+  "M1E": {
+    "840:1500": null,
+    "9996": "Can't be determined"
+  },
+  "M80": {
+    "1": "Most recent live birth",
+    "2": "Prior live birth",
+    "3": "Most recent stillbirth",
+    "4": "Prior stillbirth",
+    "5": "Miscarriage/abortion"
+  },
+  "M82": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "SRESULT": {
+    "1": "Completed",
+    "2": "Not at home",
+    "3": "Postponed",
+    "4": "Refusal",
+    "5": "Partly completed",
+    "6": "Incapacitated",
+    "7": "Other",
+    "8": "Overseas contract worker (OCW) / Overseas Filipino worker (OFW)"
+  },
+  "S102R": {
+    "1": "Region I - Ilocos",
+    "2": "Region II - Cagayan Valley",
+    "3": "Region III - Central Luzon",
+    "4": "Region IVA - Calabarzon",
+    "5": "Region V - Bicol",
+    "6": "Region VI - Western Visayas",
+    "7": "Region VII - Central Visayas",
+    "8": "Region VIII - Eastern Visayas",
+    "9": "Region IX - Zamboanga Peninsula",
+    "10": "Region X - Northern Mindanao",
+    "11": "Region XI - Davao",
+    "12": "Region XII - SOCCSKSARGEN",
+    "13": "National Capital Region",
+    "14": "CAR - Cordillera",
+    "15": "BARMM - Bangsamoro Autonomous Region in Muslim Mindanao",
+    "16": "Caraga",
+    "17": "MIMAROPA",
+    "96": "Outside of the Philippines"
+  },
+  "S102P": {
+    "1": "Abra",
+    "2": "Agusan del Norte",
+    "3": "Agusan del Sur",
+    "4": "Aklan",
+    "5": "Albay",
+    "6": "Antique",
+    "7": "Basilan",
+    "8": "Bataan",
+    "9": "Batanes",
+    "10": "Batangas",
+    "11": "Benguet",
+    "12": "Bohol",
+    "13": "Bukidnon",
+    "14": "Bulacan",
+    "15": "Cagayan",
+    "16": "Camarines Norte",
+    "17": "Camarines Sur",
+    "18": "Camigin",
+    "19": "Capiz",
+    "20": "Catanduanes",
+    "21": "Cavite",
+    "22": "Cebu",
+    "23": "Davao del Norte",
+    "24": "Davao del Sur",
+    "25": "Davao Oriental",
+    "26": "Eastern Samar",
+    "27": "Ifugao",
+    "28": "Ilocos Norte",
+    "29": "Ilocos Sur",
+    "30": "Iloilo",
+    "31": "Isabela",
+    "32": "Kalinga",
+    "33": "La Union",
+    "34": "Laguna",
+    "35": "Lanao del Norte",
+    "36": "Lanao del Sur",
+    "37": "Leyte",
+    "38": "Maguindanao",
+    "40": "Marinduque",
+    "41": "Masbate",
+    "42": "Misamis Occidental",
+    "43": "Misamis Oriental",
+    "44": "Mountain Province",
+    "45": "Negros Occidental",
+    "46": "Negros Oriental",
+    "47": "Cotabato",
+    "48": "Northern Samar",
+    "49": "Nueva Ecija",
+    "50": "Nueva Vizcaya",
+    "51": "Occidental Mindoro",
+    "52": "Oriental Mindoro",
+    "53": "Palawan",
+    "54": "Pampanga",
+    "55": "Pangasinan",
+    "56": "Quezon",
+    "57": "Quirino",
+    "58": "Rizal",
+    "59": "Romblon",
+    "60": "Samar (Western Samar)",
+    "61": "Siquijor",
+    "62": "Sorsogon",
+    "63": "South Cotabato",
+    "64": "Southern Leyte",
+    "65": "Sultan Kudarat",
+    "66": "Sulu",
+    "67": "Surigao del Norte",
+    "68": "Surigao del Sur",
+    "69": "Tarlac",
+    "70": "Tawi-Tawi",
+    "71": "Zambales",
+    "72": "Zamboanga del Norte",
+    "73": "Zamboanga del Sur",
+    "77": "Aurora",
+    "78": "Biliran",
+    "79": "Guimaras",
+    "80": "Sarangani",
+    "81": "Apayao",
+    "82": "Davao de Oro",
+    "83": "Zamboanga Sibugay",
+    "85": "Dinaga Islands",
+    "86": "Davao Occidental",
+    "91": "NCR I",
+    "92": "NCR II",
+    "93": "NCR III",
+    "94": "NCR IV",
+    "95": "NCR V",
+    "97": "Isabela City",
+    "98": "Cotabato City"
+  },
+  "S102C": {
+    "11": "City of Manila",
+    "12": "City of Mandaluyong",
+    "13": "City of San Juan",
+    "21": "City of Marikina",
+    "22": "Quezon City",
+    "31": "City of Pasig",
+    "32": "City of Makati",
+    "33": "Pateros",
+    "34": "City of Taguig",
+    "41": "City of Caloocan",
+    "42": "City of Malabon",
+    "43": "City of Navotas",
+    "44": "City of Valenzuela",
+    "51": "City of Las Pinas",
+    "52": "City of Muntinlupa",
+    "53": "City of Paranaque",
+    "54": "Pasay City",
+    "96": "Other"
+  },
+  "S103A": {
+    "1": "City",
+    "2": "Town proper/poblacion",
+    "3": "Barrio/rural area",
+    "4": "Abroad",
+    "8": "Don't know"
+  },
+  "S107R": {
+    "1": "Region I - Ilocos",
+    "2": "Region II - Cagayan Valley",
+    "3": "Region III - Central Luzon",
+    "4": "Region IVA - Calabarzon",
+    "5": "Region V - Bicol",
+    "6": "Region VI - Western Visayas",
+    "7": "Region VII - Central Visayas",
+    "8": "Region VIII - Eastern Visayas",
+    "9": "Region IX - Zamboanga Peninsula",
+    "10": "Region X - Northern Mindanao",
+    "11": "Region XI - Davao",
+    "12": "Region XII - SOCCSKSARGEN",
+    "13": "National Capital Region",
+    "14": "CAR - Cordillera",
+    "15": "BARMM - Bangsamoro Autonomous Region in Muslim Mindanao",
+    "16": "Caraga",
+    "17": "MIMAROPA",
+    "96": "Outside of the Philippines"
+  },
+  "S107P": {
+    "1": "Abra",
+    "2": "Agusan del Norte",
+    "3": "Agusan del Sur",
+    "4": "Aklan",
+    "5": "Albay",
+    "6": "Antique",
+    "7": "Basilan",
+    "8": "Bataan",
+    "9": "Batanes",
+    "10": "Batangas",
+    "11": "Benguet",
+    "12": "Bohol",
+    "13": "Bukidnon",
+    "14": "Bulacan",
+    "15": "Cagayan",
+    "16": "Camarines Norte",
+    "17": "Camarines Sur",
+    "18": "Camigin",
+    "19": "Capiz",
+    "20": "Catanduanes",
+    "21": "Cavite",
+    "22": "Cebu",
+    "23": "Davao del Norte",
+    "24": "Davao del Sur",
+    "25": "Davao Oriental",
+    "26": "Eastern Samar",
+    "27": "Ifugao",
+    "28": "Ilocos Norte",
+    "29": "Ilocos Sur",
+    "30": "Iloilo",
+    "31": "Isabela",
+    "32": "Kalinga",
+    "33": "La Union",
+    "34": "Laguna",
+    "35": "Lanao del Norte",
+    "36": "Lanao del Sur",
+    "37": "Leyte",
+    "38": "Maguindanao",
+    "40": "Marinduque",
+    "41": "Masbate",
+    "42": "Misamis Occidental",
+    "43": "Misamis Oriental",
+    "44": "Mountain Province",
+    "45": "Negros Occidental",
+    "46": "Negros Oriental",
+    "47": "Cotabato",
+    "48": "Northern Samar",
+    "49": "Nueva Ecija",
+    "50": "Nueva Vizcaya",
+    "51": "Occidental Mindoro",
+    "52": "Oriental Mindoro",
+    "53": "Palawan",
+    "54": "Pampanga",
+    "55": "Pangasinan",
+    "56": "Quezon",
+    "57": "Quirino",
+    "58": "Rizal",
+    "59": "Romblon",
+    "60": "Samar (Western Samar)",
+    "61": "Siquijor",
+    "62": "Sorsogon",
+    "63": "South Cotabato",
+    "64": "Southern Leyte",
+    "65": "Sultan Kudarat",
+    "66": "Sulu",
+    "67": "Surigao del Norte",
+    "68": "Surigao del Sur",
+    "69": "Tarlac",
+    "70": "Tawi-Tawi",
+    "71": "Zambales",
+    "72": "Zamboanga del Norte",
+    "73": "Zamboanga del Sur",
+    "77": "Aurora",
+    "78": "Biliran",
+    "79": "Guimaras",
+    "80": "Sarangani",
+    "81": "Apayao",
+    "82": "Davao de Oro",
+    "83": "Zamboanga Sibugay",
+    "85": "Dinaga Islands",
+    "86": "Davao Occidental",
+    "91": "NCR I",
+    "92": "NCR II",
+    "93": "NCR III",
+    "94": "NCR IV",
+    "95": "NCR V",
+    "97": "Isabela City",
+    "98": "Cotabato City"
+  },
+  "S107C": {
+    "11": "City of Manila",
+    "12": "City of Mandaluyong",
+    "13": "City of San Juan",
+    "21": "City of Marikina",
+    "22": "Quezon City",
+    "31": "City of Pasig",
+    "32": "City of Makati",
+    "33": "Pateros",
+    "34": "City of Taguig",
+    "41": "City of Caloocan",
+    "42": "City of Malabon",
+    "43": "City of Navotas",
+    "44": "City of Valenzuela",
+    "51": "City of Las Pinas",
+    "52": "City of Muntinlupa",
+    "53": "City of Paranaque",
+    "54": "Pasay City",
+    "96": "Other"
+  },
+  "S115": {
+    "0": "No education",
+    "1": "Grades 1-6",
+    "2": "Grades 7-10",
+    "3": "Grades 11-12",
+    "4": "Post-secondary",
+    "5": "College",
+    "8": "Don't know",
+    "9": "Missing"
+  },
+  "S115A": {
+    "0": "Level 0 - Early childhood education",
+    "1": "Level 1 - Primary education (elementary)",
+    "2": "Level 2 - Lower secondary education  (Junior high school)",
+    "3": "Level 3 - Upper secondary education  (Senior high school)",
+    "4": "Level 4 - Post secondary education  (Non tertiary education)",
+    "5": "Level 5 - Short cycle (Tertiary education)",
+    "6": "Level 6 - Bachelor level education or equivalent",
+    "7": "Level 7 - Master level education or equivalent",
+    "8": "Level 8 - Doctoral level education or equivalent"
+  },
+  "S115B": {
+    "0": "No grade completed",
+    "1": "Nursery",
+    "2": "Kindergarten",
+    "101": "Grade 1",
+    "102": "Grade 2",
+    "103": "Grade 3",
+    "104": "Grade 4",
+    "105": "Grade 5",
+    "106": "Grade 6",
+    "108": "Indigenous Peoples Education (IPED)",
+    "109": "Madrasah",
+    "110": "Special Education (SPED)",
+    "201": "Grade 7/1st year",
+    "202": "Grade 8/2nd year",
+    "203": "Grade 9/3rd year",
+    "204": "Grade 10/4th year",
+    "205": "Old curriculum grade 10 graduate",
+    "208": "Indigenous Peoples Education (IPED)",
+    "209": "Madrasah",
+    "210": "Special Education (SPED)",
+    "301": "Grade 11 - Academic track (GAS, HUMSS, STEM, ABM)",
+    "302": "Grade 12 - Academic track (GAS, HUMSS, STEM, ABM)",
+    "303": "Grade 11 - Arts and design track",
+    "304": "Grade 12 - Arts and design track",
+    "305": "Grade 11 - Sports track",
+    "306": "Grade 12 - Sports track",
+    "307": "Grade 11 - Technology and livehood education & Tech-Voc (Agri-Fisheries, Home Ec., Indust. arts, ICT)",
+    "308": "Grade 12 - Technology and livehood education & Tech-Voc (Agri-Fisheries, Home Ec., Indust. arts, ICT)",
+    "401": "1st year",
+    "402": "2nd year",
+    "403": "3rd year or more",
+    "404": "Graduate (specify course)",
+    "501": "1st year",
+    "502": "2nd year",
+    "503": "3rd year or more",
+    "504": "Graduate (specify course)",
+    "601": "1st year",
+    "602": "2nd year",
+    "603": "3rd year",
+    "604": "4th year",
+    "605": "5th year",
+    "606": "6th year or more",
+    "607": "Graduate (specify course)",
+    "701": "Undergraduate (any year other than graduate)",
+    "702": "Graduate (specify course)",
+    "801": "Undergraduate (any year other than graduate)",
+    "802": "Graduate (specify course)",
+    "998": "Don't know"
+  },
+  "S310A": {
+    "0:94": "Number of pill cycles",
+    "95": "95+",
+    "98": "Don't know"
+  },
+  "S311A": {
+    "0:94": "Number of condoms",
+    "95": "95+",
+    "98": "Don't know"
+  },
+  "S313A": {
+    "0": "Free",
+    "1:99990": "Cost - PHP",
+    "99995": "Done with caesarean section",
+    "99998": "Don't know"
+  },
+  "S313B": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S313C": {
+    "0": "Free",
+    "1:9990": "Cost - PHP",
+    "9998": "Don't know"
+  },
+  "S330A": {
+    "1": "Easier/no change",
+    "2": "Harder",
+    "8": "Don't know"
+  },
+  "S330B": {
+    "1": "Facilities closed",
+    "2": "Provider not around",
+    "3": "No transportation",
+    "4": "Crowded health facility",
+    "5": "Fear to go outside due to COVID-19 pandemic",
+    "6": "Facility ran out of stock/supply",
+    "7": "Financial concern",
+    "96": "Other"
+  },
+  "S331AA": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AB": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AC": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AD": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AE": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AF": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AG": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AH": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AI": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AJ": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AK": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AO": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AP": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AQ": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AR": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AX": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S331AY": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S636DN": {
+    "1:6": null,
+    "7": "7+",
+    "8": "Don't know"
+  },
+  "S705": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S710B": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S710C": {
+    "0": "Less than one month",
+    "1:24": "Number of months",
+    "95": "No separation in last 2 years (24 months)"
+  },
+  "S710D": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S810B": {
+    "A     ": "Economic/financial concerns",
+    "B     ": "Professional growth/career",
+    "C     ": "Education",
+    "D     ": "Health concerns",
+    "E     ": "Environmental concerns",
+    "F     ": "Covid-19 related concerns",
+    "X     ": "Other",
+    "?     ": "Missing"
+  },
+  "S812B": {
+    "11": "Not married",
+    "20": "FERTILITY-RELATED",
+    "21": "Not having sex",
+    "22": "Infrequent sex",
+    "23": "Menopausal, hysterectomy",
+    "24": "Can't get pregnant",
+    "25": "Not menstruated since last birth",
+    "26": "Breastfeeding",
+    "27": "Up to God/fatalistic",
+    "30": "OPPOSITION TO USE",
+    "31": "Respondent opposed",
+    "32": "Husband opposed",
+    "33": "Others opposed",
+    "34": "Religious prohibition",
+    "40": "LACK OF KNOWLEDGE",
+    "41": "Knows no method",
+    "42": "Knows no source",
+    "50": "METHOD-RELATED",
+    "51": "Health concerns",
+    "52": "Fears side effects",
+    "53": "Changes in menstrual bleeding",
+    "54": "Methods could cause infertility",
+    "55": "Inconvenient to use",
+    "56": "Interferes with body",
+    "60": "COST/ACCESS/AVAILABILITY",
+    "61": "Lack of access",
+    "62": "Cost too much",
+    "63": "Preferred method not available",
+    "64": "No method available",
+    "90": "OTHER",
+    "96": "Other",
+    "98": "Don't know",
+    "99": "Missing",
+    "0": "Not applicable"
+  },
+  "S812C": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S905": {
+    "0": "No education",
+    "1": "Grades 1-6",
+    "2": "Grades 7-10",
+    "3": "Grades 11-12",
+    "4": "Post-secondary",
+    "5": "College",
+    "8": "Don't know",
+    "9": "Missing"
+  },
+  "S905A": {
+    "0": "Level 0 - Early childhood education",
+    "1": "Level 1 - Primary education (elementary)",
+    "2": "Level 2 - Lower secondary education  (Junior high school)",
+    "3": "Level 3 - Upper secondary education  (Senior high school)",
+    "4": "Level 4 - Post secondary education  (Non tertiary education)",
+    "5": "Level 5 - Short cycle (Tertiary education)",
+    "6": "Level 6 - Bachelor level education or equivalent",
+    "7": "Level 7 - Master level education or equivalent",
+    "8": "Level 8 - Doctoral level education or equivalent"
+  },
+  "S905B": {
+    "0": "No grade completed",
+    "1": "Nursery",
+    "2": "Kindergarten",
+    "101": "Grade 1",
+    "102": "Grade 2",
+    "103": "Grade 3",
+    "104": "Grade 4",
+    "105": "Grade 5",
+    "106": "Grade 6",
+    "108": "Indigenous Peoples Education (IPED)",
+    "109": "Madrasah",
+    "110": "Special Education (SPED)",
+    "201": "Grade 7/1st year",
+    "202": "Grade 8/2nd year",
+    "203": "Grade 9/3rd year",
+    "204": "Grade 10/4th year",
+    "205": "Old curriculum grade 10 graduate",
+    "208": "Indigenous Peoples Education (IPED)",
+    "209": "Madrasah",
+    "210": "Special Education (SPED)",
+    "301": "Grade 11 - Academic track (GAS, HUMSS, STEM, ABM)",
+    "302": "Grade 12 - Academic track (GAS, HUMSS, STEM, ABM)",
+    "303": "Grade 11 - Arts and design track",
+    "304": "Grade 12 - Arts and design track",
+    "305": "Grade 11 - Sports track",
+    "306": "Grade 12 - Sports track",
+    "307": "Grade 11 - Technology and livehood education & Tech-Voc (Agri-Fisheris, Home Ec., Indust. arts, ICT)",
+    "308": "Grade 12 - Technology and livehood education & Tech-Voc (Agri-Fisheris, Home Ec., Indust. arts, ICT)",
+    "401": "1st year",
+    "402": "2nd year",
+    "403": "3rd year or more",
+    "404": "Graduate (specify course)",
+    "501": "1st year",
+    "502": "2nd year",
+    "503": "3rd year or more",
+    "504": "Graduate (specify course)",
+    "601": "1st year",
+    "602": "2nd year",
+    "603": "3rd year",
+    "604": "4th year",
+    "605": "5th year",
+    "606": "6th year or more",
+    "607": "Graduate (specify course)",
+    "701": "Undergraduate (any year other than graduate)",
+    "702": "Graduate (specify course)",
+    "801": "Undergraduate (any year other than graduate)",
+    "802": "Graduate (specify course)",
+    "998": "Don't know"
+  },
+  "S1234AA": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234AB": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234AC": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BA": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BB": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BC": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BD": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BE": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BF": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S1234BG": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "IDX94": {
+    "0": "Not a live birth",
+    "1:6": null
+  },
+  "IDX94P": {
+    "1:20": null
+  },
+  "S418AA": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418AB": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CA": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CB": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CC": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CD": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CE": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CF": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CG": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CH": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CI": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CX": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418CY": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S418D": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S426A": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S429AA": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S429AB": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S429AC": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S429AD": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S435AA": {
+    "0": "Free/No cost",
+    "1:999994": "Cost in PHP",
+    "999996": "In kind",
+    "999998": "Don't know"
+  },
+  "S435AB": {
+    "0": "Free/No cost",
+    "1:999994": "Donations in PHP",
+    "999996": "In kind",
+    "999998": "Don't know"
+  },
+  "S440": {
+    "0": "Immediately or less than 1 hour",
+    "100": "Less than 1 hour",
+    "101": "Hours: 1",
+    "102:190": null,
+    "201": "Days: 1",
+    "202:290": null,
+    "998": "Don't know"
+  },
+  "S446": {
+    "1": "All of the time",
+    "2": "Some of the time",
+    "3": "Not at all"
+  },
+  "S463BA": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BB": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BC": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BD": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BE": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BF": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BG": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BH": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BI": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BJ": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S463BX": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S474A": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S474C": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S474D": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S474G": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S474H": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S474I": {
+    "0": "No",
+    "1": "Yes",
+    "8": "Don't know"
+  },
+  "S483AA": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AB": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AC": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AD": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AE": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AF": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AG": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AH": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AI": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AJ": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AK": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AL": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AM": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S483AX": {
+    "0": "No",
+    "1": "Yes"
+  },
+  "S486B": {
+    "1": "Easier or no change",
+    "2": "Harder",
+    "8": "Don't know"
+  },
+  "S486C": {
+    "1": "Facility closed",
+    "2": "Provider not around",
+    "3": "No transportation",
+    "4": "Crowded health facility",
+    "5": "Fear to go outside due to COVID-19 pandemic",
+    "6": "Testing requirements",
+    "7": "Other"
+  }
+}
