@@ -1,14 +1,21 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated, PanResponder, } from 'react-native';
-import React, { useState, useRef, useEffect } from 'react';
-import { ScrollView } from 'react-native-gesture-handler';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { Ionicons } from '@expo/vector-icons';
-import { openDrawer } from '../navigation/NavigationService';
-import Slider from '@react-native-community/slider';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  Modal,
+  Animated,
+  PanResponder,
+} from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import type { RootStackScreenProps } from "../types/navigation";
+import { Ionicons } from "@expo/vector-icons";
+import { HeaderWithMenu, ScreenContainer } from "../components";
+import { colors, spacing, typography, borderRadius, shadows } from "../theme";
+import Slider from "@react-native-community/slider";
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = RootStackScreenProps<"Recommendation">;
 
 const Recommendation: React.FC<Props> = ({ navigation }) => {
   const [sliderValue, setSliderValue] = useState(0);
@@ -16,24 +23,25 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   const translateY = useRef(new Animated.Value(500)).current;
 
   const ageRanges = [
-    'Menarche to < 18 years',
-    '18 - 19 years',
-    '20 - 39 years',
-    '40 - 45 years',
-    '≥ 46 years',
+    "Menarche to < 18 years",
+    "18 - 19 years",
+    "20 - 39 years",
+    "40 - 45 years",
+    "≥ 46 years",
   ];
 
   const selectedLabel = ageRanges[sliderValue];
 
   const colorMap: Record<number, string> = {
-    1: '#4CAF50', 
-    2: '#FFEB3B', 
-    3: '#FF9800', 
-    4: '#F44336', 
+    1: colors.success,
+    2: colors.warning,
+    3: colors.warningDark,
+    4: colors.error,
   };
 
   const recommendations: Record<number, Record<string, number>> = {
-    0: { // Menarche to <18
+    0: {
+      // Menarche to <18
       pills: 1,
       patch: 1,
       copperIUD: 2,
@@ -41,7 +49,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 2,
       injectables: 2,
     },
-    1: { // 18-19
+    1: {
+      // 18-19
       pills: 1,
       patch: 1,
       copperIUD: 2,
@@ -49,7 +58,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 1,
       injectables: 1,
     },
-    2: { // 20-39
+    2: {
+      // 20-39
       pills: 1,
       patch: 1,
       copperIUD: 1,
@@ -57,7 +67,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 1,
       injectables: 1,
     },
-    3: { // 40-45
+    3: {
+      // 40-45
       pills: 1,
       patch: 2,
       copperIUD: 1,
@@ -65,7 +76,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 1,
       injectables: 1,
     },
-    4: { // ≥46
+    4: {
+      // ≥46
       pills: 1,
       patch: 2,
       copperIUD: 1,
@@ -77,7 +89,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
 
   const getColor = (method: string) => {
     const code = recommendations[sliderValue][method];
-    return colorMap[code] || '#ccc';
+    return colorMap[code] || "#ccc";
   };
 
   const panResponder = useRef(
@@ -120,25 +132,16 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   }, [modalVisible]);
 
   const handleAddPreference = () => {
-    navigation.navigate('Preferences');
+    navigation.navigate("Preferences");
   };
 
   const handleViewRecommendation = () => {
-    navigation.navigate('ViewRecommendation')
-  }
+    navigation.navigate("ViewRecommendation");
+  };
 
   return (
-    <ScrollView
-      style={styles.containerOne}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
-    >
-      <View>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <Ionicons name="menu" size={35} color={'#000'} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>What's Right for Me?</Text>
-      </View>
+    <ScreenContainer>
+      <HeaderWithMenu title="What's Right for Me?" />
 
       <View style={styles.screenCont}>
         <Text style={styles.header2}>Tell us about you</Text>
@@ -149,7 +152,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
         <View style={styles.ageCont}>
           <View style={styles.ageHeader}>
             <Image
-              source={require('../../assets/image/age.png')}
+              source={require("../../assets/image/age.png")}
               style={styles.ageIcon}
             />
             <Text style={styles.ageLabel}>Age</Text>
@@ -175,13 +178,16 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
               thumbTintColor="#E45A92"
             />
             <View style={styles.sliderLabel}>
-              <Text style={styles.labelText}>Menarche to {'< 18'}</Text>
+              <Text style={styles.labelText}>Menarche to {"< 18"}</Text>
               <Text style={styles.labelText}>(≥ 46)</Text>
             </View>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.prefButton} onPress={handleAddPreference}>
+        <TouchableOpacity
+          style={styles.prefButton}
+          onPress={handleAddPreference}
+        >
           <Text style={styles.prefLabel}>+ Add Preferences</Text>
         </TouchableOpacity>
 
@@ -198,7 +204,10 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             >
               <View style={styles.modalHandle} />
 
-              <TouchableOpacity style={styles.recomButton} onPress={handleViewRecommendation}>
+              <TouchableOpacity
+                style={styles.recomButton}
+                onPress={handleViewRecommendation}
+              >
                 <Text style={styles.modalHeader}>View Recommendation</Text>
               </TouchableOpacity>
 
@@ -211,24 +220,33 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.recomRow}>
                   <View style={styles.recomItem}>
                     <Image
-                      source={require('../../assets/image/copperiud.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('copperIUD') }]}
+                      source={require("../../assets/image/copperiud.png")}
+                      style={[
+                        styles.contaceptiveImg,
+                        { borderColor: getColor("copperIUD") },
+                      ]}
                     />
                     <Text style={styles.contraceptiveLabel}>Cu-IUD</Text>
                   </View>
 
                   <View style={styles.recomItem}>
                     <Image
-                      source={require('../../assets/image/implantt.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('implant') }]}
+                      source={require("../../assets/image/implantt.png")}
+                      style={[
+                        styles.contaceptiveImg,
+                        { borderColor: getColor("implant") },
+                      ]}
                     />
                     <Text style={styles.contraceptiveLabel}>LNG/ETG</Text>
                   </View>
 
                   <View style={styles.recomItem}>
                     <Image
-                      source={require('../../assets/image/injectables.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('injectables') }]}
+                      source={require("../../assets/image/injectables.png")}
+                      style={[
+                        styles.contaceptiveImg,
+                        { borderColor: getColor("injectables") },
+                      ]}
                     />
                     <Text style={styles.contraceptiveLabel}>DMPA</Text>
                   </View>
@@ -237,24 +255,33 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.recomRow}>
                   <View style={styles.recomItem}>
                     <Image
-                      source={require('../../assets/image/leviud.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('levIUD') }]}
+                      source={require("../../assets/image/leviud.png")}
+                      style={[
+                        styles.contaceptiveImg,
+                        { borderColor: getColor("levIUD") },
+                      ]}
                     />
                     <Text style={styles.contraceptiveLabel}>LNG-IUD</Text>
                   </View>
 
                   <View style={styles.recomItem}>
                     <Image
-                      source={require('../../assets/image/patchh.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('patch') }]}
+                      source={require("../../assets/image/patchh.png")}
+                      style={[
+                        styles.contaceptiveImg,
+                        { borderColor: getColor("patch") },
+                      ]}
                     />
                     <Text style={styles.contraceptiveLabel}>CHC</Text>
                   </View>
 
                   <View style={styles.recomItem}>
                     <Image
-                      source={require('../../assets/image/pillss.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('pills') }]}
+                      source={require("../../assets/image/pillss.png")}
+                      style={[
+                        styles.contaceptiveImg,
+                        { borderColor: getColor("pills") },
+                      ]}
                     />
                     <Text style={styles.contraceptiveLabel}>POP</Text>
                   </View>
@@ -264,191 +291,167 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
           </View>
         </Modal>
       </View>
-    </ScrollView>
+    </ScreenContainer>
   );
 };
 
 export default Recommendation;
 
 const styles = StyleSheet.create({
-  containerOne: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: 35,
-    left: 20,
-    zIndex: 10,
-  },
-  headerText: {
-    textAlign: 'center',
-    top: 40,
-    fontSize: 21,
-    fontWeight: '600',
-  },
   screenCont: {
-    top: 50,
-    left: 20,
+    marginTop: spacing.md,
   },
   header2: {
-    fontSize: 19,
-    fontWeight: '500',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.medium,
   },
   header3: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
+    fontSize: typography.sizes.sm,
+    fontStyle: "italic",
+    color: colors.text.secondary,
   },
   ageCont: {
-    elevation: 20,
-    backgroundColor: '#FBFBFB',
-    width: '90%',
-    borderRadius: 10,
-    marginRight: 10,
-    marginTop: 15,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    shadowOpacity: 0.5,
-    shadowRadius: 100,
-    shadowOffset: { width: 2, height: 2 },
+    ...shadows.xl,
+    backgroundColor: colors.background.secondary,
+    width: "90%",
+    borderRadius: borderRadius.md,
+    marginRight: spacing.sm,
+    marginTop: spacing.base,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
   ageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
     top: 1,
   },
   ageIcon: {
-    resizeMode: 'contain',
+    resizeMode: "contain",
     height: 45,
     width: 45,
   },
   ageLabel: {
-    fontSize: 20,
-    fontWeight: '600',
-    paddingLeft: 10,
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.semibold,
+    paddingLeft: spacing.sm,
   },
   selectedAge: {
-    fontSize: 16,
-    color: '#000',
-    fontWeight: '400',
-    paddingLeft: 10,
-    marginTop: 3,
-    textAlign: 'center',
+    fontSize: typography.sizes.base,
+    color: colors.text.primary,
+    fontWeight: typography.weights.regular,
+    paddingLeft: spacing.sm,
+    marginTop: spacing.xs,
+    textAlign: "center",
   },
   sliderCont: {
-    width: '100%',
+    width: "100%",
   },
   slider: {
-    width: '100%',
-    height: 50,
+    width: "100%",
+    height: spacing["4xl"],
   },
   sliderLabel: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: -10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: -spacing.sm,
   },
   labelText: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   prefButton: {
     marginTop: 10,
-    width: '90%',
-    alignItems: 'center',
+    width: "90%",
+    alignItems: "center",
     paddingVertical: 10,
   },
   prefLabel: {
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600',
+    textAlign: "center",
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.1)",
+    justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 20,
-    alignItems: 'center',
-    height: '50%',
-    elevation: 15,
+    backgroundColor: colors.background.primary,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    padding: spacing.lg,
+    alignItems: "center",
+    height: "50%",
+    ...shadows.lg,
   },
   modalHandle: {
     width: 60,
     height: 6,
-    backgroundColor: '#ccc',
-    borderRadius: 3,
-    marginBottom: 15,
+    backgroundColor: colors.border.main,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.base,
   },
   recomButton: {
-    backgroundColor: '#E45A92',
-    borderRadius: 30,
-    paddingVertical: 18,
-    paddingHorizontal: 80,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.lg - 2,
+    paddingHorizontal: spacing["6xl"],
+    ...shadows.md,
   },
   modalHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.bold,
+    color: colors.background.primary,
   },
   modalContent: {
-    alignItems: 'center',
-    marginTop: 15,
-    marginBottom: 5,
+    alignItems: "center",
+    marginTop: spacing.base,
+    marginBottom: spacing.xs,
   },
   modalText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: '#555',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
+    color: colors.text.disabled,
   },
   modalAge: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#E45A92',
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
   },
   modalButtons: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   recomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    marginBottom: spacing.lg,
   },
   recomItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   contaceptiveImg: {
     width: 90,
     height: 90,
-    resizeMode: 'contain',
-    borderRadius: 50,
+    resizeMode: "contain",
+    borderRadius: borderRadius.full,
     borderWidth: 4,
-    padding: 10,
-    backgroundColor: '#fff',
+    padding: spacing.sm,
+    backgroundColor: colors.background.primary,
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.25,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 3 },
   },
   contraceptiveLabel: {
-    marginTop: 4,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000',
-    textAlign: 'center',
+    marginTop: spacing.xs,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.text.primary,
+    textAlign: "center",
   },
 });

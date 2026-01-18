@@ -1,39 +1,79 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, ToastAndroid, Platform, Alert } from 'react-native';
-import React, { useState } from 'react';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { ScrollView } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
-import { openDrawer } from '../navigation/NavigationService';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  ToastAndroid,
+} from "react-native";
+import React, { useState } from "react";
+import type { RootStackScreenProps } from "../types/navigation";
+import { Ionicons } from "@expo/vector-icons";
+import { HeaderWithMenu, ScreenContainer } from "../components";
+import { colors, spacing, typography, borderRadius, shadows } from "../theme";
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = RootStackScreenProps<"Preferences">;
 
 const Preferences = ({ navigation }: Props) => {
   const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
 
   const preferences = [
-    { key: 'effectiveness', label: 'Effectiveness', description: 'Most reliable at preventing pregnancy', icon: require('../../assets/image/star.png') },
-    { key: 'sti', label: 'STI Prevention', description: 'Protection against STIs/HIV', icon: require('../../assets/image/shield.png') },
-    { key: 'nonhormonal', label: 'Non-hormonal', description: 'Hormone-free option', icon: require('../../assets/image/forbidden.png') },
-    { key: 'regular', label: 'Regular Bleeding', description: 'Helps with cramps or heavy bleeding', icon: require('../../assets/image/blood.png') },
-    { key: 'privacy', label: 'Privacy', description: 'Can be used without others knowing', icon: require('../../assets/image/privacy.png') },
-    { key: 'client', label: 'Client controlled', description: 'Can start or stop it myself', icon: require('../../assets/image/responsibility.png') },
-    { key: 'longterm', label: 'Long-term protection', description: 'Lasts for years with little action', icon: require('../../assets/image/calendar.png') },
+    {
+      key: "effectiveness",
+      label: "Effectiveness",
+      description: "Most reliable at preventing pregnancy",
+      icon: require("../../assets/image/star.png"),
+    },
+    {
+      key: "sti",
+      label: "STI Prevention",
+      description: "Protection against STIs/HIV",
+      icon: require("../../assets/image/shield.png"),
+    },
+    {
+      key: "nonhormonal",
+      label: "Non-hormonal",
+      description: "Hormone-free option",
+      icon: require("../../assets/image/forbidden.png"),
+    },
+    {
+      key: "regular",
+      label: "Regular Bleeding",
+      description: "Helps with cramps or heavy bleeding",
+      icon: require("../../assets/image/blood.png"),
+    },
+    {
+      key: "privacy",
+      label: "Privacy",
+      description: "Can be used without others knowing",
+      icon: require("../../assets/image/privacy.png"),
+    },
+    {
+      key: "client",
+      label: "Client controlled",
+      description: "Can start or stop it myself",
+      icon: require("../../assets/image/responsibility.png"),
+    },
+    {
+      key: "longterm",
+      label: "Long-term protection",
+      description: "Lasts for years with little action",
+      icon: require("../../assets/image/calendar.png"),
+    },
   ];
 
   const showMaxAlert = () => {
-    const message = 'You can only select up to 3 characteristics.';
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    } 
+    ToastAndroid.show(
+      "You can only select up to 3 characteristics.",
+      ToastAndroid.SHORT
+    );
   };
 
   const togglePreference = (key: string) => {
     const isSelected = selectedPrefs.includes(key);
 
     if (isSelected) {
-      setSelectedPrefs(selectedPrefs.filter(item => item !== key));
+      setSelectedPrefs(selectedPrefs.filter((item) => item !== key));
     } else {
       if (selectedPrefs.length >= 3) {
         showMaxAlert();
@@ -44,22 +84,12 @@ const Preferences = ({ navigation }: Props) => {
   };
 
   const handleViewRecommendation = () => {
-    navigation.navigate('ViewRecommendation');
+    navigation.navigate("ViewRecommendation");
   };
 
   return (
-    <ScrollView
-      style={styles.containerOne}
-      showsVerticalScrollIndicator
-      contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
-    >
-      
-      <View>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <Ionicons name="menu" size={35} color={'#000'} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>What's Right for Me?</Text>
-      </View>
+    <ScreenContainer>
+      <HeaderWithMenu title="What's Right for Me?" />
 
       <View style={styles.screenCont}>
         <Text style={styles.header2}>Preferences</Text>
@@ -75,13 +105,19 @@ const Preferences = ({ navigation }: Props) => {
               onPress={() => togglePreference(pref.key)}
               style={[
                 styles.prefCont,
-                selected && { backgroundColor: '#E6F5E9', borderColor: '#2E8B57', borderWidth: 2 },
+                selected && {
+                  backgroundColor: "#E6F5E9",
+                  borderColor: "#2E8B57",
+                  borderWidth: 2,
+                },
               ]}
             >
               <View style={styles.prefHeader}>
                 <Image source={pref.icon} style={styles.prefIcon} />
                 <Text style={styles.prefLabel}>{pref.label}</Text>
-                {selected && <Ionicons name="checkmark-circle" size={22} color="#2E8B57" />}
+                {selected && (
+                  <Ionicons name="checkmark-circle" size={22} color="#2E8B57" />
+                )}
               </View>
 
               {selected && (
@@ -91,92 +127,81 @@ const Preferences = ({ navigation }: Props) => {
           );
         })}
 
-        <TouchableOpacity style={styles.prefButton} onPress={handleViewRecommendation}>
+        <TouchableOpacity
+          style={styles.prefButton}
+          onPress={handleViewRecommendation}
+        >
           <Text style={styles.prefRecomButton}>View Recommendation</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </ScreenContainer>
   );
 };
 
 export default Preferences;
 
 const styles = StyleSheet.create({
-  containerOne: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: 35,
-    left: 20,
-    zIndex: 10,
-  },
-  headerText: {
-    textAlign: 'center',
-    top: 40,
-    fontSize: 21,
-    fontWeight: '600',
-  },
   screenCont: {
-    top: 50,
-    left: 20,
+    marginTop: spacing.md,
   },
   header2: {
-    fontSize: 19,
-    fontWeight: '500',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.medium,
   },
   header3: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
-    marginTop: 5,
+    fontSize: typography.sizes.sm,
+    fontStyle: "italic",
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
   },
   prefCont: {
-    elevation: 10,
-    backgroundColor: '#FBFBFB',
-    width: '90%',
-    borderRadius: 10,
-    marginRight: 10,
-    marginTop: 15,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 1, height: 1 },
+    ...shadows.xl,
+    backgroundColor: colors.background.secondary,
+    width: "90%",
+    borderRadius: borderRadius.md,
+    marginRight: spacing.sm,
+    marginTop: spacing.base,
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing.lg,
   },
   prefHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   prefIcon: {
-    resizeMode: 'contain',
+    resizeMode: "contain",
     height: 35,
     width: 35,
     top: 2,
   },
   prefLabel: {
-    fontSize: 19,
-    fontWeight: '600',
-    paddingLeft: 10,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
+    paddingLeft: spacing.sm,
     flex: 1,
   },
   prefDescription: {
-    marginTop: 8,
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
+    marginTop: spacing.sm,
+    fontSize: typography.sizes.sm,
+    fontStyle: "italic",
+    color: colors.text.secondary,
   },
   prefButton: {
-    marginTop: 15,
-    width: '90%',
-    alignItems: 'center',
-    paddingVertical: 10,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.xl,
+    marginTop: spacing.base,
+    width: "90%",
+    alignItems: "center",
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing["2xl"],
+    alignSelf: "center",
+    ...shadows.md,
   },
   prefRecomButton: {
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '600',
+    textAlign: "center",
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
+    color: colors.background.primary,
   },
 });
