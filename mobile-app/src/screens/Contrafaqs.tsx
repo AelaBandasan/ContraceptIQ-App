@@ -1,14 +1,22 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import React from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Contrafaqs = () => {
   return (
-    <View>
+    <SafeAreaView style={styles.container}>
       <Text>Contrafaqs</Text>
-    </View>
+    </SafeAreaView>
   )
 }
 
 export default Contrafaqs
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+})

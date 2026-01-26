@@ -116,7 +116,7 @@ Features/display:
  background: '#FFFFFF',
   surface: '#F8FAFC',
   primary: '#E45A92',
-  primaryDark: '#D94F00',
+  primaryDark: '#D3347A',
   textPrimary: '#0F172A',
   textSecondary: '#6B7280',
   textMuted: '#9CA3AF',

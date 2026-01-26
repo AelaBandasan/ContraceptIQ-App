@@ -1,58 +1,57 @@
-import { StyleSheet, Text, Touchable, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react'
 
-const UserStartingScreen = ({ navigation}: any ) => {
+const UserStartingScreen = ({ navigation }: any) => {
     const handleContinueAsGuest = () => {
         navigation.navigate('MainDrawer');
     }
     const handleOBlogin = () => {
-        navigation.navigate('ObRecom');
+        navigation.navigate('LoginforOB');
     }
-  return (
-    <View style = {styles.screen}>
-        <View style ={styles.container}>
-            <View style = {styles.textContainer}>
-                <Text style = {styles.title}>ContraceptIQ</Text>
-            <Text style = {styles.text}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor </Text>
+    return (
+        <SafeAreaView style={styles.screen}>
+            <View style={styles.container}>
+                <View style={styles.textContainer}>
+                    <Text style={styles.title}>ContraceptIQ</Text>
+                    <Text style={styles.text}>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                    </Text>
+                </View>
+
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.button} onPress={handleContinueAsGuest}>
+                        <Text style={styles.buttonLabel}>Continue as Guest</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-            
-            <View style = {styles.buttonContainer}>
-                <TouchableOpacity 
-                style = {styles.button}
-                onPress={handleContinueAsGuest}>
-                    <Text style = {styles.buttonLabel}>Continue as Guest</Text>
+
+            <View style={styles.loginContainer}>
+                <Text style={styles.loginText}>Login as </Text>
+                <TouchableOpacity onPress={handleOBlogin}>
+                    <Text style={styles.profText}>OB Professional</Text>
                 </TouchableOpacity>
             </View>
-        </View>    
-        
-        <View style = {styles.loginContainer}> 
-            <Text style = {styles.loginText}>     
-                Login as <TouchableOpacity onPress={handleOBlogin}><Text style = {styles.profText}>OB Professional</Text></TouchableOpacity>
-                </Text> 
-        </View>
-    </View>
-        
-  )
-}
+        </SafeAreaView>
+    );
+};
 
-export default UserStartingScreen
+export default UserStartingScreen;
 
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
         backgroundColor: '#fff',
-        alignItems: 'center',
     },
     container: {
+        flex: 1,
         elevation: 8,
         backgroundColor: '#fff',
         borderRadius: 30,
         margin: 15,
-        marginTop: 55,
         paddingVertical: 30,
         paddingHorizontal: 20,
-        height: 750,
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         alignItems: 'center',
         shadowOpacity: 0.1,
         shadowRadius: 10,
@@ -60,12 +59,14 @@ const styles = StyleSheet.create({
     },
     textContainer: {
         alignItems: 'center',
+        flex: 1,
+        justifyContent: 'center',
     },
     title: {
         fontSize: 30,
         fontWeight: 'bold',
         fontStyle: 'italic',
-        paddingTop: 100,
+        marginBottom: 20,
     },
     text: {
         fontSize: 16,
@@ -73,19 +74,21 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     buttonContainer: {
-        paddingTop: 200,
+        paddingBottom: 50,
+        width: '100%',
+        alignItems: 'center',
     },
     button: {
         backgroundColor: '#E45A92',
         borderRadius: 30,
         paddingVertical: 20,
-        paddingHorizontal: 80,
+        width: '80%',
+        alignItems: 'center',
         elevation: 5,
         shadowColor: '#000',
         shadowOpacity: 0.25,
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
-        paddingTop: 15,
     },
     buttonLabel: {
         fontSize: 21,
@@ -93,17 +96,20 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     loginContainer: {
-        paddingTop: 10,
+        paddingVertical: 20,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     loginText: {
         fontSize: 19,
-        flexDirection: 'row',
+        color: '#000',
     },
     profText: {
         fontSize: 19,
         color: '#E45A92',
         fontStyle: 'italic',
-        fontWeight: 400,
-        top: 7
+        fontWeight: '400',
+        top: 3,
     },
-})
+});

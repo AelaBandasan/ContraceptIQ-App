@@ -11,6 +11,7 @@ import Preferences from '../screens/Preferences';
 import ViewRecom from '../screens/ViewRecom';
 import ObRecom from '../screens/ObSide/ObRecom';
 import ObPref from '../screens/ObSide/ObPref';
+// LoginforOB removed from drawer
 import ObViewRecom from '../screens/ObSide/ObViewRecom';
 
 const Drawer = createDrawerNavigator();
@@ -24,18 +25,19 @@ const DrawerNavigator = () => {
       <Drawer.Screen name="Did You Know?" component={Diduknow} />
       <Drawer.Screen name="Contraceptive FAQs" component={Contrafaqs} />
       <Drawer.Screen name="About Us" component={AboutUs} />
+
       <Drawer.Screen name="Recommendation" component={Recommendation}
-        options={{drawerItemStyle: {display: 'none'}, headerShown: false }}/>
+        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
       <Drawer.Screen name="Preferences" component={Preferences}
-        options={{drawerItemStyle: {display: 'none'}, headerShown: false }}/>
+        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
       <Drawer.Screen name="ViewRecommendation" component={ViewRecom}
-        options={{drawerItemStyle: {display: 'none'}, headerShown: false }}/>
+        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
       <Drawer.Screen name="ObRecom" component={ObRecom}
-        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }}/>
+        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
       <Drawer.Screen name="ObPref" component={ObPref}
-        options={{ drawerItemStyle: {display: 'none'}, headerShown: false }}/>
+        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
       <Drawer.Screen name="ObViewRecom" component={ObViewRecom}
-        options={{ drawerItemStyle: {display: 'none'}, headerShown: false}}/>
+        options={{ drawerItemStyle: { display: 'none' }, headerShown: false }} />
     </Drawer.Navigator>
   );
 };

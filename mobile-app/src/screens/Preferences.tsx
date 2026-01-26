@@ -1,9 +1,10 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, ToastAndroid, Platform, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image, ToastAndroid, Platform, Alert, Dimensions } from 'react-native';
 import React, { useState } from 'react';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   navigation: DrawerNavigationProp<any, any>;
@@ -26,7 +27,9 @@ const Preferences = ({ navigation }: Props) => {
     const message = 'You can only select up to 3 characteristics.';
     if (Platform.OS === 'android') {
       ToastAndroid.show(message, ToastAndroid.SHORT);
-    } 
+    } else {
+      Alert.alert('Limit Reached', message);
+    }
   };
 
   const togglePreference = (key: string) => {
@@ -48,79 +51,89 @@ const Preferences = ({ navigation }: Props) => {
   };
 
   return (
-    <ScrollView
-      style={styles.containerOne}
-      showsVerticalScrollIndicator
-      contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
-    >
-      
-      <View>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <Ionicons name="menu" size={35} color={'#000'} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>What's Right for Me?</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.containerOne}
+        showsVerticalScrollIndicator
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
+      >
 
-      <View style={styles.screenCont}>
-        <Text style={styles.header2}>Preferences</Text>
-        <Text style={styles.header3}>What's important to you</Text>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+            <Ionicons name="menu" size={35} color={'#000'} />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>What's Right for Me?</Text>
+          <View style={{ width: 35 }} />
+        </View>
 
-        {preferences.map((pref) => {
-          const selected = selectedPrefs.includes(pref.key);
+        <View style={styles.screenCont}>
+          <Text style={styles.header2}>Preferences</Text>
+          <Text style={styles.header3}>What's important to you</Text>
 
-          return (
-            <TouchableOpacity
-              key={pref.key}
-              activeOpacity={0.9}
-              onPress={() => togglePreference(pref.key)}
-              style={[
-                styles.prefCont,
-                selected && { backgroundColor: '#E6F5E9', borderColor: '#2E8B57', borderWidth: 2 },
-              ]}
-            >
-              <View style={styles.prefHeader}>
-                <Image source={pref.icon} style={styles.prefIcon} />
-                <Text style={styles.prefLabel}>{pref.label}</Text>
-                {selected && <Ionicons name="checkmark-circle" size={22} color="#2E8B57" />}
-              </View>
+          {preferences.map((pref) => {
+            const selected = selectedPrefs.includes(pref.key);
 
-              {selected && (
-                <Text style={styles.prefDescription}>{pref.description}</Text>
-              )}
-            </TouchableOpacity>
-          );
-        })}
+            return (
+              <TouchableOpacity
+                key={pref.key}
+                activeOpacity={0.9}
+                onPress={() => togglePreference(pref.key)}
+                style={[
+                  styles.prefCont,
+                  selected && { backgroundColor: '#E6F5E9', borderColor: '#2E8B57', borderWidth: 2 },
+                ]}
+              >
+                <View style={styles.prefHeader}>
+                  <Image source={pref.icon} style={styles.prefIcon} />
+                  <Text style={styles.prefLabel}>{pref.label}</Text>
+                  {selected && <Ionicons name="checkmark-circle" size={22} color="#2E8B57" />}
+                </View>
 
-        <TouchableOpacity style={styles.prefButton} onPress={handleViewRecommendation}>
-          <Text style={styles.prefRecomButton}>View Recommendation</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+                {selected && (
+                  <Text style={styles.prefDescription}>{pref.description}</Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+
+          <TouchableOpacity style={styles.prefButton} onPress={handleViewRecommendation}>
+            <Text style={styles.prefRecomButton}>View Recommendation</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 export default Preferences;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   containerOne: {
     flex: 1,
     backgroundColor: '#fff',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 20,
+  },
   menuButton: {
-    position: 'absolute',
-    top: 35,
-    left: 20,
-    zIndex: 10,
+    padding: 5,
   },
   headerText: {
-    textAlign: 'center',
-    top: 40,
     fontSize: 21,
     fontWeight: '600',
+    textAlign: 'center',
   },
   screenCont: {
-    top: 50,
-    left: 20,
+    paddingHorizontal: 20,
   },
   header2: {
     fontSize: 19,
@@ -131,30 +144,29 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#444',
     marginTop: 5,
+    marginBottom: 15,
   },
   prefCont: {
     elevation: 10,
     backgroundColor: '#FBFBFB',
-    width: '90%',
+    width: '100%',
     borderRadius: 10,
-    marginRight: 10,
     marginTop: 15,
     paddingVertical: 15,
     paddingHorizontal: 20,
     shadowOpacity: 0.3,
     shadowRadius: 5,
     shadowOffset: { width: 1, height: 1 },
+    alignSelf: 'center',
   },
   prefHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
   },
   prefIcon: {
     resizeMode: 'contain',
     height: 35,
     width: 35,
-    top: 2,
   },
   prefLabel: {
     fontSize: 19,
@@ -169,14 +181,15 @@ const styles = StyleSheet.create({
     color: '#444',
   },
   prefButton: {
-    marginTop: 15,
-    width: '90%',
+    marginTop: 30,
+    width: '100%',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 15,
   },
   prefRecomButton: {
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
+    color: '#E45A92', // Assuming this is the theme color based on earlier files
   },
 });

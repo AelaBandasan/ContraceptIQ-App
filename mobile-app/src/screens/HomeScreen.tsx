@@ -1,94 +1,100 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Image, Dimensions } from 'react-native'
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { ScrollView } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   navigation: DrawerNavigationProp<any, any>;
 };
 
+const { width } = Dimensions.get('window');
+
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const contraceptiveMethods = [
-    { id: '1', name: 'Pills', image: null},
-    { id: '2', name: 'Patch', image: null},
-    { id: '3', name: 'IUD', image: null},
-    { id: '4', name: 'Implants', image: null},
-    { id: '5', name: 'Injections', image: null},
+    { id: '1', name: 'Pills', image: null },
+    { id: '2', name: 'Patch', image: null },
+    { id: '3', name: 'IUD', image: null },
+    { id: '4', name: 'Implants', image: null },
+    { id: '5', name: 'Injections', image: null },
   ];
-  
+
   return (
-    <ScrollView style = {styles.containerOne}
-      showsVerticalScrollIndicator = {false}
-      contentContainerStyle = {{paddingTop: 10,paddingBottom: 90}}>
-      
-      <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
-        <Ionicons name="menu" size={35} color="#000" />
-      </TouchableOpacity>
-      
-        <View style = {styles.containerTwo}>
-          <Text style = {styles.title}>ContraceptIQ</Text>
-          <Text style = {styles.tagline}>Smart Support, Informed Choices.</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.containerOne}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}>
+
+        <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
+          <Ionicons name="menu" size={35} color="#000" />
+        </TouchableOpacity>
+
+        <View style={styles.containerTwo}>
+          <Text style={styles.title}>ContraceptIQ</Text>
+          <Text style={styles.tagline}>Smart Support, Informed Choices.</Text>
         </View>
 
-        <View style = {styles.containerThree}>
+        <View style={styles.containerThree}>
           <Image source={require('../../assets/image/infographic.jpg')}
-          style = {styles.infographic}/>
+            style={styles.infographic} />
         </View>
 
-        <View style = {styles.containerFour}>
-          <Text style = {styles.headerTitle}>Contaceptive Methods</Text>
+        <View style={styles.containerFour}>
+          <Text style={styles.headerTitle}>Contaceptive Methods</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style = {styles.methodsScrollView}
-            contentContainerStyle = {styles.methodsContainer}>
-            
+            style={styles.methodsScrollView}
+            contentContainerStyle={styles.methodsContainer}>
+
             {contraceptiveMethods.map((method) => (
-              <TouchableOpacity key={method.id} style = {styles.methodItem}>
-                <View style = {styles.methodPics}>
+              <TouchableOpacity key={method.id} style={styles.methodItem}>
+                <View style={styles.methodPics}>
 
                 </View>
-                <Text style = {styles.methodName}>{method.name}</Text>
+                <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
         <View>
-          <Text style = {styles.headerTitle}>What is Contraception?</Text>
-          <Text style = {styles.info}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Text>
-          <Text style = {styles.headerTitle}>A Guide to Birth Control</Text>
-          <Text style = {styles.info}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Text>      
+          <Text style={styles.headerTitle}>What is Contraception?</Text>
+          <Text style={styles.info}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Text>
+          <Text style={styles.headerTitle}>A Guide to Birth Control</Text>
+          <Text style={styles.info}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Text>
         </View>
       </ScrollView>
-        
-    
+    </SafeAreaView>
+
   )
 }
 
 export default HomeScreen
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   containerOne: {
     flex: 1,
-    paddingTop: 25,
     paddingHorizontal: 20,
     backgroundColor: '#fff',
   },
   menuButton: {
-    position: 'absolute',
-    top: 20,
-    left: -2,
-    zIndex: 10,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: '600',
     textAlign: 'left',
-    marginTop: 50,
+    marginTop: 10,
   },
   tagline: {
     fontSize: 18,
@@ -98,11 +104,12 @@ const styles = StyleSheet.create({
     paddingBottom: 12
   },
   infographic: {
-    height: 370,
-    width: 370,
+    width: '100%',
+    height: undefined,
+    aspectRatio: 1,
     resizeMode: 'contain',
     borderRadius: 10,
-    alignItems: 'center'
+    alignSelf: 'center',
   },
   containerTwo: {
 
@@ -116,7 +123,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '500',
-    paddingBottom: 4
+    paddingBottom: 4,
+    marginTop: 10,
   },
   info: {
     fontSize: 17,
@@ -139,13 +147,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginBottom: 8
+    marginBottom: 8,
+    backgroundColor: '#eee', // Added placeholder color
   },
-  methodName:{
+  methodName: {
     fontSize: 16,
     lineHeight: 20,
     marginTop: 8,
-    marginBottom: 10 
+    marginBottom: 10
   },
 
 })

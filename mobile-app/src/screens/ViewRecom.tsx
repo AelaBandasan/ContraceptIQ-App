@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { openDrawer } from '../navigation/NavigationService';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   navigation: DrawerNavigationProp<any, any>;
@@ -48,7 +49,7 @@ const ViewRecom: React.FC<Props> = ({ navigation }) => {
     },
   ];
 
-  const [selected, setSelected] = useState(contraceptives[3]); 
+  const [selected, setSelected] = useState(contraceptives[3]);
 
   const nextMethod = () => {
     const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
@@ -61,86 +62,97 @@ const ViewRecom: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <ScrollView
-      style={styles.containerOne}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
-    >
-      <View>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <Ionicons name="menu" size={35} color={'#000'} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Recommendations</Text>
-      </View>
-
-      <View style={styles.mainCircleWrapper}>
-        <TouchableOpacity onPress={prevMethod} style={styles.sideButton}>
-          <Ionicons name="chevron-back" size={28} color="#555" />
-        </TouchableOpacity>
-
-        <View style={[styles.mainCircle, { borderColor: selected.color }]}>
-          <Image source={selected.image} style={styles.mainImage} />
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.containerOne}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+      >
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+            <Ionicons name="menu" size={35} color={'#000'} />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Recommendations</Text>
+          <View style={{ width: 35 }} />
         </View>
 
-        <TouchableOpacity onPress={nextMethod} style={styles.sideButton}>
-          <Ionicons name="chevron-forward" size={28} color="#555" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.deviceInfo}>
-        <Text style={styles.deviceName}>{selected.name}</Text>
-        <Text style={styles.preferencesText}>
-          <Text style={{ fontStyle: 'italic' }}>{selected.preferences}</Text>
-        </Text>
-      </View>
-
-      <TouchableOpacity style={styles.addNotesButton}>
-        <Ionicons name="create-outline" size={26} color="#fff" />
-      </TouchableOpacity>
-      
-      <View style={styles.listContainer}>
-        {contraceptives.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.listItem,
-              selected.name === item.name && styles.listItemSelected,
-            ]}
-            onPress={() => setSelected(item)}
-          >
-            <Image source={item.image} style={styles.listImage} />
-            <Text style={styles.listText}>{item.name}</Text>
+        <View style={styles.mainCircleWrapper}>
+          <TouchableOpacity onPress={prevMethod} style={styles.sideButton}>
+            <Ionicons name="chevron-back" size={28} color="#555" />
           </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+
+          <View style={[styles.mainCircle, { borderColor: selected.color }]}>
+            <Image source={selected.image} style={styles.mainImage} />
+          </View>
+
+          <TouchableOpacity onPress={nextMethod} style={styles.sideButton}>
+            <Ionicons name="chevron-forward" size={28} color="#555" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.deviceInfo}>
+          <Text style={styles.deviceName}>{selected.name}</Text>
+          <Text style={styles.preferencesText}>
+            <Text style={{ fontStyle: 'italic' }}>{selected.preferences}</Text>
+          </Text>
+        </View>
+
+        <TouchableOpacity style={styles.addNotesButton}>
+          <Ionicons name="create-outline" size={26} color="#fff" />
+        </TouchableOpacity>
+
+        <View style={styles.listContainer}>
+          {contraceptives.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.listItem,
+                selected.name === item.name && styles.listItemSelected,
+              ]}
+              onPress={() => setSelected(item)}
+            >
+              <Image source={item.image} style={styles.listImage} />
+              <Text style={styles.listText}>{item.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 export default ViewRecom;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   containerOne: {
     flex: 1,
     backgroundColor: '#fff',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 20,
+  },
   menuButton: {
-    position: 'absolute',
-    top: 35,
-    left: 20,
-    zIndex: 10,
+    padding: 5,
   },
   headerText: {
-    textAlign: 'center',
-    top: 40,
     fontSize: 21,
     fontWeight: '600',
+    textAlign: 'center',
   },
   mainCircleWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
+    marginTop: 40,
   },
   sideButton: {
     backgroundColor: '#D9D9D9',

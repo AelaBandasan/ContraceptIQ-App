@@ -1,10 +1,11 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated, PanResponder, } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated, PanResponder, Dimensions } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
 import Slider from '@react-native-community/slider';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   navigation: DrawerNavigationProp<any, any>;
@@ -26,10 +27,11 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   const selectedLabel = ageRanges[sliderValue];
 
   const colorMap: Record<number, string> = {
-    1: '#4CAF50', 
-    2: '#FFEB3B', 
-    3: '#FF9800', 
-    4: '#F44336', 
+    1: '#4CAF50',
+    2: '#FFEB3B',
+    3: '#FF9800',
+    4: '#F44336',
+    5: '#bbb', // Default gray
   };
 
   const recommendations: Record<number, Record<string, number>> = {
@@ -128,168 +130,178 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <ScrollView
-      style={styles.containerOne}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
-    >
-      <View>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <Ionicons name="menu" size={35} color={'#000'} />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>What's Right for Me?</Text>
-      </View>
-
-      <View style={styles.screenCont}>
-        <Text style={styles.header2}>Tell us about you</Text>
-        <Text style={styles.header3}>
-          Enter your age to personalize recommendations.
-        </Text>
-
-        <View style={styles.ageCont}>
-          <View style={styles.ageHeader}>
-            <Image
-              source={require('../../assets/image/age.png')}
-              style={styles.ageIcon}
-            />
-            <Text style={styles.ageLabel}>Age</Text>
-          </View>
-
-          <View>
-            <Text style={styles.selectedAge}>{selectedLabel}</Text>
-          </View>
-
-          <View style={styles.sliderCont}>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={4}
-              step={1}
-              value={sliderValue}
-              onValueChange={(value) => {
-                setSliderValue(value);
-                setModalVisible(true);
-              }}
-              minimumTrackTintColor="#E45A92"
-              maximumTrackTintColor="#D3D3D3"
-              thumbTintColor="#E45A92"
-            />
-            <View style={styles.sliderLabel}>
-              <Text style={styles.labelText}>Menarche to {'< 18'}</Text>
-              <Text style={styles.labelText}>(≥ 46)</Text>
-            </View>
-          </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.containerOne}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+      >
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+            <Ionicons name="menu" size={35} color={'#000'} />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>What's Right for Me?</Text>
+          <View style={{ width: 35 }} />
         </View>
 
-        <TouchableOpacity style={styles.prefButton} onPress={handleAddPreference}>
-          <Text style={styles.prefLabel}>+ Add Preferences</Text>
-        </TouchableOpacity>
+        <View style={styles.screenCont}>
+          <Text style={styles.header2}>Tell us about you</Text>
+          <Text style={styles.header3}>
+            Enter your age to personalize recommendations.
+          </Text>
 
-        <Modal
-          visible={modalVisible}
-          transparent
-          animationType="none"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay} pointerEvents="box-none">
-            <Animated.View
-              style={[styles.modalContainer, { transform: [{ translateY }] }]}
-              {...panResponder.panHandlers}
-            >
-              <View style={styles.modalHandle} />
+          <View style={styles.ageCont}>
+            <View style={styles.ageHeader}>
+              <Image
+                source={require('../../assets/image/age.png')}
+                style={styles.ageIcon}
+              />
+              <Text style={styles.ageLabel}>Age</Text>
+            </View>
 
-              <TouchableOpacity style={styles.recomButton} onPress={handleViewRecommendation}>
-                <Text style={styles.modalHeader}>View Recommendation</Text>
-              </TouchableOpacity>
+            <View>
+              <Text style={styles.selectedAge}>{selectedLabel}</Text>
+            </View>
 
-              <View style={styles.modalContent}>
-                <Text style={styles.modalText}>Selected Age:</Text>
-                <Text style={styles.modalAge}>{selectedLabel}</Text>
+            <View style={styles.sliderCont}>
+              <Slider
+                style={styles.slider}
+                minimumValue={0}
+                maximumValue={4}
+                step={1}
+                value={sliderValue}
+                onValueChange={(value) => {
+                  setSliderValue(value);
+                  setModalVisible(true);
+                }}
+                minimumTrackTintColor="#E45A92"
+                maximumTrackTintColor="#D3D3D3"
+                thumbTintColor="#E45A92"
+              />
+              <View style={styles.sliderLabel}>
+                <Text style={styles.labelText}>Menarche to {'< 18'}</Text>
+                <Text style={styles.labelText}>(≥ 46)</Text>
               </View>
-
-              <View style={styles.modalButtons}>
-                <View style={styles.recomRow}>
-                  <View style={styles.recomItem}>
-                    <Image
-                      source={require('../../assets/image/copperiud.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('copperIUD') }]}
-                    />
-                    <Text style={styles.contraceptiveLabel}>Cu-IUD</Text>
-                  </View>
-
-                  <View style={styles.recomItem}>
-                    <Image
-                      source={require('../../assets/image/implantt.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('implant') }]}
-                    />
-                    <Text style={styles.contraceptiveLabel}>LNG/ETG</Text>
-                  </View>
-
-                  <View style={styles.recomItem}>
-                    <Image
-                      source={require('../../assets/image/injectables.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('injectables') }]}
-                    />
-                    <Text style={styles.contraceptiveLabel}>DMPA</Text>
-                  </View>
-                </View>
-
-                <View style={styles.recomRow}>
-                  <View style={styles.recomItem}>
-                    <Image
-                      source={require('../../assets/image/leviud.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('levIUD') }]}
-                    />
-                    <Text style={styles.contraceptiveLabel}>LNG-IUD</Text>
-                  </View>
-
-                  <View style={styles.recomItem}>
-                    <Image
-                      source={require('../../assets/image/patchh.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('patch') }]}
-                    />
-                    <Text style={styles.contraceptiveLabel}>CHC</Text>
-                  </View>
-
-                  <View style={styles.recomItem}>
-                    <Image
-                      source={require('../../assets/image/pillss.png')}
-                      style={[styles.contaceptiveImg, { borderColor: getColor('pills') }]}
-                    />
-                    <Text style={styles.contraceptiveLabel}>POP</Text>
-                  </View>
-                </View>
-              </View>
-            </Animated.View>
+            </View>
           </View>
-        </Modal>
-      </View>
-    </ScrollView>
+
+          <TouchableOpacity style={styles.prefButton} onPress={handleAddPreference}>
+            <Text style={styles.prefLabel}>+ Add Preferences</Text>
+          </TouchableOpacity>
+
+          <Modal
+            visible={modalVisible}
+            transparent
+            animationType="none"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalOverlay} pointerEvents="box-none">
+              <Animated.View
+                style={[styles.modalContainer, { transform: [{ translateY }] }]}
+                {...panResponder.panHandlers}
+              >
+                <View style={styles.modalHandle} />
+
+                <TouchableOpacity style={styles.recomButton} onPress={handleViewRecommendation}>
+                  <Text style={styles.modalHeader}>View Recommendation</Text>
+                </TouchableOpacity>
+
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalText}>Selected Age:</Text>
+                  <Text style={styles.modalAge}>{selectedLabel}</Text>
+                </View>
+
+                <View style={styles.modalButtons}>
+                  <View style={styles.recomRow}>
+                    <View style={styles.recomItem}>
+                      <Image
+                        source={require('../../assets/image/copperiud.png')}
+                        style={[styles.contaceptiveImg, { borderColor: getColor('copperIUD') }]}
+                      />
+                      <Text style={styles.contraceptiveLabel}>Cu-IUD</Text>
+                    </View>
+
+                    <View style={styles.recomItem}>
+                      <Image
+                        source={require('../../assets/image/implantt.png')}
+                        style={[styles.contaceptiveImg, { borderColor: getColor('implant') }]}
+                      />
+                      <Text style={styles.contraceptiveLabel}>LNG/ETG</Text>
+                    </View>
+
+                    <View style={styles.recomItem}>
+                      <Image
+                        source={require('../../assets/image/injectables.png')}
+                        style={[styles.contaceptiveImg, { borderColor: getColor('injectables') }]}
+                      />
+                      <Text style={styles.contraceptiveLabel}>DMPA</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.recomRow}>
+                    <View style={styles.recomItem}>
+                      <Image
+                        source={require('../../assets/image/leviud.png')}
+                        style={[styles.contaceptiveImg, { borderColor: getColor('levIUD') }]}
+                      />
+                      <Text style={styles.contraceptiveLabel}>LNG-IUD</Text>
+                    </View>
+
+                    <View style={styles.recomItem}>
+                      <Image
+                        source={require('../../assets/image/patchh.png')}
+                        style={[styles.contaceptiveImg, { borderColor: getColor('patch') }]}
+                      />
+                      <Text style={styles.contraceptiveLabel}>CHC</Text>
+                    </View>
+
+                    <View style={styles.recomItem}>
+                      <Image
+                        source={require('../../assets/image/pillss.png')}
+                        style={[styles.contaceptiveImg, { borderColor: getColor('pills') }]}
+                      />
+                      <Text style={styles.contraceptiveLabel}>POP</Text>
+                    </View>
+                  </View>
+                </View>
+              </Animated.View>
+            </View>
+          </Modal>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 export default Recommendation;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   containerOne: {
     flex: 1,
     backgroundColor: '#fff',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 20,
+  },
   menuButton: {
-    position: 'absolute',
-    top: 35,
-    left: 20,
-    zIndex: 10,
+    padding: 5,
   },
   headerText: {
-    textAlign: 'center',
-    top: 40,
     fontSize: 21,
     fontWeight: '600',
+    textAlign: 'center',
   },
   screenCont: {
-    top: 50,
-    left: 20,
+    paddingHorizontal: 20,
   },
   header2: {
     fontSize: 19,
@@ -303,21 +315,20 @@ const styles = StyleSheet.create({
   ageCont: {
     elevation: 20,
     backgroundColor: '#FBFBFB',
-    width: '90%',
+    width: '100%',
     borderRadius: 10,
-    marginRight: 10,
-    marginTop: 15,
+    marginTop: 25,
     paddingVertical: 20,
     paddingHorizontal: 20,
     shadowOpacity: 0.5,
     shadowRadius: 100,
     shadowOffset: { width: 2, height: 2 },
+    alignSelf: 'center',
   },
   ageHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    top: 1,
   },
   ageIcon: {
     resizeMode: 'contain',
@@ -339,6 +350,7 @@ const styles = StyleSheet.create({
   },
   sliderCont: {
     width: '100%',
+    marginTop: 10,
   },
   slider: {
     width: '100%',
@@ -354,8 +366,8 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   prefButton: {
-    marginTop: 10,
-    width: '90%',
+    marginTop: 30,
+    width: '100%',
     alignItems: 'center',
     paddingVertical: 10,
   },
@@ -366,7 +378,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
@@ -375,7 +387,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     padding: 20,
     alignItems: 'center',
-    height: '50%',
+    height: '60%',
     elevation: 15,
   },
   modalHandle: {
@@ -389,7 +401,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#E45A92',
     borderRadius: 30,
     paddingVertical: 18,
-    paddingHorizontal: 80,
+    width: '80%',
+    alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 0.25,
@@ -404,7 +417,7 @@ const styles = StyleSheet.create({
   modalContent: {
     alignItems: 'center',
     marginTop: 15,
-    marginBottom: 5,
+    marginBottom: 15,
   },
   modalText: {
     fontSize: 17,
@@ -415,38 +428,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#E45A92',
+    marginTop: 5,
   },
   modalButtons: {
     width: '100%',
     alignItems: 'center',
+    flex: 1,
   },
   recomRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 10,
+    flexWrap: 'wrap',
   },
   recomItem: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '30%',
+    marginBottom: 10,
   },
   contaceptiveImg: {
-    width: 90,
-    height: 90,
+    width: 70,
+    height: 70,
     resizeMode: 'contain',
-    borderRadius: 50,
+    borderRadius: 35,
     borderWidth: 4,
-    padding: 10,
+    padding: 5,
     backgroundColor: '#fff',
-    elevation: 6,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
   },
   contraceptiveLabel: {
     marginTop: 4,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
     color: '#000',
     textAlign: 'center',
