@@ -10,6 +10,7 @@ import ObRecom from '../screens/ObSide/ObRecom';
 import ObPref from '../screens/ObSide/ObPref';
 import ObViewRecom from '../screens/ObSide/ObViewRecom';
 import SignupforOB from '../screens/ObSide/SignupforOB';
+import ObDrawerNavigator from './ObDrawerNavigator';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,6 +31,7 @@ const RootStack = () => {
       <Stack.Screen name="ObPref" component={ObPref} />
       <Stack.Screen name="ObViewRecom" component={ObViewRecom} />
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
+      <Stack.Screen name="ObDrawer" component={ObDrawerNavigator} />
     </Stack.Navigator>
   );
 };
