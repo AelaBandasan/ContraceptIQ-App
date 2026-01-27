@@ -6,10 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RootStackScreenProps } from '../types/navigation';
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = RootStackScreenProps<"Recommendation">;
 
 const Recommendation: React.FC<Props> = ({ navigation }) => {
   const [sliderValue, setSliderValue] = useState(0);
@@ -17,11 +16,11 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   const translateY = useRef(new Animated.Value(500)).current;
 
   const ageRanges = [
-    'Menarche to < 18 years',
-    '18 - 19 years',
-    '20 - 39 years',
-    '40 - 45 years',
-    '≥ 46 years',
+    "Menarche to < 18 years",
+    "18 - 19 years",
+    "20 - 39 years",
+    "40 - 45 years",
+    "≥ 46 years",
   ];
 
   const selectedLabel = ageRanges[sliderValue];
@@ -35,7 +34,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   };
 
   const recommendations: Record<number, Record<string, number>> = {
-    0: { // Menarche to <18
+    0: {
+      // Menarche to <18
       pills: 1,
       patch: 1,
       copperIUD: 2,
@@ -43,7 +43,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 2,
       injectables: 2,
     },
-    1: { // 18-19
+    1: {
+      // 18-19
       pills: 1,
       patch: 1,
       copperIUD: 2,
@@ -51,7 +52,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 1,
       injectables: 1,
     },
-    2: { // 20-39
+    2: {
+      // 20-39
       pills: 1,
       patch: 1,
       copperIUD: 1,
@@ -59,7 +61,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 1,
       injectables: 1,
     },
-    3: { // 40-45
+    3: {
+      // 40-45
       pills: 1,
       patch: 2,
       copperIUD: 1,
@@ -67,7 +70,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
       implant: 1,
       injectables: 1,
     },
-    4: { // ≥46
+    4: {
+      // ≥46
       pills: 1,
       patch: 2,
       copperIUD: 1,
@@ -79,7 +83,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
 
   const getColor = (method: string) => {
     const code = recommendations[sliderValue][method];
-    return colorMap[code] || '#ccc';
+    return colorMap[code] || "#ccc";
   };
 
   const panResponder = useRef(
@@ -122,12 +126,12 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   }, [modalVisible]);
 
   const handleAddPreference = () => {
-    navigation.navigate('Preferences');
+    navigation.navigate("Preferences");
   };
 
   const handleViewRecommendation = () => {
-    navigation.navigate('ViewRecommendation')
-  }
+    navigation.navigate("ViewRecommendation");
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -304,13 +308,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header2: {
-    fontSize: 19,
-    fontWeight: '500',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.medium,
   },
   header3: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
+    fontSize: typography.sizes.sm,
+    fontStyle: "italic",
+    color: colors.text.secondary,
   },
   ageCont: {
     elevation: 20,
@@ -331,39 +335,39 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   ageIcon: {
-    resizeMode: 'contain',
+    resizeMode: "contain",
     height: 45,
     width: 45,
   },
   ageLabel: {
-    fontSize: 20,
-    fontWeight: '600',
-    paddingLeft: 10,
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.semibold,
+    paddingLeft: spacing.sm,
   },
   selectedAge: {
-    fontSize: 16,
-    color: '#000',
-    fontWeight: '400',
-    paddingLeft: 10,
-    marginTop: 3,
-    textAlign: 'center',
+    fontSize: typography.sizes.base,
+    color: colors.text.primary,
+    fontWeight: typography.weights.regular,
+    paddingLeft: spacing.sm,
+    marginTop: spacing.xs,
+    textAlign: "center",
   },
   sliderCont: {
     width: '100%',
     marginTop: 10,
   },
   slider: {
-    width: '100%',
-    height: 50,
+    width: "100%",
+    height: spacing["4xl"],
   },
   sliderLabel: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: -10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: -spacing.sm,
   },
   labelText: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   prefButton: {
     marginTop: 30,
@@ -372,9 +376,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   prefLabel: {
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '600',
+    textAlign: "center",
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
   },
   modalOverlay: {
     flex: 1,
@@ -393,9 +397,9 @@ const styles = StyleSheet.create({
   modalHandle: {
     width: 60,
     height: 6,
-    backgroundColor: '#ccc',
-    borderRadius: 3,
-    marginBottom: 15,
+    backgroundColor: colors.border.main,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.base,
   },
   recomButton: {
     backgroundColor: '#E45A92',
@@ -410,9 +414,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   modalHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.bold,
+    color: colors.background.primary,
   },
   modalContent: {
     alignItems: 'center',
@@ -420,9 +424,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   modalText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: '#555',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
+    color: colors.text.disabled,
   },
   modalAge: {
     fontSize: 20,

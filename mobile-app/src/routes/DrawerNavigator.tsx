@@ -18,10 +18,16 @@ const Drawer = createDrawerNavigator();
 
 const DrawerNavigator = () => {
   return (
-    <Drawer.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+    <Drawer.Navigator
+      initialRouteName="Home"
+      screenOptions={{ headerShown: false }}
+    >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="What's Right for Me?" component={Whatsrightforme} />
-      <Drawer.Screen name="Contraceptive Methods" component={Contraceptivemethods} />
+      <Drawer.Screen
+        name="Contraceptive Methods"
+        component={Contraceptivemethods}
+      />
       <Drawer.Screen name="Did You Know?" component={Diduknow} />
       <Drawer.Screen name="Contraceptive FAQs" component={Contrafaqs} />
       <Drawer.Screen name="About Us" component={AboutUs} />

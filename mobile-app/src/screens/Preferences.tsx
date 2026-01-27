@@ -6,21 +6,54 @@ import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = RootStackScreenProps<"Preferences">;
 
 const Preferences = ({ navigation }: Props) => {
   const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
 
   const preferences = [
-    { key: 'effectiveness', label: 'Effectiveness', description: 'Most reliable at preventing pregnancy', icon: require('../../assets/image/star.png') },
-    { key: 'sti', label: 'STI Prevention', description: 'Protection against STIs/HIV', icon: require('../../assets/image/shield.png') },
-    { key: 'nonhormonal', label: 'Non-hormonal', description: 'Hormone-free option', icon: require('../../assets/image/forbidden.png') },
-    { key: 'regular', label: 'Regular Bleeding', description: 'Helps with cramps or heavy bleeding', icon: require('../../assets/image/blood.png') },
-    { key: 'privacy', label: 'Privacy', description: 'Can be used without others knowing', icon: require('../../assets/image/privacy.png') },
-    { key: 'client', label: 'Client controlled', description: 'Can start or stop it myself', icon: require('../../assets/image/responsibility.png') },
-    { key: 'longterm', label: 'Long-term protection', description: 'Lasts for years with little action', icon: require('../../assets/image/calendar.png') },
+    {
+      key: "effectiveness",
+      label: "Effectiveness",
+      description: "Most reliable at preventing pregnancy",
+      icon: require("../../assets/image/star.png"),
+    },
+    {
+      key: "sti",
+      label: "STI Prevention",
+      description: "Protection against STIs/HIV",
+      icon: require("../../assets/image/shield.png"),
+    },
+    {
+      key: "nonhormonal",
+      label: "Non-hormonal",
+      description: "Hormone-free option",
+      icon: require("../../assets/image/forbidden.png"),
+    },
+    {
+      key: "regular",
+      label: "Regular Bleeding",
+      description: "Helps with cramps or heavy bleeding",
+      icon: require("../../assets/image/blood.png"),
+    },
+    {
+      key: "privacy",
+      label: "Privacy",
+      description: "Can be used without others knowing",
+      icon: require("../../assets/image/privacy.png"),
+    },
+    {
+      key: "client",
+      label: "Client controlled",
+      description: "Can start or stop it myself",
+      icon: require("../../assets/image/responsibility.png"),
+    },
+    {
+      key: "longterm",
+      label: "Long-term protection",
+      description: "Lasts for years with little action",
+      icon: require("../../assets/image/calendar.png"),
+    },
   ];
 
   const showMaxAlert = () => {
@@ -36,7 +69,7 @@ const Preferences = ({ navigation }: Props) => {
     const isSelected = selectedPrefs.includes(key);
 
     if (isSelected) {
-      setSelectedPrefs(selectedPrefs.filter(item => item !== key));
+      setSelectedPrefs(selectedPrefs.filter((item) => item !== key));
     } else {
       if (selectedPrefs.length >= 3) {
         showMaxAlert();
@@ -47,7 +80,7 @@ const Preferences = ({ navigation }: Props) => {
   };
 
   const handleViewRecommendation = () => {
-    navigation.navigate('ViewRecommendation');
+    navigation.navigate("ViewRecommendation");
   };
 
   return (
@@ -136,8 +169,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header2: {
-    fontSize: 19,
-    fontWeight: '500',
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.medium,
   },
   header3: {
     fontSize: 15,
@@ -164,14 +197,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   prefIcon: {
-    resizeMode: 'contain',
+    resizeMode: "contain",
     height: 35,
     width: 35,
   },
   prefLabel: {
-    fontSize: 19,
-    fontWeight: '600',
-    paddingLeft: 10,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.semibold,
+    paddingLeft: spacing.sm,
     flex: 1,
   },
   prefDescription: {

@@ -1,13 +1,21 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, Dimensions } from 'react-native'
-import React from 'react'
+// src/screens/HomeScreen.tsx
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  ScrollView,
+  SafeAreaView,
+} from 'react-native';
+import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { ScrollView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { DrawerScreenProps } from '../types/navigation';
+import { HeaderWithMenu, ScreenContainer } from '../components';
+import { colors, spacing, typography, borderRadius, shadows } from '../theme';
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = DrawerScreenProps<'Home'>;
 
 const { width } = Dimensions.get('window');
 
@@ -22,58 +30,68 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.containerOne}
+      <ScrollView
+        style={styles.containerOne}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}>
-
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+      >
+        {/* Header with menu button */}
         <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
           <Ionicons name="menu" size={35} color="#000" />
         </TouchableOpacity>
 
+        {/* Title section */}
         <View style={styles.containerTwo}>
           <Text style={styles.title}>ContraceptIQ</Text>
           <Text style={styles.tagline}>Smart Support, Informed Choices.</Text>
         </View>
 
+        {/* Infographic */}
         <View style={styles.containerThree}>
-          <Image source={require('../../assets/image/infographic.jpg')}
-            style={styles.infographic} />
+          <Image
+            source={require('../../assets/image/infographic.jpg')}
+            style={styles.infographic}
+          />
         </View>
 
+        {/* Contraceptive methods carousel */}
         <View style={styles.containerFour}>
-          <Text style={styles.headerTitle}>Contaceptive Methods</Text>
+          <Text style={styles.headerTitle}>Contraceptive Methods</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.methodsScrollView}
-            contentContainerStyle={styles.methodsContainer}>
-
+            contentContainerStyle={styles.methodsContainer}
+          >
             {contraceptiveMethods.map((method) => (
               <TouchableOpacity key={method.id} style={styles.methodItem}>
-                <View style={styles.methodPics}>
-
-                </View>
+                <View style={styles.methodPics} />
                 <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        <View>
+        {/* Informational sections */}
+        <View style={styles.infoSection}>
           <Text style={styles.headerTitle}>What is Contraception?</Text>
-          <Text style={styles.info}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Text>
+          <Text style={styles.info}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+            incididunt ut labore et dolore magna aliqua.
+          </Text>
+
           <Text style={styles.headerTitle}>A Guide to Birth Control</Text>
-          <Text style={styles.info}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</Text>
+          <Text style={styles.info}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+            incididunt ut labore et dolore magna aliqua.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+};
 
-  )
-}
-
-export default HomeScreen
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -97,11 +115,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   tagline: {
-    fontSize: 18,
+    fontSize: typography.sizes.lg,
     fontStyle: 'italic',
     textAlign: 'left',
-    marginTop: 2,
-    paddingBottom: 12
+    marginTop: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  infographicContainer: {
+    paddingBottom: spacing.md,
   },
   infographic: {
     width: '100%',
@@ -112,13 +133,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   containerTwo: {
-
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 32,
   },
   containerThree: {
-    paddingBottom: 12
+    paddingBottom: 12,
   },
   containerFour: {
-
+    marginTop: spacing.md,
   },
   headerTitle: {
     fontSize: 20,
@@ -127,34 +150,36 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   info: {
-    fontSize: 17,
-    paddingTop: 1,
-    paddingBottom: 4,
-    textAlign: 'justify'
+    fontSize: typography.sizes.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+    textAlign: 'justify',
   },
   methodsScrollView: {
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
+    marginTop: spacing.sm,
   },
   methodsContainer: {
-    paddingRight: 20
+    paddingHorizontal: spacing.sm,
   },
   methodItem: {
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: spacing.lg,
   },
   methodPics: {
     width: 80,
     height: 80,
     borderRadius: 40,
     marginBottom: 8,
-    backgroundColor: '#eee', // Added placeholder color
+    backgroundColor: '#eee',
   },
   methodName: {
     fontSize: 16,
     lineHeight: 20,
     marginTop: 8,
-    marginBottom: 10
+    marginBottom: 10,
   },
-
-})
+  infoSection: {
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+});

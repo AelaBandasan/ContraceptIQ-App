@@ -18,7 +18,7 @@ const Whatsrightforme: React.FC<Props> = ({ navigation }) => {
 
   const handleGetStarter = () => setIsModalVisible(true);
   const handleContinue = () => {
-    navigation.navigate('Recommendation' as never)
+    navigation.navigate("Recommendation");
   };
 
   const handleScroll = (event: any) => {
@@ -173,11 +173,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   OBheader: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#000',
-    textAlign: 'center',
-    marginTop: 10,
+    fontSize: typography.sizes["3xl"] + 1,
+    fontWeight: typography.weights.semibold,
+    color: colors.text.primary,
+    textAlign: "center",
+    marginTop: spacing.sm,
   },
   OBtext: {
     fontSize: 17,
@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   buttonLabel: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
+    color: colors.background.primary,
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.semibold,
   },
   indicatorContainer: {
     position: 'absolute',
@@ -216,48 +216,48 @@ const styles = StyleSheet.create({
     height: 12,
     width: 12,
     borderRadius: 6,
-    backgroundColor: '#C4C4C4',
-    marginHorizontal: 5,
+    backgroundColor: colors.border.main,
+    marginHorizontal: spacing.xs,
   },
   currentIndicator: {
-    width: 30,
-    backgroundColor: '#E45A92',
+    width: spacing["2xl"],
+    backgroundColor: colors.primary,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalBox: {
-    backgroundColor: '#fff',
-    padding: 25,
-    borderRadius: 10,
-    width: '85%',
-    elevation: 5,
+    backgroundColor: colors.background.primary,
+    padding: spacing.xl,
+    borderRadius: borderRadius.md,
+    width: "85%",
+    ...shadows.md,
   },
   disclaimer: {
-    fontSize: 20,
-    fontWeight: '500',
-    marginBottom: 10,
-    color: '#000',
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.medium,
+    marginBottom: spacing.sm,
+    color: colors.text.primary,
   },
   message: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 20,
-    textAlign: 'justify',
-    lineHeight: 22,
+    fontSize: typography.sizes.base,
+    color: colors.text.secondary,
+    marginBottom: spacing.lg,
+    textAlign: "justify",
+    lineHeight: typography.lineHeights.normal - 2,
   },
   modalButton: {
-    backgroundColor: '#E45A92',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.sm,
+    alignItems: "center",
   },
   modalButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 17,
+    color: colors.background.primary,
+    fontWeight: typography.weights.semibold,
+    fontSize: typography.sizes.md,
   },
 });
