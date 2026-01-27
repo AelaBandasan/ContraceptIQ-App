@@ -135,7 +135,7 @@ const LoginforOB = ({ navigation }: any) => {
 
           <View style={styles.registerSection}>
             <Text style={styles.registerText}>Don't have an account? </Text>
-            <Pressable onPress={() => navigation.navigate('Signup')}>
+            <Pressable onPress={() => navigation.navigate('SignupforOB')}>
               <Text style={styles.registerLink}>Sign Up</Text>
             </Pressable>
           </View>

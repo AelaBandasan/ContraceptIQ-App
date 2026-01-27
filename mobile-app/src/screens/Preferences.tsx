@@ -5,6 +5,8 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RootStackScreenProps } from '../types/navigation';
+import { typography, spacing } from '../theme';
 
 type Props = RootStackScreenProps<"Preferences">;
 

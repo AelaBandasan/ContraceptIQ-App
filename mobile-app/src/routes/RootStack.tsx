@@ -29,7 +29,7 @@ const RootStack = () => {
       <Stack.Screen name="ObRecom" component={ObRecom} />
       <Stack.Screen name="ObPref" component={ObPref} />
       <Stack.Screen name="ObViewRecom" component={ObViewRecom} />
-      {/* <Stack.Screen name="Signup" component={SignupforOB} /> */}
+      <Stack.Screen name="SignupforOB" component={SignupforOB} />
     </Stack.Navigator>
   );
 };

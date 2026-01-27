@@ -6,6 +6,7 @@ import type { CompositeNavigationProp } from '@react-navigation/native';
 export type RootStackParamList = {
   UserStartingScreen: undefined;
   LoginforOB: undefined;
+  SignupforOB: undefined;
   MainDrawer: undefined;
   Recommendation: undefined;
   Preferences: undefined;
@@ -26,11 +27,11 @@ export type DrawerParamList = {
 };
 
 // Navigation prop types for screens in the Root Stack
-export type RootStackNavigationProp<T extends keyof RootStackParamList> = 
+export type RootStackNavigationProp<T extends keyof RootStackParamList> =
   NativeStackNavigationProp<RootStackParamList, T>;
 
 // Navigation prop types for screens in the Drawer
-export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> = 
+export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
   CompositeNavigationProp<
     DrawerNavigationProp<DrawerParamList, T>,
     NativeStackNavigationProp<RootStackParamList>

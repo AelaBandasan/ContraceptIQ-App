@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import type { DrawerNavigationProp } from '@react-navigation/drawer'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 type Props = {
   navigation: DrawerNavigationProp<any, any>;

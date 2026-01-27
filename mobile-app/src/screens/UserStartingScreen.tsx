@@ -6,7 +6,7 @@ const UserStartingScreen = ({ navigation}: any ) => {
         navigation.navigate('MainDrawer');
     }
     const handleOBlogin = () => {
-        navigation.navigate('ObRecom');
+        navigation.navigate('LoginforOB');
     }
   return (
     <View style = {styles.screen}>

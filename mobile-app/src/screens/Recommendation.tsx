@@ -7,6 +7,7 @@ import { openDrawer } from '../navigation/NavigationService';
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackScreenProps } from '../types/navigation';
+import { colors, typography, spacing, borderRadius } from '../theme';
 
 type Props = RootStackScreenProps<"Recommendation">;
 
