@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     },
     loginContainer: {
         position: 'absolute',
-        bottom: hp('2%'),
+        bottom: hp('6%'),
         elevation: 10, // Ensure it sits on top of container
         zIndex: 10,
     },
