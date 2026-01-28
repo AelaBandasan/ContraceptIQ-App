@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-    StyleSheet, View, Text, TouchableOpacity, SafeAreaView,
+    StyleSheet, View, Text, TouchableOpacity,
     Dimensions, ScrollView, FlatList, Image, StatusBar, Platform, TextInput
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu } from 'lucide-react-native';
 import Animated, {
     useSharedValue, useAnimatedStyle, withRepeat,
@@ -10,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Picker } from '@react-native-picker/picker';
 
-const { width, height } = Dimensions.get('window');
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 // --- DATA CONFIGURATION ---
 const STEPS = [
@@ -45,12 +46,12 @@ interface FloatingIconProps {
     source: any;
     delay?: number;
     size?: number;
-    top: number;
-    left: number;
+    top: number | string; // Allow percentage strings or numbers
+    left: number | string;
 }
 
 // --- FLOATING ICON COMPONENT ---
-const FloatingIcon = ({ source, delay = 0, size = 60, top, left }: FloatingIconProps) => {
+const FloatingIcon = ({ source, delay = 0, size = wp('15%'), top, left }: FloatingIconProps) => {
     const translateY = useSharedValue(0);
     useEffect(() => {
         translateY.value = withRepeat(withSequence(withTiming(-15, { duration: 2500 + delay }), withTiming(0, { duration: 2500 + delay })), -1, true);
@@ -58,7 +59,7 @@ const FloatingIcon = ({ source, delay = 0, size = 60, top, left }: FloatingIconP
     const animatedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
     return (
         <Animated.View style={[{
-            position: 'absolute', top, left,
+            position: 'absolute', top: top as any, left: left as any,
             shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 8
         }, animatedStyle]}>
             <View style={{ backgroundColor: 'white', borderRadius: 100, padding: 10 }}>
@@ -68,7 +69,6 @@ const FloatingIcon = ({ source, delay = 0, size = 60, top, left }: FloatingIconP
     );
 };
 
-// ... (imports remain same, not replacing entire file to be safe, targeting the component implementation)
 const ObAssessment = ({ navigation, route }: any) => {
     const [screen, setScreen] = useState('welcome'); // 'welcome', 'onboarding', 'review'
     const [currentStep, setCurrentStep] = useState(0);
@@ -139,32 +139,32 @@ const ObAssessment = ({ navigation, route }: any) => {
                     <View style={styles.animationContainer}>
                         <FloatingIcon
                             source={require('../../../assets/tempLogo.png')}
-                            top={height * 0.22} left={width * 0.38} size={90}
+                            top={hp('22%')} left={wp('38%')} size={wp('23%')}
                         />
                         {/* ... keep other icons ... */}
                         <FloatingIcon
                             source={require('../../../assets/image/copperiud.png')} // IUD
-                            top={height * 0.17} left={width * 0.70} delay={0} size={70}
+                            top={hp('17%')} left={wp('70%')} delay={0} size={wp('18%')}
                         />
                         <FloatingIcon
                             source={require('../../../assets/image/implantt.png')} // Condom/Other
-                            top={height * 0.07} left={width * 0.38} delay={0} size={65}
+                            top={hp('7%')} left={wp('38%')} delay={0} size={wp('16%')}
                         />
                         <FloatingIcon
                             source={require('../../../assets/image/injectables.png')} // Condom/Other
-                            top={height * 0.18} left={width * 0.09} delay={300} size={70}
+                            top={hp('18%')} left={wp('9%')} delay={300} size={wp('18%')}
                         />
                         <FloatingIcon
                             source={require('../../../assets/image/leviud.png')} // Condom/Other
-                            top={height * 0.33} left={width * 0.09} delay={100} size={65}
+                            top={hp('33%')} left={wp('9%')} delay={100} size={wp('16%')}
                         />
                         <FloatingIcon
                             source={require('../../../assets/image/patchh.png')} // Condom/Other
-                            top={height * 0.41} left={width * 0.4} delay={200} size={75}
+                            top={hp('41%')} left={wp('40%')} delay={200} size={wp('19%')}
                         />
                         <FloatingIcon
                             source={require('../../../assets/image/pillss.png')} // Condom/Other
-                            top={height * 0.34} left={width * 0.70} delay={40} size={65}
+                            top={hp('34%')} left={wp('70%')} delay={40} size={wp('16%')}
                         />
                     </View>
 
