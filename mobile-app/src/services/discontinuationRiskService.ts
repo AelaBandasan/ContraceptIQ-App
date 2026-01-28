@@ -10,6 +10,14 @@ import axios, {
   AxiosError,
   AxiosResponse,
 } from 'axios';
+import { createModuleLogger } from '../utils/loggerUtils';
+import {
+  createAppError,
+  isRetryableError,
+  isOfflineError,
+  AppError,
+} from '../utils/errorHandler';
+import { isOnline } from '../utils/networkUtils';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -123,18 +131,42 @@ class DiscontinuationRiskService {
    * Check if the API server is healthy and models are loaded.
    * 
    * @returns Promise with health status
-   * @throws Error if server is not accessible
+   * @throws AppError if server is not accessible
    */
   async checkHealth(): Promise<HealthCheckResponse> {
+    const logger = createModuleLogger('DiscontinuationRiskService');
     try {
+      // Check network connectivity first
+      const online = await isOnline();
+      if (!online) {
+        const offlineError = createAppError(new Error('Device is offline'), {
+          operation: 'checkHealth',
+          offline: true
+        });
+        logger.warn('DiscontinuationRiskService', 'Health check - device offline');
+        throw offlineError;
+      }
+
       const response = await this.client.get<HealthCheckResponse>(
         '/api/health'
       );
+      logger.info('DiscontinuationRiskService', 'Health check passed', {
+        status: response.data.status,
+        modelsLoaded: response.data.models_loaded
+      });
       return response.data;
     } catch (error) {
-      throw new Error(
-        `Health check failed: ${this.extractErrorMessage(error)}`
+      const appError = error instanceof Error && 'type' in error && 'userMessage' in error 
+        ? error as any
+        : createAppError(error, { operation: 'checkHealth' });
+      
+      logger.error(
+        'DiscontinuationRiskService',
+        'Health check failed',
+        appError as Error
       );
+      throw appError;
+    }
     }
   }
 
@@ -144,15 +176,35 @@ class DiscontinuationRiskService {
    * @returns Promise with list of required features and categories
    */
   async getRequiredFeatures(): Promise<RequiredFeaturesResponse> {
+    const logger = createModuleLogger('DiscontinuationRiskService');
     try {
+      // Check if device is online
+      const online = await isOnline();
+      if (!online) {
+        const appError = createAppError(new Error('No internet connection'), {
+          operation: 'getRequiredFeatures',
+          offline: true
+        });
+        logger.error('DiscontinuationRiskService', 'getRequiredFeatures offline', appError);
+        throw appError;
+      }
+
       const response = await this.client.get<RequiredFeaturesResponse>(
         '/api/v1/features'
       );
+      logger.info('DiscontinuationRiskService', 'Features fetched successfully');
       return response.data;
     } catch (error) {
-      throw new Error(
-        `Failed to fetch required features: ${this.extractErrorMessage(error)}`
+      const appError = error instanceof Error && 'type' in error && 'userMessage' in error 
+        ? error as any
+        : createAppError(error, { operation: 'getRequiredFeatures' });
+      
+      logger.error(
+        'DiscontinuationRiskService',
+        'Failed to fetch required features',
+        appError as Error
       );
+      throw appError;
     }
   }
 
@@ -160,18 +212,36 @@ class DiscontinuationRiskService {
    * Assess discontinuation risk for a user.
    * 
    * Implements retry logic: retries up to 3 times on network errors.
+   * Checks network connectivity before attempting request.
    * 
    * @param data - User assessment data (26 features)
    * @returns Promise with risk assessment result
-   * @throws Error if all retries fail or validation fails
+   * @throws AppError if all retries fail or validation fails
    */
   async assessDiscontinuationRisk(
     data: UserAssessmentData,
     retryCount: number = 0
   ): Promise<RiskAssessmentResponse> {
+    const logger = createModuleLogger('DiscontinuationRiskService');
     try {
+      // Check network connectivity first
+      const online = await isOnline();
+      if (!online) {
+        const offlineError = createAppError(new Error('Device is offline'), {
+          operation: 'assessDiscontinuationRisk',
+          offline: true
+        });
+        logger.warn(
+          'DiscontinuationRiskService',
+          'Assessment attempt while offline',
+          { offline: true }
+        );
+        throw offlineError;
+      }
+
       // Validate input data before sending
       this.validateInputData(data);
+      logger.debug('DiscontinuationRiskService', 'Input validation passed', { featureCount: Object.keys(data).length });
 
       // Make API request with retry logic
       const response = await this.client.post<RiskAssessmentResponse>(
@@ -179,43 +249,113 @@ class DiscontinuationRiskService {
         data
       );
 
+      logger.info(
+        'DiscontinuationRiskService',
+        'Assessment completed successfully',
+        { riskLevel: response.data.risk_level, confidence: response.data.confidence_score }
+      );
+
       return response.data;
     } catch (error) {
-      // Handle specific error types
-      if (axios.isAxiosError(error)) {
-        const apiError = error.response?.data as ApiError | undefined;
-
-        // Validation errors (400) - don't retry
-        if (error.response?.status === 400) {
-          throw new Error(
-            `Validation error: ${apiError?.error || 'Invalid input'}`
+      // Handle offline errors
+      if (error instanceof Error && 'type' in error) {
+        if ((error as any).type === 'OfflineError') {
+          logger.error(
+            'DiscontinuationRiskService',
+            'Device offline - cannot perform assessment',
+            error as Error
           );
-        }
-
-        // Network errors or server errors (5xx) - retry
-        if (error.code && ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT'].includes(error.code)) {
-          if (retryCount < this.MAX_RETRIES) {
-            console.warn(
-              `Network error, retrying (${retryCount + 1}/${this.MAX_RETRIES})...`
-            );
-            // Wait before retrying (exponential backoff)
-            await this.delay(1000 * (retryCount + 1));
-            return this.assessDiscontinuationRisk(data, retryCount + 1);
-          }
-        }
-
-        // Server error (503) - models not loaded
-        if (error.response?.status === 503) {
-          throw new Error(
-            'Assessment service temporarily unavailable. Please try again.'
-          );
+          throw error;
         }
       }
 
-      // Non-retryable error or max retries exceeded
-      throw new Error(
-        `Assessment failed: ${this.extractErrorMessage(error)}`
+      // Handle axios errors
+      if (axios.isAxiosError(error)) {
+        const apiError = error.response?.data as ApiError | undefined;
+
+        // Validation errors (400) - don't retry, permanent issue
+        if (error.response?.status === 400) {
+          const validationError = createAppError(error, {
+            operation: 'assessDiscontinuationRisk',
+            validationFailed: true,
+            details: apiError?.error
+          });
+          logger.error(
+            'DiscontinuationRiskService',
+            'Validation failed',
+            validationError as Error,
+            { details: apiError?.error }
+          );
+          throw validationError;
+        }
+
+        // Service unavailable (503) - models not loaded
+        if (error.response?.status === 503) {
+          const serviceError = createAppError(error, {
+            operation: 'assessDiscontinuationRisk',
+            serviceUnavailable: true
+          });
+          logger.error(
+            'DiscontinuationRiskService',
+            'Service unavailable (models not loaded)',
+            serviceError as Error
+          );
+          
+          // Retry on service unavailable
+          if (retryCount < this.MAX_RETRIES) {
+            logger.info(
+              'DiscontinuationRiskService',
+              `Retrying after service unavailable (${retryCount + 1}/${this.MAX_RETRIES})`,
+              { retryCount: retryCount + 1 }
+            );
+            await this.delay(1000 * (retryCount + 1));
+            return this.assessDiscontinuationRisk(data, retryCount + 1);
+          }
+          throw serviceError;
+        }
+
+        // Network errors - retry with backoff
+        if (error.code && ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT'].includes(error.code)) {
+          if (isRetryableError(error as any)) {
+            if (retryCount < this.MAX_RETRIES) {
+              logger.warn(
+                'DiscontinuationRiskService',
+                `Network error, retrying (${retryCount + 1}/${this.MAX_RETRIES})`,
+                { code: error.code, retryCount: retryCount + 1 }
+              );
+              await this.delay(1000 * (retryCount + 1));
+              return this.assessDiscontinuationRisk(data, retryCount + 1);
+            }
+          }
+        }
+
+        // Other HTTP errors
+        const appError = createAppError(error, {
+          operation: 'assessDiscontinuationRisk',
+          httpStatus: error.response?.status,
+          retried: retryCount > 0
+        });
+        logger.error(
+          'DiscontinuationRiskService',
+          'Assessment failed after retries',
+          appError as Error,
+          { retries: retryCount, status: error.response?.status }
+        );
+        throw appError;
+      }
+
+      // Non-axios errors
+      const appError = createAppError(error, {
+        operation: 'assessDiscontinuationRisk',
+        retried: retryCount > 0
+      });
+      logger.error(
+        'DiscontinuationRiskService',
+        'Assessment failed with unexpected error',
+        appError as Error,
+        { retries: retryCount }
       );
+      throw appError;
     }
   }
 
@@ -224,9 +364,10 @@ class DiscontinuationRiskService {
    * Checks for required features and basic type validation.
    * 
    * @param data - User assessment data
-   * @throws Error if validation fails
+   * @throws AppError if validation fails
    */
   private validateInputData(data: Partial<UserAssessmentData>): void {
+    const logger = createModuleLogger('DiscontinuationRiskService');
     const requiredKeys: (keyof UserAssessmentData)[] = [
       'AGE',
       'REGION',
@@ -258,15 +399,44 @@ class DiscontinuationRiskService {
     // Check for missing features
     const missingFeatures = requiredKeys.filter((key) => !(key in data));
     if (missingFeatures.length > 0) {
-      throw new Error(
-        `Missing required features: ${missingFeatures.join(', ')}`
+      const validationError = createAppError(
+        new Error(`Missing required features: ${missingFeatures.join(', ')}`),
+        {
+          operation: 'validateInputData',
+          missingFeatures,
+          missingCount: missingFeatures.length
+        }
       );
+      logger.error(
+        'DiscontinuationRiskService',
+        'Validation failed - missing features',
+        validationError as Error,
+        { missingFeatures, count: missingFeatures.length }
+      );
+      throw validationError;
     }
 
     // Validate AGE range
     if (typeof data.AGE === 'number' && (data.AGE < 15 || data.AGE > 55)) {
-      throw new Error('AGE must be between 15 and 55');
+      const validationError = createAppError(
+        new Error('AGE must be between 15 and 55'),
+        {
+          operation: 'validateInputData',
+          field: 'AGE',
+          value: data.AGE,
+          validRange: '15-55'
+        }
+      );
+      logger.error(
+        'DiscontinuationRiskService',
+        'Validation failed - invalid age',
+        validationError as Error,
+        { age: data.AGE }
+      );
+      throw validationError;
     }
+
+    logger.debug('DiscontinuationRiskService', 'Input validation successful', { featureCount: Object.keys(data).length });
   }
 
   /**

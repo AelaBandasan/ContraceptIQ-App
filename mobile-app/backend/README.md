@@ -40,6 +40,7 @@ Edit `.env` if needed (default values should work).
 ### 3. Verify ML Models
 
 Ensure the ML model files exist at:
+
 ```
 ../../machine-learning/src/models/models_high_risk_v3/
 ├── xgb_high_recall.joblib
@@ -58,11 +59,13 @@ The server will start on `http://localhost:5000`
 ## API Endpoints
 
 ### Health Check
+
 **GET** `/api/health`
 
 Returns server status and model loading status.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -73,11 +76,13 @@ Returns server status and model loading status.
 ```
 
 ### Get Required Features
+
 **GET** `/api/v1/features`
 
 Returns list of 26 required input features.
 
 **Response:**
+
 ```json
 {
   "required_features": ["AGE", "REGION", ...],
@@ -91,11 +96,13 @@ Returns list of 26 required input features.
 ```
 
 ### Predict Discontinuation Risk
+
 **POST** `/api/v1/discontinuation-risk`
 
 Predicts whether a contraceptive user is at risk of discontinuation.
 
 **Request Body:**
+
 ```json
 {
   "AGE": 28,
@@ -127,6 +134,7 @@ Predicts whether a contraceptive user is at risk of discontinuation.
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "risk_level": "LOW",
@@ -143,6 +151,7 @@ Predicts whether a contraceptive user is at risk of discontinuation.
 ```
 
 **Error Response (400 - Missing Features):**
+
 ```json
 {
   "error": "Missing required features",
@@ -154,12 +163,11 @@ Predicts whether a contraceptive user is at risk of discontinuation.
 ```
 
 **Error Response (400 - Invalid Types):**
+
 ```json
 {
   "error": "Invalid feature types or values",
-  "validation_errors": [
-    "AGE must be between 15 and 55, got 10"
-  ],
+  "validation_errors": ["AGE must be between 15 and 55, got 10"],
   "status": 400
 }
 ```
@@ -227,7 +235,8 @@ backend/
 
 **Error:** `FileNotFoundError: Missing model files`
 
-**Solution:** 
+**Solution:**
+
 - Verify model files exist in the correct directory
 - Check the `MODEL_DIR` path in `.env`
 - Ensure you're in the `mobile-app/backend` directory when running
@@ -237,6 +246,7 @@ backend/
 **Error:** `Address already in use`
 
 **Solution:**
+
 - Change `FLASK_PORT` in `.env` to a different port (e.g., 5001)
 - Or stop the process using port 5000
 
@@ -245,6 +255,7 @@ backend/
 **Error:** `ModuleNotFoundError: No module named 'flask'`
 
 **Solution:**
+
 - Ensure virtual environment is activated
 - Run `pip install -r requirements.txt`
 

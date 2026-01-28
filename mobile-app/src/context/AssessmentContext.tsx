@@ -8,7 +8,7 @@
  *   const { assessment, updateAssessment } = useAssessment();
  */
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 // ============================================================================
 // TYPES
@@ -52,7 +52,7 @@ export interface AssessmentData {
  * Risk assessment result from ML model
  */
 export interface RiskAssessmentResult {
-  riskLevel: 'LOW' | 'HIGH';
+  riskLevel: "LOW" | "HIGH";
   confidence: number; // 0-1
   recommendation: string;
   contraceptiveMethod?: string;
@@ -118,7 +118,9 @@ export interface AssessmentContextType extends AssessmentState {
 // CONTEXT & PROVIDER
 // ============================================================================
 
-const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
+const AssessmentContext = createContext<AssessmentContextType | undefined>(
+  undefined,
+);
 
 /**
  * Initial assessment data with default values
@@ -173,7 +175,9 @@ const initialState: AssessmentState = {
  *     </NavigationContainer>
  *   </AssessmentProvider>
  */
-export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, setState] = useState<AssessmentState>(initialState);
 
   // Assessment data management
@@ -266,29 +270,29 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children
 
     // Check that all required fields are present and valid
     const requiredFields: (keyof AssessmentData)[] = [
-      'age',
-      'education',
-      'working',
-      'urban',
-      'partner_object',
-      'partner_approval',
-      'fertility_want',
-      'fertility_soon',
-      'parity',
-      'son_preference',
-      'method_duration_months',
-      'switching_last_12m',
-      'discontinuation_reason_satisfied',
-      'discontinuation_reason_side_effects',
-      'discontinuation_reason_other',
-      'current_method',
-      'num_previous_methods',
-      'counseling_received',
-      'satisfaction_score',
-      'adherence_score',
-      'accessibility_score',
-      'relationship_status',
-      'previous_discontinuation',
+      "age",
+      "education",
+      "working",
+      "urban",
+      "partner_object",
+      "partner_approval",
+      "fertility_want",
+      "fertility_soon",
+      "parity",
+      "son_preference",
+      "method_duration_months",
+      "switching_last_12m",
+      "discontinuation_reason_satisfied",
+      "discontinuation_reason_side_effects",
+      "discontinuation_reason_other",
+      "current_method",
+      "num_previous_methods",
+      "counseling_received",
+      "satisfaction_score",
+      "adherence_score",
+      "accessibility_score",
+      "relationship_status",
+      "previous_discontinuation",
     ];
 
     for (const field of requiredFields) {
@@ -350,7 +354,7 @@ export const useAssessment = (): AssessmentContextType => {
   const context = useContext(AssessmentContext);
 
   if (context === undefined) {
-    throw new Error('useAssessment must be used within an AssessmentProvider');
+    throw new Error("useAssessment must be used within an AssessmentProvider");
   }
 
   return context;

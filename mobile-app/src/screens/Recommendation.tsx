@@ -9,7 +9,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius } from '../theme';
 import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
+import { ErrorAlert } from '../components/ErrorAlert';
 import { assessDiscontinuationRisk } from '../services/discontinuationRiskService';
+import { useAssessment } from '../context/AssessmentContext';
+import { createAppError, AppError } from '../utils/errorHandler';
+import { getDeduplicator, generateAssessmentKey } from '../utils/requestDeduplication';
 
 type Props = RootStackScreenProps<"Recommendation">;
 
@@ -17,11 +21,20 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   const [sliderValue, setSliderValue] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(500)).current;
+  const [localError, setLocalError] = useState<AppError | null>(null);
+  const deduplicator = getDeduplicator();
   
-  // Risk assessment state
-  const [riskAssessmentLoading, setRiskAssessmentLoading] = useState(false);
-  const [riskAssessmentResult, setRiskAssessmentResult] = useState<any>(null);
-  const [riskAssessmentError, setRiskAssessmentError] = useState<string | null>(null);
+  // Context for assessment state
+  const {
+    assessmentData,
+    assessmentResult,
+    updateAssessmentData,
+    setAssessmentResult,
+    setIsLoading,
+    setError,
+    isLoading: contextLoading,
+    error: contextError,
+  } = useAssessment();
 
   const ageRanges = [
     "Menarche to < 18 years",
@@ -133,6 +146,19 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     }
   }, [modalVisible]);
 
+  // Cleanup pending requests on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel any pending requests when leaving screen
+      if (assessmentData) {
+        const requestKey = generateAssessmentKey(assessmentData);
+        if (deduplicator.isPending(requestKey)) {
+          deduplicator.cancel(requestKey);
+        }
+      }
+    };
+  }, [assessmentData]);
+
   const handleAddPreference = () => {
     navigation.navigate("Preferences");
   };
@@ -143,42 +169,28 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
 
   const handleAssessDiscontinuationRisk = async () => {
     try {
-      setRiskAssessmentLoading(true);
-      setRiskAssessmentError(null);
+      setLocalError(null);
 
-      // Create assessment data with required features
-      // For demonstration, we'll use reasonable defaults based on the selected age
-      const assessmentData = {
-        age: 25 + sliderValue * 5, // Map slider value to approximate age
-        // Demographic features
-        education: 2,
-        working: 1,
-        urban: 1,
-        partner_object: 0,
-        partner_approval: 1,
-        // Fertility features
-        fertility_want: 1,
-        fertility_soon: 0,
-        parity: 1,
-        son_preference: 0,
-        // Method and history features
-        method_duration_months: 6,
-        switching_last_12m: 0,
-        discontinuation_reason_satisfied: 0,
-        discontinuation_reason_side_effects: 0,
-        discontinuation_reason_other: 0,
-        // Additional fields to reach 26 features
-        current_method: 1,
-        num_previous_methods: 1,
-        counseling_received: 1,
-        satisfaction_score: 3,
-        adherence_score: 3,
-        accessibility_score: 3,
-        relationship_status: 1,
-        previous_discontinuation: 0,
-      };
+      // Create assessment data from current state and slider
+      const updatedAssessmentData = assessmentData ? {
+        ...assessmentData,
+        age: 15 + sliderValue * 8, // Map slider value to age
+      } : null;
 
-      const result = await assessDiscontinuationRisk(assessmentData);
+      if (!updatedAssessmentData) {
+        throw new Error('Assessment data not initialized');
+      }
+
+      // Update context with current assessment data
+      updateAssessmentData({ age: updatedAssessmentData.age });
+
+      // Generate request key for deduplication
+      const requestKey = generateAssessmentKey(updatedAssessmentData);
+
+      // Use deduplication to prevent duplicate requests
+      const result = await deduplicator.deduplicate(requestKey, async () => {
+        return await assessDiscontinuationRisk(updatedAssessmentData);
+      });
 
       // Format the result for display
       const riskLevel = result.risk_level === 1 ? 'HIGH' : 'LOW';
@@ -194,19 +206,27 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
           'Your current contraceptive method appears well-suited to your needs. Continue regular follow-ups with your healthcare provider.';
       }
 
-      setRiskAssessmentResult({
+      // Store result in context
+      setAssessmentResult({
         riskLevel,
         confidence,
         recommendation,
-        method: result.method_name || 'Current Method',
+        contraceptiveMethod: result.method_name || 'Current Method',
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
-      const errorMessage =
-        error?.message || 'Failed to assess discontinuation risk. Please try again.';
-      setRiskAssessmentError(errorMessage);
+      // Convert to AppError for standardized handling
+      const appError = createAppError(error, {
+        operation: 'assessDiscontinuationRisk',
+        component: 'Recommendation',
+      });
+      
+      setLocalError(appError);
+      setError(appError.userMessageease try again.';
+      setError(errorMessage);
       Alert.alert('Assessment Error', errorMessage, [{ text: 'OK' }]);
     } finally {
-      setRiskAssessmentLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -270,13 +290,26 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.prefLabel}>+ Add Preferences</Text>
           </TouchableOpacity>
 
+          {/* Error Alert */}
+          {localError && (
+            <ErrorAlert
+              error={localError}
+              onRetry={handleAssessDiscontinuationRisk}
+              onDismiss={() => {
+                setLocalError(null);
+                setError(null);
+              }}
+              style={{ marginBottom: 16 }}
+            />
+          )}
+
           {/* Risk Assessment Section */}
           <TouchableOpacity
             style={styles.riskAssessmentButton}
             onPress={handleAssessDiscontinuationRisk}
-            disabled={riskAssessmentLoading}
+            disabled={contextLoading || deduplicator.isPending(generateAssessmentKey(assessmentData || {}))}
           >
-            {riskAssessmentLoading ? (
+            {contextLoading ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.riskAssessmentButtonText}>
@@ -285,13 +318,13 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             )}
           </TouchableOpacity>
 
-          {/* Risk Assessment Result Card */}
-          {riskAssessmentResult && (
+          {/* Risk Assessment Result Card - From Context */}
+          {assessmentResult && (
             <RiskAssessmentCard
-              riskLevel={riskAssessmentResult.riskLevel}
-              confidence={riskAssessmentResult.confidence}
-              recommendation={riskAssessmentResult.recommendation}
-              contraceptiveMethod={riskAssessmentResult.method}
+              riskLevel={assessmentResult.riskLevel}
+              confidence={assessmentResult.confidence}
+              recommendation={assessmentResult.recommendation}
+              contraceptiveMethod={assessmentResult.contraceptiveMethod}
               style={styles.riskCard}
             />
           )}

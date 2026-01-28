@@ -1,26 +1,20 @@
 /**
  * Risk Assessment Card Component
- * 
+ *
  * Displays the results of a discontinuation risk assessment.
  * Shows risk level (LOW/HIGH), confidence score, recommendation, and optional method info.
  * Uses the existing design system from the app (colors, spacing, typography).
  */
 
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
+import React from "react";
+import { View, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface RiskAssessmentCardProps {
-  riskLevel: 'LOW' | 'HIGH';
+  riskLevel: "LOW" | "HIGH";
   confidence: number; // 0-1
   recommendation: string;
   contraceptiveMethod?: string;
@@ -33,20 +27,20 @@ export interface RiskAssessmentCardProps {
 // ============================================================================
 
 const COLORS = {
-  background: '#FFFFFF',
-  surface: '#F8FAFC',
-  primary: '#E45A92',
-  primaryDark: '#D3347A',
-  textPrimary: '#0F172A',
-  textSecondary: '#6B7280',
-  textMuted: '#9CA3AF',
-  border: '#E5E7EB',
-  star: '#FACC15',
-  success: '#22C55E', // Low risk
-  error: '#EF4444',   // High risk
-  warning: '#F59E0B',
-  lightSuccess: '#ECFDF5', // Light green background
-  lightError: '#FEF2F2',   // Light red background
+  background: "#FFFFFF",
+  surface: "#F8FAFC",
+  primary: "#E45A92",
+  primaryDark: "#D3347A",
+  textPrimary: "#0F172A",
+  textSecondary: "#6B7280",
+  textMuted: "#9CA3AF",
+  border: "#E5E7EB",
+  star: "#FACC15",
+  success: "#22C55E", // Low risk
+  error: "#EF4444", // High risk
+  warning: "#F59E0B",
+  lightSuccess: "#ECFDF5", // Light green background
+  lightError: "#FEF2F2", // Light red background
 };
 
 const SPACING = {
@@ -67,11 +61,11 @@ const RADIUS = {
 };
 
 const TYPOGRAPHY = {
-  sectionTitle: { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
-  cardTitle: { fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
-  body: { fontSize: 14, fontWeight: '500', letterSpacing: -0.1 },
-  caption: { fontSize: 12, fontWeight: '500', letterSpacing: 0 },
-  small: { fontSize: 11, fontWeight: '400', letterSpacing: 0.2 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
+  cardTitle: { fontSize: 16, fontWeight: "700", letterSpacing: -0.2 },
+  body: { fontSize: 14, fontWeight: "500", letterSpacing: -0.1 },
+  caption: { fontSize: 12, fontWeight: "500", letterSpacing: 0 },
+  small: { fontSize: 11, fontWeight: "400", letterSpacing: 0.2 },
 };
 
 // ============================================================================
@@ -87,8 +81,10 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   style,
 }) => {
   // Determine colors based on risk level
-  const isHighRisk = riskLevel === 'HIGH';
-  const badgeBackgroundColor = isHighRisk ? COLORS.lightError : COLORS.lightSuccess;
+  const isHighRisk = riskLevel === "HIGH";
+  const badgeBackgroundColor = isHighRisk
+    ? COLORS.lightError
+    : COLORS.lightSuccess;
   const badgeTextColor = isHighRisk ? COLORS.error : COLORS.success;
   const borderColor = isHighRisk ? COLORS.error : COLORS.success;
 
@@ -118,7 +114,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
               },
             ]}
           >
-            {riskLevel === 'HIGH' ? '⚠️ High Risk' : '✓ Low Risk'}
+            {riskLevel === "HIGH" ? "⚠️ High Risk" : "✓ Low Risk"}
           </Text>
         </View>
 
@@ -133,8 +129,8 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
         <Text style={styles.descriptionLabel}>Discontinuation Risk</Text>
         <Text style={styles.descriptionValue}>
           {isHighRisk
-            ? 'High likelihood of stopping or switching methods'
-            : 'Low likelihood of discontinuation'}
+            ? "High likelihood of stopping or switching methods"
+            : "Low likelihood of discontinuation"}
         </Text>
       </View>
 
@@ -155,10 +151,10 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
       {/* Additional Info */}
       <View style={styles.infoContainer}>
         <Text style={styles.infoText}>
-          This assessment is based on the user's demographics, fertility goals, and
-          contraceptive history. It should be used as a supportive tool, not a
-          diagnostic tool. Always consult with healthcare providers for personalized
-          medical advice.
+          This assessment is based on the user's demographics, fertility goals,
+          and contraceptive history. It should be used as a supportive tool, not
+          a diagnostic tool. Always consult with healthcare providers for
+          personalized medical advice.
         </Text>
       </View>
     </View>
@@ -179,9 +175,9 @@ const styles = StyleSheet.create({
   },
 
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: SPACING.lg,
   },
 
@@ -193,12 +189,12 @@ const styles = StyleSheet.create({
 
   badgeText: {
     ...TYPOGRAPHY.cardTitle,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   confidenceText: {
     ...TYPOGRAPHY.caption,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   descriptionContainer: {
@@ -212,8 +208,8 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.small,
     color: COLORS.textMuted,
     marginBottom: SPACING.xs,
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    textTransform: "uppercase",
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
 
@@ -234,8 +230,8 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.small,
     color: COLORS.textMuted,
     marginBottom: SPACING.xs,
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    textTransform: "uppercase",
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
 
@@ -255,15 +251,15 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.small,
     color: COLORS.textMuted,
     marginBottom: SPACING.xs,
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    textTransform: "uppercase",
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
 
   recommendationValue: {
     ...TYPOGRAPHY.body,
     color: COLORS.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   infoContainer: {
@@ -274,7 +270,7 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.small,
     color: COLORS.textSecondary,
     lineHeight: 18,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 });
 

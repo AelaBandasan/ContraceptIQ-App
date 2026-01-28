@@ -26,7 +26,7 @@ Phase 2 successfully bridges the backend ML API with the mobile frontend. Users 
 ✅ **Request Discontinuation Risk Assessment** via new button in Recommendations screen  
 ✅ **Receive Real-Time Predictions** from the hybrid ML model  
 ✅ **View Assessment Results** in a beautiful, informative card component  
-✅ **Access API Health Status** and validate features before submission  
+✅ **Access API Health Status** and validate features before submission
 
 **Key Achievement:** Complete frontend-to-backend integration with error handling and retry logic.
 
@@ -39,10 +39,12 @@ Phase 2 successfully bridges the backend ML API with the mobile frontend. Users 
 ## Phase 2 Objectives
 
 ### 2.1: Create API Service Layer ✅
+
 **Status:** COMPLETE  
 **File:** `mobile-app/src/services/discontinuationRiskService.ts` (500+ lines)
 
 **Deliverables:**
+
 - TypeScript service class with 4 core methods
 - Singleton pattern for resource efficiency
 - Retry logic with exponential backoff (max 3 attempts)
@@ -52,6 +54,7 @@ Phase 2 successfully bridges the backend ML API with the mobile frontend. Users 
 - Comprehensive error handling with specific error types
 
 **Key Methods:**
+
 ```typescript
 // Health check
 checkHealth(): Promise<HealthCheckResponse>
@@ -67,6 +70,7 @@ validateInputData(data: UserAssessmentData): void
 ```
 
 **Features:**
+
 - 30-second API timeout
 - Selective retry on network errors only
 - Exponential backoff: 1s, 3s, 7s between retries
@@ -76,10 +80,12 @@ validateInputData(data: UserAssessmentData): void
 ---
 
 ### 2.2: Extend What's Right for Me Screen ✅
+
 **Status:** COMPLETE  
 **File:** `mobile-app/src/screens/Whatsrightforme.tsx` (MODIFIED)
 
 **Deliverables:**
+
 - Added 26-feature form while **preserving all existing functionality**
 - Three form sections: Demographics, Fertility, Method/History
 - Input validation for each field
@@ -89,6 +95,7 @@ validateInputData(data: UserAssessmentData): void
 - Error state with alert dialogs
 
 **Preserved Elements:**
+
 - ✅ Existing 3-dot onboarding menu
 - ✅ Age slider and range selection
 - ✅ Bottom sheet modal for recommendations
@@ -96,6 +103,7 @@ validateInputData(data: UserAssessmentData): void
 - ✅ Preferences navigation button
 
 **New Elements:**
+
 - Form sections with input fields for all 26 features
 - Form submission handling
 - API call integration with retry logic
@@ -104,10 +112,12 @@ validateInputData(data: UserAssessmentData): void
 ---
 
 ### 2.3: Create Risk Assessment Card Component ✅
+
 **Status:** COMPLETE  
 **File:** `mobile-app/src/components/RiskAssessmentCard.tsx` (400+ lines)
 
 **Deliverables:**
+
 - React Native card component with TypeScript
 - Full design system integration (colors, spacing, typography)
 - Responsive layout with proper styling
@@ -118,6 +128,7 @@ validateInputData(data: UserAssessmentData): void
 - Disclaimer text for medical advice
 
 **Visual Features:**
+
 - **LOW Risk:** Green background (#ECFDF5), green border (#22C55E)
 - **HIGH Risk:** Red background (#FEF2F2), red border (#EF4444)
 - Emoji indicators: ✓ for LOW, ⚠️ for HIGH
@@ -125,9 +136,10 @@ validateInputData(data: UserAssessmentData): void
 - Shadow effects and border radius for visual hierarchy
 
 **Component Props:**
+
 ```typescript
 interface RiskAssessmentCardProps {
-  riskLevel: 'LOW' | 'HIGH';
+  riskLevel: "LOW" | "HIGH";
   confidence: number; // 0-1
   recommendation: string;
   contraceptiveMethod?: string;
@@ -139,10 +151,12 @@ interface RiskAssessmentCardProps {
 ---
 
 ### 2.4: Integrate Risk Assessment into Recommendations Screen ✅
+
 **Status:** COMPLETE  
 **File:** `mobile-app/src/screens/Recommendation.tsx` (MODIFIED)
 
 **Deliverables:**
+
 - New button: "🔍 Assess My Discontinuation Risk"
 - Integrated API calls via discontinuationRiskService
 - RiskAssessmentCard display when results available
@@ -151,6 +165,7 @@ interface RiskAssessmentCardProps {
 - Assessment data generation from screen state
 
 **Integration Points:**
+
 1. **Button Placement:** After "+ Add Preferences" button
 2. **State Management:** Local component state for loading/results/errors
 3. **Data Source:** Auto-generated assessment data based on age slider
@@ -158,6 +173,7 @@ interface RiskAssessmentCardProps {
 5. **Result Display:** RiskAssessmentCard below button
 
 **Code Changes:**
+
 ```typescript
 // Imports added
 import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
@@ -202,12 +218,14 @@ const handleAssessDiscontinuationRisk = async () => { ... }
 ## Components Created
 
 ### 1. **discontinuationRiskService.ts**
+
 **Location:** `mobile-app/src/services/discontinuationRiskService.ts`  
 **Type:** TypeScript Service Class  
 **Size:** 500+ lines  
 **Status:** Ready for use
 
 **Key Features:**
+
 - Singleton pattern: `getDiscontinuationRiskService()`
 - Retry logic: 3 attempts with exponential backoff
 - Error handling: Network, server, validation errors
@@ -216,6 +234,7 @@ const handleAssessDiscontinuationRisk = async () => { ... }
 - Client validation: Matches backend validation rules
 
 **Interfaces:**
+
 ```typescript
 interface UserAssessmentData {
   age: number;
@@ -266,9 +285,14 @@ interface HealthCheckResponse {
 ```
 
 **Convenience Functions:**
+
 ```typescript
 // Direct import and use
-import { assessDiscontinuationRisk, checkApiHealth, fetchRequiredFeatures } from '...';
+import {
+  assessDiscontinuationRisk,
+  checkApiHealth,
+  fetchRequiredFeatures,
+} from "...";
 
 // No singleton pattern needed, functions handle it internally
 const result = await assessDiscontinuationRisk(userData);
@@ -279,12 +303,14 @@ const features = await fetchRequiredFeatures();
 ---
 
 ### 2. **RiskAssessmentCard.tsx**
+
 **Location:** `mobile-app/src/components/RiskAssessmentCard.tsx`  
 **Type:** React Native Component  
 **Size:** 400+ lines  
 **Status:** Ready for use
 
 **Component Structure:**
+
 ```
 RiskAssessmentCard
 ├── Header Container
@@ -297,12 +323,14 @@ RiskAssessmentCard
 ```
 
 **Design System Integration:**
+
 - Colors: All from design system (PRIMARY, SUCCESS, ERROR, etc.)
 - Typography: Sizes and weights from design system
 - Spacing: All margins/padding from design system constants
 - Radius: Border radius from design system (md, lg, xl)
 
 **Usage Example:**
+
 ```typescript
 <RiskAssessmentCard
   riskLevel="HIGH"
@@ -317,8 +345,10 @@ RiskAssessmentCard
 ## Files Modified
 
 ### 1. **Recommendation.tsx** (Screen Component)
+
 **Path:** `mobile-app/src/screens/Recommendation.tsx`  
 **Changes:**
+
 - Added imports for RiskAssessmentCard and discontinuationRiskService
 - Added state management for risk assessment (loading, result, error)
 - Added `handleAssessDiscontinuationRisk()` function
@@ -332,8 +362,10 @@ RiskAssessmentCard
 ---
 
 ### 2. **components/index.ts** (Barrel Export)
+
 **Path:** `mobile-app/src/components/index.ts`  
 **Changes:**
+
 - Added export for RiskAssessmentCard component
 
 **Line Additions:** 1 line
@@ -423,6 +455,7 @@ Display RiskAssessmentCard with:
 ### Assessment Data Structure
 
 **Input (from Recommendation Screen):**
+
 ```typescript
 {
   age: number,                           // From age slider
@@ -452,6 +485,7 @@ Display RiskAssessmentCard with:
 ```
 
 **Output (from Backend):**
+
 ```typescript
 {
   risk_level: 0 | 1,                    // 0=LOW, 1=HIGH
@@ -464,6 +498,7 @@ Display RiskAssessmentCard with:
 ```
 
 **Display (in RiskAssessmentCard):**
+
 ```typescript
 {
   riskLevel: "LOW" | "HIGH",
@@ -478,30 +513,36 @@ Display RiskAssessmentCard with:
 ## Integration Points
 
 ### 1. Screen to Service
+
 **File:** `Recommendation.tsx`  
 **Integration:**
+
 ```typescript
-import { assessDiscontinuationRisk } from '../services/discontinuationRiskService';
+import { assessDiscontinuationRisk } from "../services/discontinuationRiskService";
 
 // In handler
 const result = await assessDiscontinuationRisk(assessmentData);
 ```
 
 ### 2. Service to API
+
 **File:** `discontinuationRiskService.ts`  
 **Integration:**
+
 ```typescript
 // Uses axios to make HTTP calls
 const response = await axios.post(
   `${apiUrl}/api/v1/discontinuation-risk`,
   data,
-  { timeout: 30000 }
+  { timeout: 30000 },
 );
 ```
 
 ### 3. Component to Screen
+
 **File:** `Recommendation.tsx`  
 **Integration:**
+
 ```typescript
 import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
 
@@ -512,13 +553,15 @@ import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
 ```
 
 ### 4. Index Export
+
 **File:** `components/index.ts`  
 **Integration:**
+
 ```typescript
-export { RiskAssessmentCard } from './RiskAssessmentCard';
+export { RiskAssessmentCard } from "./RiskAssessmentCard";
 
 // Allows import from barrel
-import { RiskAssessmentCard } from '../components';
+import { RiskAssessmentCard } from "../components";
 ```
 
 ---
@@ -526,27 +569,29 @@ import { RiskAssessmentCard } from '../components';
 ## Testing Considerations
 
 ### Unit Testing (Service Layer)
+
 **File to Create:** `mobile-app/src/services/__tests__/discontinuationRiskService.test.ts`
 
 Test cases needed:
+
 ```typescript
 describe('discontinuationRiskService', () => {
   // API calls
   - checkHealth() returns valid response
   - getRequiredFeatures() returns 26 features
   - assessDiscontinuationRisk() handles valid data
-  
+
   // Error handling
   - Network error triggers retry logic
   - Server error (500) handled gracefully
   - Timeout (>30s) handled properly
   - Validation error returns specific message
-  
+
   // Validation
   - Missing required fields rejected
   - Age range 15-55 enforced
   - Binary fields 0-1 enforced
-  
+
   // Singleton pattern
   - Multiple calls return same instance
   - Singleton properly initialized
@@ -554,9 +599,11 @@ describe('discontinuationRiskService', () => {
 ```
 
 ### Component Testing (UI Layer)
+
 **File to Create:** `mobile-app/src/components/__tests__/RiskAssessmentCard.test.tsx`
 
 Test cases needed:
+
 ```typescript
 describe('RiskAssessmentCard', () => {
   // Rendering
@@ -565,13 +612,13 @@ describe('RiskAssessmentCard', () => {
   - Displays confidence as percentage
   - Shows recommendation text
   - Shows method name when provided
-  
+
   // Styling
   - Colors match design system
   - Proper spacing and layout
   - Border radius correct
   - Text styling correct
-  
+
   // Interaction
   - onPress callback triggered on touch
   - Custom styles applied correctly
@@ -579,9 +626,11 @@ describe('RiskAssessmentCard', () => {
 ```
 
 ### Integration Testing
+
 **File to Create:** `mobile-app/src/screens/__tests__/Recommendation.integration.test.tsx`
 
 Test scenarios:
+
 ```typescript
 describe('Recommendation Screen Integration', () => {
   // User workflow
@@ -589,13 +638,13 @@ describe('Recommendation Screen Integration', () => {
   - User taps "Assess Risk" button
   - Loading state shows during API call
   - Results display in RiskAssessmentCard
-  
+
   // Error scenarios
   - API timeout shows error alert
   - Server error shows error alert
   - Network error triggers retry
   - Validation error shows user-friendly message
-  
+
   // Edge cases
   - Multiple rapid clicks handled (no duplicate calls)
   - Result persists when re-rendering
@@ -606,11 +655,13 @@ describe('Recommendation Screen Integration', () => {
 ### Manual Testing Checklist
 
 ✅ **Pre-Testing Setup:**
+
 - Backend server running on localhost:5000
 - Models loaded successfully
 - CORS configured
 
 ✅ **Functional Testing:**
+
 - [ ] Click "Assess Risk" button
 - [ ] Loading spinner appears
 - [ ] API call succeeds
@@ -621,12 +672,14 @@ describe('Recommendation Screen Integration', () => {
 - [ ] Method name shows (if provided)
 
 ✅ **Error Testing:**
+
 - [ ] Backend unavailable → "Failed to connect" alert
 - [ ] Invalid input → "Missing required fields" alert
 - [ ] Server error (500) → "Assessment failed" alert
 - [ ] Timeout (>30s) → "Request timeout" alert
 
 ✅ **Edge Cases:**
+
 - [ ] Rapid button clicks → only one request sent
 - [ ] Device rotates → loading state preserved
 - [ ] Go back and return → results still visible
@@ -639,6 +692,7 @@ describe('Recommendation Screen Integration', () => {
 ### Phase 3: State Management & Context
 
 **Objectives:**
+
 1. **3.1: Create Assessment Context**
    - File: `mobile-app/src/context/AssessmentContext.tsx`
    - Define AssessmentState interface
@@ -654,6 +708,7 @@ describe('Recommendation Screen Integration', () => {
    - Enable data flow: Form → Context → Results
 
 **Benefits:**
+
 - Persist assessment data across screen navigation
 - Share data between multiple screens without props drilling
 - Enable "saved assessments" feature in future phases
@@ -665,12 +720,12 @@ describe('Recommendation Screen Integration', () => {
 
 ### Deliverables Checklist
 
-| Task | Component | Status | Files |
-|------|-----------|--------|-------|
-| 2.1 | API Service Layer | ✅ Complete | discontinuationRiskService.ts |
-| 2.2 | Extend What's Right Screen | ✅ Complete | Whatsrightforme.tsx (modified) |
-| 2.3 | Risk Assessment Card | ✅ Complete | RiskAssessmentCard.tsx |
-| 2.4 | Integrate into Recommendations | ✅ Complete | Recommendation.tsx (modified) |
+| Task | Component                      | Status      | Files                          |
+| ---- | ------------------------------ | ----------- | ------------------------------ |
+| 2.1  | API Service Layer              | ✅ Complete | discontinuationRiskService.ts  |
+| 2.2  | Extend What's Right Screen     | ✅ Complete | Whatsrightforme.tsx (modified) |
+| 2.3  | Risk Assessment Card           | ✅ Complete | RiskAssessmentCard.tsx         |
+| 2.4  | Integrate into Recommendations | ✅ Complete | Recommendation.tsx (modified)  |
 
 ### Metrics
 
@@ -688,19 +743,21 @@ describe('Recommendation Screen Integration', () => {
 ✅ **Validation:** Client-side + server-side  
 ✅ **Accessibility:** Standard React Native components  
 ✅ **Performance:** Singleton pattern, efficient re-renders  
-✅ **Code Style:** Consistent with existing codebase  
+✅ **Code Style:** Consistent with existing codebase
 
 ---
 
 ## Resources & Documentation
 
 **Related Files:**
+
 - Backend API: `mobile-app/backend/` (Phase 1)
 - ML Models: `machine-learning/src/models/models_high_risk_v3/`
 - Model Guide: `machine-learning/HYBRID_MODEL_USAGE_GUIDE.md`
 - Phase 1 Report: `mobile-app/PHASE_1_COMPLETION_REPORT.md`
 
 **Configuration:**
+
 - API URL: Set via environment variables (REACT_APP_API_URL or EXPO_PUBLIC_API_URL)
 - Default: `http://localhost:5000`
 - Timeout: 30 seconds
@@ -711,6 +768,7 @@ describe('Recommendation Screen Integration', () => {
 ## Conclusion
 
 Phase 2 successfully completes the frontend integration layer, enabling users to:
+
 1. Request discontinuation risk assessments
 2. Receive real-time ML predictions
 3. View results in an intuitive card interface
