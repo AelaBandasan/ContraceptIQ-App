@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated, PanResponder, Dimensions } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated, PanResponder, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -8,6 +8,8 @@ import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius } from '../theme';
+import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
+import { assessDiscontinuationRisk } from '../services/discontinuationRiskService';
 
 type Props = RootStackScreenProps<"Recommendation">;
 
@@ -15,6 +17,11 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   const [sliderValue, setSliderValue] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(500)).current;
+  
+  // Risk assessment state
+  const [riskAssessmentLoading, setRiskAssessmentLoading] = useState(false);
+  const [riskAssessmentResult, setRiskAssessmentResult] = useState<any>(null);
+  const [riskAssessmentError, setRiskAssessmentError] = useState<string | null>(null);
 
   const ageRanges = [
     "Menarche to < 18 years",
@@ -134,6 +141,75 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     navigation.navigate("ViewRecommendation");
   };
 
+  const handleAssessDiscontinuationRisk = async () => {
+    try {
+      setRiskAssessmentLoading(true);
+      setRiskAssessmentError(null);
+
+      // Create assessment data with required features
+      // For demonstration, we'll use reasonable defaults based on the selected age
+      const assessmentData = {
+        age: 25 + sliderValue * 5, // Map slider value to approximate age
+        // Demographic features
+        education: 2,
+        working: 1,
+        urban: 1,
+        partner_object: 0,
+        partner_approval: 1,
+        // Fertility features
+        fertility_want: 1,
+        fertility_soon: 0,
+        parity: 1,
+        son_preference: 0,
+        // Method and history features
+        method_duration_months: 6,
+        switching_last_12m: 0,
+        discontinuation_reason_satisfied: 0,
+        discontinuation_reason_side_effects: 0,
+        discontinuation_reason_other: 0,
+        // Additional fields to reach 26 features
+        current_method: 1,
+        num_previous_methods: 1,
+        counseling_received: 1,
+        satisfaction_score: 3,
+        adherence_score: 3,
+        accessibility_score: 3,
+        relationship_status: 1,
+        previous_discontinuation: 0,
+      };
+
+      const result = await assessDiscontinuationRisk(assessmentData);
+
+      // Format the result for display
+      const riskLevel = result.risk_level === 1 ? 'HIGH' : 'LOW';
+      const confidence = result.confidence || 0.5;
+
+      // Generate recommendation based on risk level
+      let recommendation = '';
+      if (riskLevel === 'HIGH') {
+        recommendation =
+          'Consider discussing method alternatives with a healthcare provider. Explore options that better match your needs and preferences.';
+      } else {
+        recommendation =
+          'Your current contraceptive method appears well-suited to your needs. Continue regular follow-ups with your healthcare provider.';
+      }
+
+      setRiskAssessmentResult({
+        riskLevel,
+        confidence,
+        recommendation,
+        method: result.method_name || 'Current Method',
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || 'Failed to assess discontinuation risk. Please try again.';
+      setRiskAssessmentError(errorMessage);
+      Alert.alert('Assessment Error', errorMessage, [{ text: 'OK' }]);
+    } finally {
+      setRiskAssessmentLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -193,6 +269,32 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity style={styles.prefButton} onPress={handleAddPreference}>
             <Text style={styles.prefLabel}>+ Add Preferences</Text>
           </TouchableOpacity>
+
+          {/* Risk Assessment Section */}
+          <TouchableOpacity
+            style={styles.riskAssessmentButton}
+            onPress={handleAssessDiscontinuationRisk}
+            disabled={riskAssessmentLoading}
+          >
+            {riskAssessmentLoading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.riskAssessmentButtonText}>
+                🔍 Assess My Discontinuation Risk
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Risk Assessment Result Card */}
+          {riskAssessmentResult && (
+            <RiskAssessmentCard
+              riskLevel={riskAssessmentResult.riskLevel}
+              confidence={riskAssessmentResult.confidence}
+              recommendation={riskAssessmentResult.recommendation}
+              contraceptiveMethod={riskAssessmentResult.method}
+              style={styles.riskCard}
+            />
+          )}
 
           <Modal
             visible={modalVisible}
@@ -473,5 +575,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000',
     textAlign: 'center',
+  },
+  riskAssessmentButton: {
+    marginTop: 30,
+    marginBottom: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#E45A92',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  riskAssessmentButtonText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  riskCard: {
+    marginHorizontal: 0,
+    marginTop: 20,
   },
 });
