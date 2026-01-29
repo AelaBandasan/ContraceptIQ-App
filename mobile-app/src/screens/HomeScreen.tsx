@@ -7,9 +7,9 @@ import {
   Image,
   Dimensions,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { DrawerScreenProps } from '../types/navigation';
 import { HeaderWithMenu, ScreenContainer } from '../components';
@@ -64,7 +64,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             contentContainerStyle={styles.methodsContainer}
           >
             {contraceptiveMethods.map((method) => (
-              <TouchableOpacity key={method.id} style={styles.methodItem}>
+              <TouchableOpacity
+                key={method.id}
+                style={styles.methodItem}
+                onPress={() => navigation.navigate('Contraceptive Methods')}
+              >
                 <View style={styles.methodPics} />
                 <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>

@@ -1,7 +1,18 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated, PanResponder, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  Modal,
+  Animated,
+  PanResponder,
+  ActivityIndicator,
+  Alert,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
-import { ScrollView } from 'react-native-gesture-handler';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
 import Slider from '@react-native-community/slider';
@@ -10,102 +21,178 @@ import { RootStackScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius } from '../theme';
 import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
 import { ErrorAlert } from '../components/ErrorAlert';
-import { assessDiscontinuationRisk } from '../services/discontinuationRiskService';
-import { useAssessment } from '../context/AssessmentContext';
-import { createAppError, AppError } from '../utils/errorHandler';
-import { getDeduplicator, generateAssessmentKey } from '../utils/requestDeduplication';
+import { 
+  assessDiscontinuationRisk, 
+  UserAssessmentData 
+} from '../services/discontinuationRiskService';
+import { AssessmentData, useAssessment } from '../context/AssessmentContext';
+import { createAppError } from '../utils/errorHandler';
 
-type Props = RootStackScreenProps<"Recommendation">;
+type Props = RootStackScreenProps<'Recommendation'>;
+
+// Predefined inputs to ensure the model always has a valid baseline
+const PREDEFINED_INPUTS: Partial<UserAssessmentData> = {
+  REGION: 1,
+  EDUC_LEVEL: 2,
+  RELIGION: 1,
+  ETHNICITY: 1,
+  MARITAL_STATUS: 1,
+  RESIDING_WITH_PARTNER: 1,
+  HOUSEHOLD_HEAD_SEX: 1,
+  OCCUPATION: 1,
+  HUSBANDS_EDUC: 2,
+  HUSBAND_AGE: 30,
+  PARTNER_EDUC: 2,
+  SMOKE_CIGAR: 2,
+  PARITY: 1,
+  DESIRE_FOR_MORE_CHILDREN: 1,
+  WANT_LAST_CHILD: 1,
+  WANT_LAST_PREGNANCY: 1,
+  CONTRACEPTIVE_METHOD: 1,
+  MONTH_USE_CURRENT_METHOD: 6,
+  PATTERN_USE: 1,
+  TOLD_ABT_SIDE_EFFECTS: 1,
+  LAST_SOURCE_TYPE: 3,
+  LAST_METHOD_DISCONTINUED: 2,
+  REASON_DISCONTINUED: 0,
+  HSBND_DESIRE_FOR_MORE_CHILDREN: 2,
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 const Recommendation: React.FC<Props> = ({ navigation }) => {
+  // State
   const [sliderValue, setSliderValue] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isAssessing, setIsAssessing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const translateY = useRef(new Animated.Value(500)).current;
-  const [localError, setLocalError] = useState<AppError | null>(null);
-  const deduplicator = getDeduplicator();
-  
-  // Context for assessment state
+
+  // Context
   const {
     assessmentData,
     assessmentResult,
     updateAssessmentData,
     setAssessmentResult,
-    setIsLoading,
-    setError,
-    isLoading: contextLoading,
-    error: contextError,
   } = useAssessment();
 
+  // Constants
   const ageRanges = [
-    "Menarche to < 18 years",
-    "18 - 19 years",
-    "20 - 39 years",
-    "40 - 45 years",
-    "≥ 46 years",
+    'Menarche to < 18 years',
+    '18 - 19 years',
+    '20 - 39 years',
+    '40 - 45 years',
+    '≥ 46 years',
   ];
 
-  const selectedLabel = ageRanges[sliderValue];
+  const representativeAges = [17, 19, 30, 42, 48];
 
   const colorMap: Record<number, string> = {
-    1: '#4CAF50',
-    2: '#FFEB3B',
-    3: '#FF9800',
-    4: '#F44336',
-    5: '#bbb', // Default gray
+    1: '#4CAF50', // Green
+    2: '#FFEB3B', // Yellow
+    3: '#FF9800', // Orange
+    4: '#F44336', // Red
+    5: '#bbb',    // Gray
   };
 
   const recommendations: Record<number, Record<string, number>> = {
-    0: {
-      // Menarche to <18
-      pills: 1,
-      patch: 1,
-      copperIUD: 2,
-      levIUD: 2,
-      implant: 2,
-      injectables: 2,
-    },
-    1: {
-      // 18-19
-      pills: 1,
-      patch: 1,
-      copperIUD: 2,
-      levIUD: 2,
-      implant: 1,
-      injectables: 1,
-    },
-    2: {
-      // 20-39
-      pills: 1,
-      patch: 1,
-      copperIUD: 1,
-      levIUD: 1,
-      implant: 1,
-      injectables: 1,
-    },
-    3: {
-      // 40-45
-      pills: 1,
-      patch: 2,
-      copperIUD: 1,
-      levIUD: 1,
-      implant: 1,
-      injectables: 1,
-    },
-    4: {
-      // ≥46
-      pills: 1,
-      patch: 2,
-      copperIUD: 1,
-      levIUD: 1,
-      implant: 1,
-      injectables: 2,
-    },
+    0: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 2, injectables: 2 },
+    1: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 1, injectables: 1 },
+    2: { pills: 1, patch: 1, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
+    3: { pills: 1, patch: 2, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
+    4: { pills: 1, patch: 2, copperIUD: 1, levIUD: 1, implant: 1, injectables: 2 },
   };
 
-  const getColor = (method: string) => {
-    const code = recommendations[sliderValue][method];
-    return colorMap[code] || "#ccc";
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
+  const handleAssessDiscontinuationRisk = async () => {
+    // Prevent duplicate requests
+    if (isAssessing) return;
+
+    try {
+      setIsAssessing(true);
+      setError(null);
+
+      console.log('[Recommendation] Starting risk assessment...');
+
+      // Get selected age
+      const selectedAge = representativeAges[sliderValue];
+
+      // Prepare the data for the API call, merging with predefined inputs
+      // We use the local selectedAge variable to ensure the API gets the right value
+      // regardless of when the context state update finishes.
+      const apiData: UserAssessmentData = {
+        ...PREDEFINED_INPUTS,
+        ...(assessmentData || {}),
+        AGE: selectedAge,
+      } as UserAssessmentData;
+
+      console.log('[Recommendation] Prepared API Data:', apiData);
+
+      // Call API
+      const result = await assessDiscontinuationRisk(apiData);
+
+      console.log('[Recommendation] Assessment successful:', result);
+
+      // Store result in context
+      setAssessmentResult({
+        riskLevel: result.risk_level,
+        confidence: result.confidence,
+        recommendation: result.recommendation,
+        contraceptiveMethod: result.method_name || 'Current Method',
+        timestamp: new Date().toISOString(),
+      });
+
+      // Update context with the selected age
+      updateAssessmentData({ AGE: selectedAge });
+    } catch (err) {
+      console.error('[Recommendation] Assessment failed:', err);
+      const appError = createAppError(err, "Recommendation: handleAssessDiscontinuationRisk");
+      setError(new Error(appError.userMessage));
+      Alert.alert('Assessment Error', appError.userMessage);
+    } finally {
+      setIsAssessing(false);
+    }
   };
+
+  const handleRetry = () => {
+    setError(null);
+    handleAssessDiscontinuationRisk();
+  };
+
+  const handleDismissError = () => {
+    setError(null);
+  };
+
+  const handleSliderChange = (value: number) => {
+    setSliderValue(value);
+  };
+
+  const handleSlidingComplete = (value: number) => {
+    setSliderValue(value);
+    setModalVisible(true);
+  };
+
+  const handleAddPreference = () => {
+    navigation.navigate('Preferences');
+  };
+
+  const handleViewRecommendation = () => {
+    navigation.navigate('ViewRecommendation');
+  };
+
+  const getColor = (method: string): string => {
+    const code = recommendations[sliderValue][method];
+    return colorMap[code] || '#ccc';
+  };
+
+  // ============================================================================
+  // PAN RESPONDER
+  // ============================================================================
 
   const panResponder = useRef(
     PanResponder.create({
@@ -136,6 +223,10 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     })
   ).current;
 
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
   useEffect(() => {
     if (modalVisible) {
       Animated.timing(translateY, {
@@ -146,111 +237,34 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     }
   }, [modalVisible]);
 
-  // Cleanup pending requests on unmount
-  useEffect(() => {
-    return () => {
-      // Cancel any pending requests when leaving screen
-      if (assessmentData) {
-        const requestKey = generateAssessmentKey(assessmentData);
-        if (deduplicator.isPending(requestKey)) {
-          deduplicator.cancel(requestKey);
-        }
-      }
-    };
-  }, [assessmentData]);
-
-  const handleAddPreference = () => {
-    navigation.navigate("Preferences");
-  };
-
-  const handleViewRecommendation = () => {
-    navigation.navigate("ViewRecommendation");
-  };
-
-  const handleAssessDiscontinuationRisk = async () => {
-    try {
-      setLocalError(null);
-
-      // Create assessment data from current state and slider
-      const updatedAssessmentData = assessmentData ? {
-        ...assessmentData,
-        age: 15 + sliderValue * 8, // Map slider value to age
-      } : null;
-
-      if (!updatedAssessmentData) {
-        throw new Error('Assessment data not initialized');
-      }
-
-      // Update context with current assessment data
-      updateAssessmentData({ age: updatedAssessmentData.age });
-
-      // Generate request key for deduplication
-      const requestKey = generateAssessmentKey(updatedAssessmentData);
-
-      // Use deduplication to prevent duplicate requests
-      const result = await deduplicator.deduplicate(requestKey, async () => {
-        return await assessDiscontinuationRisk(updatedAssessmentData);
-      });
-
-      // Format the result for display
-      const riskLevel = result.risk_level === 1 ? 'HIGH' : 'LOW';
-      const confidence = result.confidence || 0.5;
-
-      // Generate recommendation based on risk level
-      let recommendation = '';
-      if (riskLevel === 'HIGH') {
-        recommendation =
-          'Consider discussing method alternatives with a healthcare provider. Explore options that better match your needs and preferences.';
-      } else {
-        recommendation =
-          'Your current contraceptive method appears well-suited to your needs. Continue regular follow-ups with your healthcare provider.';
-      }
-
-      // Store result in context
-      setAssessmentResult({
-        riskLevel,
-        confidence,
-        recommendation,
-        contraceptiveMethod: result.method_name || 'Current Method',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error: any) {
-      // Convert to AppError for standardized handling
-      const appError = createAppError(error, {
-        operation: 'assessDiscontinuationRisk',
-        component: 'Recommendation',
-      });
-      
-      setLocalError(appError);
-      setError(appError.userMessageease try again.';
-      setError(errorMessage);
-      Alert.alert('Assessment Error', errorMessage, [{ text: 'OK' }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={styles.containerOne}
+        style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+        contentContainerStyle={styles.scrollContent}
       >
+        {/* Header */}
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-            <Ionicons name="menu" size={35} color={'#000'} />
+            <Ionicons name="menu" size={35} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerText}>What's Right for Me?</Text>
-          <View style={{ width: 35 }} />
+          <View style={styles.menuButton} />
         </View>
 
+        {/* Main Content */}
         <View style={styles.screenCont}>
           <Text style={styles.header2}>Tell us about you</Text>
           <Text style={styles.header3}>
             Enter your age to personalize recommendations.
           </Text>
 
+          {/* Age Selector */}
           <View style={styles.ageCont}>
             <View style={styles.ageHeader}>
               <Image
@@ -260,9 +274,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.ageLabel}>Age</Text>
             </View>
 
-            <View>
-              <Text style={styles.selectedAge}>{selectedLabel}</Text>
-            </View>
+            <Text style={styles.selectedAge}>{ageRanges[sliderValue]}</Text>
 
             <View style={styles.sliderCont}>
               <Slider
@@ -271,10 +283,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
                 maximumValue={4}
                 step={1}
                 value={sliderValue}
-                onValueChange={(value) => {
-                  setSliderValue(value);
-                  setModalVisible(true);
-                }}
+                onValueChange={handleSliderChange}
+                onSlidingComplete={handleSlidingComplete}
                 minimumTrackTintColor="#E45A92"
                 maximumTrackTintColor="#D3D3D3"
                 thumbTintColor="#E45A92"
@@ -286,31 +296,38 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.prefButton} onPress={handleAddPreference}>
+          {/* Add Preferences Button */}
+          <TouchableOpacity
+            style={styles.prefButton}
+            onPress={handleAddPreference}
+          >
             <Text style={styles.prefLabel}>+ Add Preferences</Text>
           </TouchableOpacity>
 
           {/* Error Alert */}
-          {localError && (
+          {error && (
             <ErrorAlert
-              error={localError}
-              onRetry={handleAssessDiscontinuationRisk}
-              onDismiss={() => {
-                setLocalError(null);
-                setError(null);
-              }}
-              style={{ marginBottom: 16 }}
+              error={error}
+              onRetry={handleRetry}
+              onDismiss={handleDismissError}
+              style={styles.errorAlert}
             />
           )}
 
-          {/* Risk Assessment Section */}
+          {/* Risk Assessment Button */}
           <TouchableOpacity
-            style={styles.riskAssessmentButton}
+            style={[
+              styles.riskAssessmentButton,
+              isAssessing && styles.riskAssessmentButtonDisabled,
+            ]}
             onPress={handleAssessDiscontinuationRisk}
-            disabled={contextLoading || deduplicator.isPending(generateAssessmentKey(assessmentData || {}))}
+            disabled={isAssessing}
           >
-            {contextLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
+            {isAssessing ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#fff" size="small" />
+                <Text style={styles.loadingText}>Assessing...</Text>
+              </View>
             ) : (
               <Text style={styles.riskAssessmentButtonText}>
                 🔍 Assess My Discontinuation Risk
@@ -318,7 +335,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             )}
           </TouchableOpacity>
 
-          {/* Risk Assessment Result Card - From Context */}
+          {/* Risk Assessment Result Card */}
           {assessmentResult && (
             <RiskAssessmentCard
               riskLevel={assessmentResult.riskLevel}
@@ -328,101 +345,125 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
               style={styles.riskCard}
             />
           )}
-
-          <Modal
-            visible={modalVisible}
-            transparent
-            animationType="none"
-            onRequestClose={() => setModalVisible(false)}
-          >
-            <View style={styles.modalOverlay} pointerEvents="box-none">
-              <Animated.View
-                style={[styles.modalContainer, { transform: [{ translateY }] }]}
-                {...panResponder.panHandlers}
-              >
-                <View style={styles.modalHandle} />
-
-                <TouchableOpacity style={styles.recomButton} onPress={handleViewRecommendation}>
-                  <Text style={styles.modalHeader}>View Recommendation</Text>
-                </TouchableOpacity>
-
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalText}>Selected Age:</Text>
-                  <Text style={styles.modalAge}>{selectedLabel}</Text>
-                </View>
-
-                <View style={styles.modalButtons}>
-                  <View style={styles.recomRow}>
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/copperiud.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('copperIUD') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>Cu-IUD</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/implantt.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('implant') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>LNG/ETG</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/injectables.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('injectables') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>DMPA</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.recomRow}>
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/leviud.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('levIUD') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>LNG-IUD</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/patchh.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('patch') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>CHC</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/pillss.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('pills') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>POP</Text>
-                    </View>
-                  </View>
-                </View>
-              </Animated.View>
-            </View>
-          </Modal>
         </View>
+
+        {/* Modal */}
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="none"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+              <View style={StyleSheet.absoluteFill} />
+            </TouchableWithoutFeedback>
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                { transform: [{ translateY }] },
+              ]}
+              {...panResponder.panHandlers}
+            >
+              <View style={styles.modalHandle} />
+
+              <TouchableOpacity
+                style={styles.recomButton}
+                onPress={handleViewRecommendation}
+              >
+                <Text style={styles.modalHeader}>View Recommendation</Text>
+              </TouchableOpacity>
+
+              <View style={styles.modalContent}>
+                <Text style={styles.modalText}>Selected Age:</Text>
+                <Text style={styles.modalAge}>{ageRanges[sliderValue]}</Text>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <View style={styles.recomRow}>
+                  <ContraceptiveItem
+                    image={require('../../assets/image/copperiud.png')}
+                    label="Cu-IUD"
+                    color={getColor('copperIUD')}
+                  />
+                  <ContraceptiveItem
+                    image={require('../../assets/image/implantt.png')}
+                    label="LNG/ETG"
+                    color={getColor('implant')}
+                  />
+                  <ContraceptiveItem
+                    image={require('../../assets/image/injectables.png')}
+                    label="DMPA"
+                    color={getColor('injectables')}
+                  />
+                </View>
+
+                <View style={styles.recomRow}>
+                  <ContraceptiveItem
+                    image={require('../../assets/image/leviud.png')}
+                    label="LNG-IUD"
+                    color={getColor('levIUD')}
+                  />
+                  <ContraceptiveItem
+                    image={require('../../assets/image/patchh.png')}
+                    label="CHC"
+                    color={getColor('patch')}
+                  />
+                  <ContraceptiveItem
+                    image={require('../../assets/image/pillss.png')}
+                    label="POP"
+                    color={getColor('pills')}
+                  />
+                </View>
+              </View>
+            </Animated.View>
+          </View>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default Recommendation;
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+interface ContraceptiveItemProps {
+  image: any;
+  label: string;
+  color: string;
+}
+
+const ContraceptiveItem: React.FC<ContraceptiveItemProps> = ({
+  image,
+  label,
+  color,
+}) => (
+  <View style={styles.recomItem}>
+    <Image
+      source={image}
+      style={[styles.contraceptiveImg, { borderColor: color }]}
+    />
+    <Text style={styles.contraceptiveLabel}>{label}</Text>
+  </View>
+);
+
+// ============================================================================
+// STYLES
+// ============================================================================
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fff',
   },
-  containerOne: {
+  container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollContent: {
+    paddingTop: 10,
+    paddingBottom: 90,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -434,6 +475,7 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     padding: 5,
+    width: 45,
   },
   headerText: {
     fontSize: 21,
@@ -449,7 +491,7 @@ const styles = StyleSheet.create({
   },
   header3: {
     fontSize: typography.sizes.sm,
-    fontStyle: "italic",
+    fontStyle: 'italic',
     color: colors.text.secondary,
   },
   ageCont: {
@@ -471,12 +513,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   ageIcon: {
-    resizeMode: "contain",
+    resizeMode: 'contain',
     height: 45,
     width: 45,
   },
   ageLabel: {
-    fontSize: typography.sizes["2xl"],
+    fontSize: typography.sizes['2xl'],
     fontWeight: typography.weights.semibold,
     paddingLeft: spacing.sm,
   },
@@ -486,24 +528,24 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.regular,
     paddingLeft: spacing.sm,
     marginTop: spacing.xs,
-    textAlign: "center",
+    textAlign: 'center',
   },
   sliderCont: {
     width: '100%',
     marginTop: 10,
   },
   slider: {
-    width: "100%",
-    height: spacing["4xl"],
+    width: '100%',
+    height: spacing['4xl'],
   },
   sliderLabel: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: -spacing.sm,
   },
   labelText: {
     fontSize: 14,
-    color: "#333",
+    color: '#333',
   },
   prefButton: {
     marginTop: 30,
@@ -512,9 +554,52 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   prefLabel: {
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.semibold,
+  },
+  errorAlert: {
+    marginBottom: 16,
+  },
+  riskAssessmentButton: {
+    marginTop: 30,
+    marginBottom: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#E45A92',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  riskAssessmentButtonDisabled: {
+    backgroundColor: '#C4C4C4',
+    elevation: 2,
+  },
+  riskAssessmentButtonText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: '#fff',
+    marginLeft: 10,
+  },
+  riskCard: {
+    marginHorizontal: 0,
+    marginTop: 20,
   },
   modalOverlay: {
     flex: 1,
@@ -550,7 +635,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   modalHeader: {
-    fontSize: typography.sizes["2xl"],
+    fontSize: typography.sizes['2xl'],
     fontWeight: typography.weights.bold,
     color: colors.background.primary,
   },
@@ -588,7 +673,7 @@ const styles = StyleSheet.create({
     width: '30%',
     marginBottom: 10,
   },
-  contaceptiveImg: {
+  contraceptiveImg: {
     width: 70,
     height: 70,
     resizeMode: 'contain',
@@ -609,29 +694,6 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
   },
-  riskAssessmentButton: {
-    marginTop: 30,
-    marginBottom: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: '#E45A92',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  riskAssessmentButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  riskCard: {
-    marginHorizontal: 0,
-    marginTop: 20,
-  },
 });
+
+export default Recommendation;

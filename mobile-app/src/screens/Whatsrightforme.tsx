@@ -36,18 +36,18 @@ const Whatsrightforme: React.FC<Props> = ({ navigation }) => {
   const handleGetStarter = () => setIsModalVisible(true);
   const handleContinue = () => {
     try {
+      setIsModalVisible(false);
+      
       // Ensure assessment data is initialized in context before navigating
-      if (!assessmentData) {
+      if (!assessmentData || Object.keys(assessmentData).length === 0) {
         updateAssessmentData({});
       }
+
       setLocalError(null);
       setError(null);
       navigation.navigate("Recommendation");
     } catch (err) {
-      const appError = createAppError(err, {
-        operation: "handleContinue",
-        component: "Whatsrightforme",
-      });
+      const appError = createAppError(err, "Whatsrightforme: handleContinue");
       setLocalError(appError);
       setError(appError.userMessage);
     }

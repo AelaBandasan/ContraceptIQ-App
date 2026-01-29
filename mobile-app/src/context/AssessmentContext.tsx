@@ -9,6 +9,7 @@
  */
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { UserAssessmentData } from "../services/discontinuationRiskService";
 
 // ============================================================================
 // TYPES
@@ -17,36 +18,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 /**
  * User assessment data - contains all 26 required features for ML prediction
  */
-export interface AssessmentData {
-  // Demographic Features (6)
-  age: number;
-  education: number;
-  working: number;
-  urban: number;
-  partner_object: number;
-  partner_approval: number;
-
-  // Fertility Features (4)
-  fertility_want: number;
-  fertility_soon: number;
-  parity: number;
-  son_preference: number;
-
-  // Method & History Features (13)
-  method_duration_months: number;
-  switching_last_12m: number;
-  discontinuation_reason_satisfied: number;
-  discontinuation_reason_side_effects: number;
-  discontinuation_reason_other: number;
-  current_method: number;
-  num_previous_methods: number;
-  counseling_received: number;
-  satisfaction_score: number;
-  adherence_score: number;
-  accessibility_score: number;
-  relationship_status: number;
-  previous_discontinuation: number;
-}
+export type AssessmentData = UserAssessmentData;
 
 /**
  * Risk assessment result from ML model
@@ -125,30 +97,32 @@ const AssessmentContext = createContext<AssessmentContextType | undefined>(
 /**
  * Initial assessment data with default values
  */
-const defaultAssessmentData: AssessmentData = {
-  age: 25,
-  education: 2,
-  working: 1,
-  urban: 1,
-  partner_object: 0,
-  partner_approval: 1,
-  fertility_want: 1,
-  fertility_soon: 0,
-  parity: 1,
-  son_preference: 0,
-  method_duration_months: 6,
-  switching_last_12m: 0,
-  discontinuation_reason_satisfied: 0,
-  discontinuation_reason_side_effects: 0,
-  discontinuation_reason_other: 0,
-  current_method: 1,
-  num_previous_methods: 1,
-  counseling_received: 1,
-  satisfaction_score: 3,
-  adherence_score: 3,
-  accessibility_score: 3,
-  relationship_status: 1,
-  previous_discontinuation: 0,
+const defaultAssessmentData: UserAssessmentData = {
+  AGE: 25,
+  REGION: 1,
+  EDUC_LEVEL: 2,
+  RELIGION: 1,
+  ETHNICITY: 1,
+  MARITAL_STATUS: 1,
+  RESIDING_WITH_PARTNER: 1,
+  HOUSEHOLD_HEAD_SEX: 1,
+  OCCUPATION: 1,
+  HUSBANDS_EDUC: 2,
+  HUSBAND_AGE: 30,
+  PARTNER_EDUC: 2,
+  SMOKE_CIGAR: 0,
+  PARITY: 1,
+  DESIRE_FOR_MORE_CHILDREN: 1,
+  WANT_LAST_CHILD: 1,
+  WANT_LAST_PREGNANCY: 1,
+  CONTRACEPTIVE_METHOD: 1,
+  MONTH_USE_CURRENT_METHOD: 6,
+  PATTERN_USE: 1,
+  TOLD_ABT_SIDE_EFFECTS: 1,
+  LAST_SOURCE_TYPE: 1,
+  LAST_METHOD_DISCONTINUED: 0,
+  REASON_DISCONTINUED: 0,
+  HSBND_DESIRE_FOR_MORE_CHILDREN: 1,
 };
 
 /**
@@ -270,29 +244,14 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
 
     // Check that all required fields are present and valid
     const requiredFields: (keyof AssessmentData)[] = [
-      "age",
-      "education",
-      "working",
-      "urban",
-      "partner_object",
-      "partner_approval",
-      "fertility_want",
-      "fertility_soon",
-      "parity",
-      "son_preference",
-      "method_duration_months",
-      "switching_last_12m",
-      "discontinuation_reason_satisfied",
-      "discontinuation_reason_side_effects",
-      "discontinuation_reason_other",
-      "current_method",
-      "num_previous_methods",
-      "counseling_received",
-      "satisfaction_score",
-      "adherence_score",
-      "accessibility_score",
-      "relationship_status",
-      "previous_discontinuation",
+      "AGE", "REGION", "EDUC_LEVEL", "RELIGION", "ETHNICITY", 
+      "MARITAL_STATUS", "RESIDING_WITH_PARTNER", "HOUSEHOLD_HEAD_SEX",
+      "OCCUPATION", "HUSBANDS_EDUC", "HUSBAND_AGE", "PARTNER_EDUC",
+      "SMOKE_CIGAR", "PARITY", "DESIRE_FOR_MORE_CHILDREN",
+      "WANT_LAST_CHILD", "WANT_LAST_PREGNANCY", "CONTRACEPTIVE_METHOD",
+      "MONTH_USE_CURRENT_METHOD", "PATTERN_USE", "TOLD_ABT_SIDE_EFFECTS",
+      "LAST_SOURCE_TYPE", "LAST_METHOD_DISCONTINUED", "REASON_DISCONTINUED",
+      "HSBND_DESIRE_FOR_MORE_CHILDREN"
     ];
 
     for (const field of requiredFields) {
@@ -300,11 +259,6 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
       if (value === null || value === undefined) {
         return false;
       }
-    }
-
-    // Validate age range (15-55 recommended)
-    if (state.assessmentData.age < 15 || state.assessmentData.age > 55) {
-      return false;
     }
 
     return true;
