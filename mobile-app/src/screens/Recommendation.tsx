@@ -4,7 +4,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
-import Slider from '@react-native-community/slider';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius } from '../theme';
@@ -12,7 +12,7 @@ import { colors, typography, spacing, borderRadius } from '../theme';
 type Props = RootStackScreenProps<"Recommendation">;
 
 const Recommendation: React.FC<Props> = ({ navigation }) => {
-  const [sliderValue, setSliderValue] = useState(0);
+  const [selectedAgeIndex, setSelectedAgeIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(500)).current;
 
@@ -24,7 +24,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     "≥ 46 years",
   ];
 
-  const selectedLabel = ageRanges[sliderValue];
+  const selectedLabel = ageRanges[selectedAgeIndex];
 
   const colorMap: Record<number, string> = {
     1: '#4CAF50',
@@ -83,7 +83,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   };
 
   const getColor = (method: string) => {
-    const code = recommendations[sliderValue][method];
+    const code = recommendations[selectedAgeIndex][method];
     return colorMap[code] || "#ccc";
   };
 
@@ -164,29 +164,32 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.ageLabel}>Age</Text>
             </View>
 
-            <View>
-              <Text style={styles.selectedAge}>{selectedLabel}</Text>
-            </View>
-
-            <View style={styles.sliderCont}>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={4}
-                step={1}
-                value={sliderValue}
-                onValueChange={(value) => {
-                  setSliderValue(value);
-                  setModalVisible(true);
-                }}
-                minimumTrackTintColor="#E45A92"
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#E45A92"
-              />
-              <View style={styles.sliderLabel}>
-                <Text style={styles.labelText}>Menarche to {'< 18'}</Text>
-                <Text style={styles.labelText}>(≥ 46)</Text>
-              </View>
+            <View style={styles.chipsContainer}>
+              {ageRanges.map((age, index) => {
+                const isSelected = selectedAgeIndex === index;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.ageChip,
+                      isSelected && styles.ageChipSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedAgeIndex(index);
+                      setModalVisible(true);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.ageChipText,
+                        isSelected && styles.ageChipTextSelected,
+                      ]}
+                    >
+                      {age}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
@@ -473,5 +476,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000',
     textAlign: 'center',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  ageChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginBottom: 8,
+  },
+  ageChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  ageChipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  ageChipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
