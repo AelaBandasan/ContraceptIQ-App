@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput, Platform, Pressable, ActivityIndicator } from 'react-native'
+import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput, Platform, Pressable, ActivityIndicator, ScrollView } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +24,9 @@ const LoginforOB = ({ navigation }: any) => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
+      const namePart = email.split('@')[0];
+      const doctorName = "Dr. " + namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      navigation.navigate('ObDrawer', { doctorName });
     }, 2000);
   };
 
@@ -34,116 +37,117 @@ const LoginforOB = ({ navigation }: any) => {
   };
 
   return (
-
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}
       >
-        <View style={styles.logoSection}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/tempLogo.png')} // Replace with your logo path
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.title}>ContraceptIQ</Text>
-          <Text style={styles.welcomeText}>Create your OB Account</Text>
-          <Text style={styles.subtext}>Your expertise. Smarter contraceptive care.</Text>
-        </View>
-
-        <Pressable style={styles.demoBanner} onPress={fillDemoCredentials}>
-          <View style={styles.demoContent}>
-            <Text style={styles.demoTitle}>🎉 Demo Credentials</Text>
-            <Text style={styles.demoText}>Email: ob@gmail.com</Text>
-            <Text style={styles.demoText}>Password: password</Text>
-            <Text style={styles.demoHint}>Tap here to auto-fill</Text>
-          </View>
-        </Pressable>
-
-        <View style={styles.form}>
-          {/* Email */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputWrapper}>
-              <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+          <View style={styles.logoSection}>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../../assets/tempLogo.png')} // Replace with your logo path
+                style={styles.logo}
+                resizeMode="contain"
               />
             </View>
+            <Text style={styles.title}>ContraceptIQ</Text>
+            <Text style={styles.welcomeText}>Create your OB Account</Text>
+            <Text style={styles.subtext}>Your expertise. Smarter contraceptive care.</Text>
           </View>
 
-          {/* Password */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
-              <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
+          <Pressable style={styles.demoBanner} onPress={fillDemoCredentials}>
+            <View style={styles.demoContent}>
+              <Text style={styles.demoTitle}>🎉 Demo Credentials</Text>
+              <Text style={styles.demoText}>Email: ob@gmail.com</Text>
+              <Text style={styles.demoText}>Password: password</Text>
+              <Text style={styles.demoHint}>Tap here to auto-fill</Text>
+            </View>
+          </Pressable>
+
+          <View style={styles.form}>
+            {/* Email */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            {/* Password */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color="#9CA3AF" />
+                  ) : (
+                    <Eye size={20} color="#9CA3AF" />
+                  )}
+                </Pressable>
+              </View>
+              {/* Forgot Password */}
+              <Pressable style={styles.forgotPassword}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </Pressable>
+
+              {/* Login Button */}
               <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
+                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
               >
-                {showPassword ? (
-                  <EyeOff size={20} color="#9CA3AF" />
-                ) : (
-                  <Eye size={20} color="#9CA3AF" />
-                )}
+                <LinearGradient
+                  colors={['#d3347a', '#e83c91']}
+                  style={styles.buttonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <ArrowRight size={20} color="#FFFFFF" />
+                    </>
+                  )}
+                </LinearGradient>
               </Pressable>
             </View>
-            {/* Forgot Password */}
-            <Pressable style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </Pressable>
 
-            {/* Login Button */}
-            <Pressable
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <LinearGradient
-                colors={['#d3347a', '#e83c91']}
-                style={styles.buttonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Text style={styles.loginButtonText}>Sign In</Text>
-                    <ArrowRight size={20} color="#FFFFFF" />
-                  </>
-                )}
-              </LinearGradient>
-            </Pressable>
+            <View style={styles.registerSection}>
+              <Text style={styles.registerText}>Don't have an account? </Text>
+              <Pressable onPress={() => navigation.navigate('SignupforOB')}>
+                <Text style={styles.registerLink}>Sign Up</Text>
+              </Pressable>
+            </View>
           </View>
-
-          <View style={styles.registerSection}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
-            <Pressable onPress={() => navigation.navigate('SignupforOB')}>
-              <Text style={styles.registerLink}>Sign Up</Text>
-            </Pressable>
-          </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

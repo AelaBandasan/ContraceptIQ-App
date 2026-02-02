@@ -14,6 +14,8 @@ export type RootStackParamList = {
   ObRecom: undefined;
   ObPref: undefined;
   ObViewRecom: undefined;
+  ObHomeScreen: undefined;
+  ObDrawer: { doctorName?: string };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -24,6 +26,12 @@ export type DrawerParamList = {
   'Did You Know?': undefined;
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
+};
+
+// OB Drawer Navigator
+export type ObDrawerParamList = {
+  ObHomeScreen: { doctorName?: string };
+  ObAssessment: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack
