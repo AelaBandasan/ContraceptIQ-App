@@ -1,55 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import { RootStackScreenProps } from '../types/navigation';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getMECColor, getMECLabel, MECCategory, calculateMatchScore } from '../services/mecService';
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = RootStackScreenProps<'ViewRecommendation'>;
 
-const ViewRecom: React.FC<Props> = ({ navigation }) => {
-  const contraceptives = [
+const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
+  const { ageLabel, ageValue, prefs, mecResults } = route.params || {};
+
+  // Define contraceptives with their MEC key mapping
+  const baseContraceptives = [
     {
       name: 'Implant',
+      mecKey: 'Implant' as const,
       image: require('../../assets/image/implantt.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#FF6B6B',
+      description: 'Long-acting, highly effective',
     },
     {
-      name: 'Injectables',
+      name: 'DMPA (Injectable)',
+      mecKey: 'DMPA' as const,
       image: require('../../assets/image/injectables.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#16A085',
+      description: 'Injection every 3 months',
     },
     {
-      name: 'Patch',
+      name: 'CHC (Patch/Pills/Ring)',
+      mecKey: 'CHC' as const,
       image: require('../../assets/image/patchh.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#FFB84D',
+      description: 'Combined hormonal methods',
     },
     {
-      name: 'Cu-IUD',
+      name: 'Cu-IUD (Copper)',
+      mecKey: 'Cu-IUD' as const,
       image: require('../../assets/image/copperiud.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#4A90E2',
+      description: 'Non-hormonal, long-acting',
     },
     {
-      name: 'Pills',
+      name: 'POP (Progestin-Only Pills)',
+      mecKey: 'POP' as const,
       image: require('../../assets/image/pillss.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#58D68D',
+      description: 'Daily progestin pill',
     },
     {
-      name: 'Hormonal IUD',
+      name: 'LNG-IUD (Hormonal)',
+      mecKey: 'LNG-IUD' as const,
       image: require('../../assets/image/leviud.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#A569BD',
+      description: 'Hormonal IUD, long-acting',
     },
   ];
 
-  const [selected, setSelected] = useState(contraceptives[3]);
+  // Sort by MEC category (safest first) and add color
+  // Sort by MEC category (safest first) AND Preference Match (highest first)
+  const contraceptives = useMemo(() => {
+    if (!mecResults) {
+      return baseContraceptives.map(c => ({
+        ...c,
+        mecCategory: 1 as MECCategory,
+        color: getMECColor(1),
+        matchScore: calculateMatchScore(c.mecKey, prefs || [])
+      })).sort((a, b) => b.matchScore - a.matchScore);
+    }
+
+    return baseContraceptives
+      .map(c => ({
+        ...c,
+        mecCategory: mecResults[c.mecKey] as MECCategory,
+        color: getMECColor(mecResults[c.mecKey]),
+        matchScore: calculateMatchScore(c.mecKey, prefs || [])
+      }))
+      .sort((a, b) => {
+        // 1. Primary Sort: Safety (MEC Category Ascending: 1 is best)
+        if (a.mecCategory !== b.mecCategory) {
+          return a.mecCategory - b.mecCategory;
+        }
+        // 2. Secondary Sort: Preference Match (Score Descending: 100% is best)
+        return b.matchScore - a.matchScore;
+      });
+  }, [mecResults, prefs]);
+
+  const [selected, setSelected] = useState(contraceptives[0]);
 
   const nextMethod = () => {
     const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
@@ -76,6 +107,13 @@ const ViewRecom: React.FC<Props> = ({ navigation }) => {
           <View style={{ width: 35 }} />
         </View>
 
+        {/* Display Selected Age */}
+        <View style={{ alignItems: 'center', marginBottom: 10 }}>
+          <Text style={{ fontSize: 16, color: '#E45A92', fontWeight: 'bold' }}>
+            Selected Age: {ageLabel || 'N/A'}
+          </Text>
+        </View>
+
         <View style={styles.mainCircleWrapper}>
           <TouchableOpacity onPress={prevMethod} style={styles.sideButton}>
             <Ionicons name="chevron-back" size={28} color="#555" />
@@ -93,12 +131,35 @@ const ViewRecom: React.FC<Props> = ({ navigation }) => {
         <View style={styles.deviceInfo}>
           <Text style={styles.deviceName}>{selected.name}</Text>
           <Text style={styles.preferencesText}>
-            <Text style={{ fontStyle: 'italic' }}>{selected.preferences}</Text>
+            <Text style={{ fontStyle: 'italic' }}>{selected.description}</Text>
           </Text>
+          {/* MEC Category Badge */}
+          <View style={[styles.mecBadge, { backgroundColor: selected.color }]}>
+            <Text style={styles.mecBadgeText}>{getMECLabel(selected.mecCategory)}</Text>
+          </View>
+
+          {/* Match Score Badge (Secondary) */}
+          {(selected as any).matchScore > 0 && (
+            <View style={styles.matchBadge}>
+              <Ionicons name="thumbs-up" size={12} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={styles.matchBadgeText}>{(selected as any).matchScore}% Match</Text>
+            </View>
+          )}
         </View>
 
-        <TouchableOpacity style={styles.addNotesButton}>
-          <Ionicons name="create-outline" size={26} color="#fff" />
+        {/* CONSULT WITH DOCTOR BUTTON */}
+        <TouchableOpacity
+          style={styles.consultButton}
+          onPress={() => {
+            const preFilledData = {
+              AGE: ageValue ? ageValue.toString() : '25',
+              prefs: prefs || []
+            };
+            navigation.navigate('GuestAssessment', { preFilledData });
+          }}
+        >
+          <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
+          <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
         </TouchableOpacity>
 
         <View style={styles.listContainer}>
@@ -235,5 +296,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
+  },
+  consultButton: {
+    backgroundColor: '#E45A92',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 20,
+    marginTop: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  consultButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  mecBadge: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'center',
+  },
+  mecBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  matchBadge: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 15,
+  },
+  matchBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

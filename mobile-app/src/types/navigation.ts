@@ -10,12 +10,37 @@ export type RootStackParamList = {
   MainDrawer: undefined;
   Recommendation: undefined;
   Preferences: undefined;
-  ViewRecommendation: undefined;
+  ViewRecommendation: {
+    ageLabel?: string;
+    ageValue?: number;
+    prefs?: string[];
+    mecResults?: {
+      'Cu-IUD': 1 | 2 | 3 | 4;
+      'LNG-IUD': 1 | 2 | 3 | 4;
+      'Implant': 1 | 2 | 3 | 4;
+      'DMPA': 1 | 2 | 3 | 4;
+      'CHC': 1 | 2 | 3 | 4;
+      'POP': 1 | 2 | 3 | 4;
+    };
+  };
   ObRecom: undefined;
   ObPref: undefined;
   ObViewRecom: undefined;
   ObHomeScreen: undefined;
   ObDrawer: { doctorName?: string };
+  AssessmentResultScreen: {
+    riskResult: any; // Using 'any' to avoid circular dependencies for now, or import type if possible
+    patientData: any;
+  };
+  ConsultationCodeScreen: {
+    patientData: any;
+  };
+  GuestAssessment: {
+    preFilledData?: {
+      AGE: string;
+      prefs: string[];
+    };
+  };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -45,9 +70,12 @@ export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
     NativeStackNavigationProp<RootStackParamList>
   >;
 
+import type { RouteProp } from '@react-navigation/native';
+
 // Screen props for type-safe screen components
 export type RootStackScreenProps<T extends keyof RootStackParamList> = {
   navigation: RootStackNavigationProp<T>;
+  route: RouteProp<RootStackParamList, T>;
 };
 
 export type DrawerScreenProps<T extends keyof DrawerParamList> = {

@@ -4,6 +4,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 
 const UserStartingScreen = ({ navigation }: any) => {
     const handleContinueAsGuest = () => {
+        // Start at Recommendation/Home screen (Review First)
         navigation.navigate('MainDrawer');
     }
     const handleOBlogin = () => {

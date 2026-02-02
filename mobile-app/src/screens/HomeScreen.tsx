@@ -19,11 +19,11 @@ type Props = DrawerScreenProps<'Home'>;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const contraceptiveMethods = [
-    { id: '1', name: 'Pills', image: null },
-    { id: '2', name: 'Patch', image: null },
-    { id: '3', name: 'IUD', image: null },
-    { id: '4', name: 'Implants', image: null },
-    { id: '5', name: 'Injections', image: null },
+    { id: '1', name: 'Pills', image: require('../../assets/image/pillss.png') },
+    { id: '2', name: 'Patch', image: require('../../assets/image/patchh.png') },
+    { id: '3', name: 'IUD', image: require('../../assets/image/copperiud.png') },
+    { id: '4', name: 'Implants', image: require('../../assets/image/implantt.png') },
+    { id: '5', name: 'Injections', image: require('../../assets/image/injectables.png') },
   ];
 
   return (
@@ -63,7 +63,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           >
             {contraceptiveMethods.map((method) => (
               <TouchableOpacity key={method.id} style={styles.methodItem}>
-                <View style={styles.methodPics} />
+                <Image source={method.image} style={styles.methodPics} />
                 <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>
             ))}

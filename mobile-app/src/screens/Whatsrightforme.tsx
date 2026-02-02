@@ -42,6 +42,7 @@ const Whatsrightforme: React.FC<Props> = ({ navigation }) => {
       }
       setLocalError(null);
       setError(null);
+      setIsModalVisible(false);
       navigation.navigate("Recommendation");
     } catch (err) {
       const appError = createAppError(err, {

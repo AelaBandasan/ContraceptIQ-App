@@ -11,6 +11,9 @@ import ObPref from '../screens/ObSide/ObPref';
 import ObViewRecom from '../screens/ObSide/ObViewRecom';
 import SignupforOB from '../screens/ObSide/SignupforOB';
 import ObDrawerNavigator from './ObDrawerNavigator';
+import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
+import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
+import GuestAssessment from '../screens/GuestAssessment';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -32,6 +35,9 @@ const RootStack = () => {
       <Stack.Screen name="ObViewRecom" component={ObViewRecom} />
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
       <Stack.Screen name="ObDrawer" component={ObDrawerNavigator} />
+      <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
+      <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
+      <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
     </Stack.Navigator>
   );
 };

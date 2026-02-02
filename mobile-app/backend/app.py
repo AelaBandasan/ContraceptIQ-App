@@ -215,6 +215,80 @@ def get_required_features():
     }), 200
 
 
+# ==============================================================================
+# PATIENT INTAKE & HANDOFF (IN-MEMORY)
+# ==============================================================================
+
+# Simple in-memory storage for patient handoff
+# Format: { 'CODE12': { ...patient_data... }, ... }
+PATIENT_DB = {}
+
+import string
+import secrets
+
+def generate_patient_code(length=6):
+    """Generate a random alphanumeric code (uppercase)."""
+    chars = string.ascii_uppercase + string.digits
+    while True:
+        code = ''.join(secrets.choice(chars) for _ in range(length))
+        if code not in PATIENT_DB:
+            return code
+
+@app.route('/api/v1/patient-intake', methods=['POST'])
+def create_patient_intake():
+    """
+    Submit patient intake data (Guest App) and get a retrieval code.
+    
+    Request Body:
+        JSON object containing PatientIntakeData
+    
+    Returns:
+        JSON: { 'code': 'A7X29P', 'expires_in': '24h' }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        # Generate unique code
+        code = generate_patient_code()
+        
+        # Store in DB (In a real app, use Redis/DB with TTL)
+        PATIENT_DB[code] = data
+        
+        print(f"✅ Patient Intake Created: {code}")
+        
+        return jsonify({
+            'code': code,
+            'message': 'Patient data stored successfully',
+            'expires_in': 'Session' 
+        }), 201
+        
+    except Exception as e:
+        print(f"❌ Error in create_patient_intake: {e}")
+        return jsonify({'error': 'Internal server error', 'message': str(e)}), 500
+
+
+@app.route('/api/v1/patient-intake/<code_id>', methods=['GET'])
+def get_patient_intake(code_id):
+    """
+    Retrieve patient data using the code (Doctor App).
+    """
+    try:
+        code = code_id.upper().strip()
+        
+        if code in PATIENT_DB:
+            data = PATIENT_DB[code]
+            print(f"✅ Patient Data Retrieived: {code}")
+            return jsonify(data), 200
+        else:
+            return jsonify({'error': 'NotFound', 'message': 'Invalid code or data expired'}), 404
+            
+    except Exception as e:
+        print(f"❌ Error in get_patient_intake: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
 if __name__ == '__main__':
     print("\n" + "=" * 70)
     print("ContraceptIQ Discontinuation Risk API")

@@ -4,47 +4,72 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
-import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius } from '../theme';
-import { RiskAssessmentCard } from '../components/RiskAssessmentCard';
-import { ErrorAlert } from '../components/ErrorAlert';
-import { assessDiscontinuationRisk } from '../services/discontinuationRiskService';
-import { useAssessment } from '../context/AssessmentContext';
-import { createAppError, AppError } from '../utils/errorHandler';
-import { getDeduplicator, generateAssessmentKey } from '../utils/requestDeduplication';
+import { calculateMEC } from '../services/mecService';
 
 type Props = RootStackScreenProps<"Recommendation">;
 
-const Recommendation: React.FC<Props> = ({ navigation }) => {
-  const [sliderValue, setSliderValue] = useState(0);
+const Recommendation: React.FC<Props> = ({ navigation, route }) => {
+  const [selectedAgeIndex, setSelectedAgeIndex] = useState<number | null>(null);
+  const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(500)).current;
-  const [localError, setLocalError] = useState<AppError | null>(null);
-  const deduplicator = getDeduplicator();
-  
-  // Context for assessment state
-  const {
-    assessmentData,
-    assessmentResult,
-    updateAssessmentData,
-    setAssessmentResult,
-    setIsLoading,
-    setError,
-    isLoading: contextLoading,
-    error: contextError,
-  } = useAssessment();
 
+  // Age ranges with actual numeric age for MEC calculation
   const ageRanges = [
-    "Menarche to < 18 years",
-    "18 - 19 years",
-    "20 - 39 years",
-    "40 - 45 years",
-    "≥ 46 years",
+    { label: "< 18", value: 0, fullLabel: "Menarche to < 18 years", numericAge: 16 },
+    { label: "18-19", value: 1, fullLabel: "18 - 19 years", numericAge: 18 },
+    { label: "20-39", value: 2, fullLabel: "20 - 39 years", numericAge: 30 },
+    { label: "40-45", value: 3, fullLabel: "40 - 45 years", numericAge: 42 },
+    { label: "≥ 46", value: 4, fullLabel: "≥ 46 years", numericAge: 50 },
   ];
 
-  const selectedLabel = ageRanges[sliderValue];
+  const preferences = [
+    {
+      key: "effectiveness",
+      label: "Effectiveness",
+      description: "Most reliable at preventing pregnancy",
+      icon: require("../../assets/image/star.png"),
+    },
+    {
+      key: "sti",
+      label: "STI Prevention",
+      description: "Protection against STIs/HIV",
+      icon: require("../../assets/image/shield.png"),
+    },
+    {
+      key: "nonhormonal",
+      label: "Non-hormonal",
+      description: "Hormone-free option",
+      icon: require("../../assets/image/forbidden.png"),
+    },
+    {
+      key: "regular",
+      label: "Regular Bleeding",
+      description: "Helps with cramps or heavy bleeding",
+      icon: require("../../assets/image/blood.png"),
+    },
+    {
+      key: "privacy",
+      label: "Privacy",
+      description: "Can be used without others knowing",
+      icon: require("../../assets/image/privacy.png"),
+    },
+    {
+      key: "client",
+      label: "Client controlled",
+      description: "Can start or stop it myself",
+      icon: require("../../assets/image/responsibility.png"),
+    },
+    {
+      key: "longterm",
+      label: "Long-term protection",
+      description: "Lasts for years with little action",
+      icon: require("../../assets/image/calendar.png"),
+    },
+  ];
 
   const colorMap: Record<number, string> = {
     1: '#4CAF50',
@@ -55,55 +80,19 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   };
 
   const recommendations: Record<number, Record<string, number>> = {
-    0: {
-      // Menarche to <18
-      pills: 1,
-      patch: 1,
-      copperIUD: 2,
-      levIUD: 2,
-      implant: 2,
-      injectables: 2,
-    },
-    1: {
-      // 18-19
-      pills: 1,
-      patch: 1,
-      copperIUD: 2,
-      levIUD: 2,
-      implant: 1,
-      injectables: 1,
-    },
-    2: {
-      // 20-39
-      pills: 1,
-      patch: 1,
-      copperIUD: 1,
-      levIUD: 1,
-      implant: 1,
-      injectables: 1,
-    },
-    3: {
-      // 40-45
-      pills: 1,
-      patch: 2,
-      copperIUD: 1,
-      levIUD: 1,
-      implant: 1,
-      injectables: 1,
-    },
-    4: {
-      // ≥46
-      pills: 1,
-      patch: 2,
-      copperIUD: 1,
-      levIUD: 1,
-      implant: 1,
-      injectables: 2,
-    },
+    // ... (keeping existing logic for brevity, though logic might need update if age isn't selected)
+    // Using 0 as fallback if nothing selected, or handle check before modal
+    0: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 2, injectables: 2 },
+    1: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 1, injectables: 1 },
+    2: { pills: 1, patch: 1, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
+    3: { pills: 1, patch: 2, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
+    4: { pills: 1, patch: 2, copperIUD: 1, levIUD: 1, implant: 1, injectables: 2 },
   };
 
   const getColor = (method: string) => {
-    const code = recommendations[sliderValue][method];
+    // Default to index 0 logic if no age selected, or handle specifically
+    const index = selectedAgeIndex ?? 0;
+    const code = recommendations[index][method];
     return colorMap[code] || "#ccc";
   };
 
@@ -146,96 +135,47 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     }
   }, [modalVisible]);
 
-  // Cleanup pending requests on unmount
-  useEffect(() => {
-    return () => {
-      // Cancel any pending requests when leaving screen
-      if (assessmentData) {
-        const requestKey = generateAssessmentKey(assessmentData);
-        if (deduplicator.isPending(requestKey)) {
-          deduplicator.cancel(requestKey);
-        }
-      }
-    };
-  }, [assessmentData]);
+  const togglePreference = (key: string) => {
+    const isSelected = selectedPrefs.includes(key);
 
-  const handleAddPreference = () => {
-    navigation.navigate("Preferences");
+    if (isSelected) {
+      setSelectedPrefs(selectedPrefs.filter((item) => item !== key));
+    } else {
+      if (selectedPrefs.length >= 3) {
+        Alert.alert('Limit Reached', 'You can only select up to 3 characteristics.');
+        return;
+      }
+      setSelectedPrefs([...selectedPrefs, key]);
+    }
   };
 
   const handleViewRecommendation = () => {
-    navigation.navigate("ViewRecommendation");
-  };
-
-  const handleAssessDiscontinuationRisk = async () => {
-    try {
-      setLocalError(null);
-
-      // Create assessment data from current state and slider
-      const updatedAssessmentData = assessmentData ? {
-        ...assessmentData,
-        age: 15 + sliderValue * 8, // Map slider value to age
-      } : null;
-
-      if (!updatedAssessmentData) {
-        throw new Error('Assessment data not initialized');
-      }
-
-      // Update context with current assessment data
-      updateAssessmentData({ age: updatedAssessmentData.age });
-
-      // Generate request key for deduplication
-      const requestKey = generateAssessmentKey(updatedAssessmentData);
-
-      // Use deduplication to prevent duplicate requests
-      const result = await deduplicator.deduplicate(requestKey, async () => {
-        return await assessDiscontinuationRisk(updatedAssessmentData);
-      });
-
-      // Format the result for display
-      const riskLevel = result.risk_level === 1 ? 'HIGH' : 'LOW';
-      const confidence = result.confidence || 0.5;
-
-      // Generate recommendation based on risk level
-      let recommendation = '';
-      if (riskLevel === 'HIGH') {
-        recommendation =
-          'Consider discussing method alternatives with a healthcare provider. Explore options that better match your needs and preferences.';
-      } else {
-        recommendation =
-          'Your current contraceptive method appears well-suited to your needs. Continue regular follow-ups with your healthcare provider.';
-      }
-
-      // Store result in context
-      setAssessmentResult({
-        riskLevel,
-        confidence,
-        recommendation,
-        contraceptiveMethod: result.method_name || 'Current Method',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error: any) {
-      // Convert to AppError for standardized handling
-      const appError = createAppError(error, {
-        operation: 'assessDiscontinuationRisk',
-        component: 'Recommendation',
-      });
-      
-      setLocalError(appError);
-      setError(appError.userMessageease try again.';
-      setError(errorMessage);
-      Alert.alert('Assessment Error', errorMessage, [{ text: 'OK' }]);
-    } finally {
-      setIsLoading(false);
+    if (selectedAgeIndex === null) {
+      Alert.alert('Required', 'Please select your age range first.');
+      return;
     }
+
+    // Calculate MEC categories based on age
+    const numericAge = ageRanges[selectedAgeIndex].numericAge;
+    const mecResults = calculateMEC({ age: numericAge });
+
+    // Navigate to ViewRecommendation with MEC results
+    navigation.navigate('ViewRecommendation', {
+      ageLabel: ageRanges[selectedAgeIndex].fullLabel,
+      ageValue: ageRanges[selectedAgeIndex].value,
+      prefs: selectedPrefs,
+      mecResults
+    });
   };
+
+  const selectedAgeLabel = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
       >
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
@@ -246,167 +186,95 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.screenCont}>
+          {/* Age Section */}
           <Text style={styles.header2}>Tell us about you</Text>
           <Text style={styles.header3}>
             Enter your age to personalize recommendations.
           </Text>
 
-          <View style={styles.ageCont}>
-            <View style={styles.ageHeader}>
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
               <Image
                 source={require('../../assets/image/age.png')}
-                style={styles.ageIcon}
+                style={styles.sectionIcon}
               />
-              <Text style={styles.ageLabel}>Age</Text>
+              <Text style={styles.sectionLabel}>Age</Text>
             </View>
 
-            <View>
-              <Text style={styles.selectedAge}>{selectedLabel}</Text>
-            </View>
-
-            <View style={styles.sliderCont}>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={4}
-                step={1}
-                value={sliderValue}
-                onValueChange={(value) => {
-                  setSliderValue(value);
-                  setModalVisible(true);
-                }}
-                minimumTrackTintColor="#E45A92"
-                maximumTrackTintColor="#D3D3D3"
-                thumbTintColor="#E45A92"
-              />
-              <View style={styles.sliderLabel}>
-                <Text style={styles.labelText}>Menarche to {'< 18'}</Text>
-                <Text style={styles.labelText}>(≥ 46)</Text>
-              </View>
+            <View style={styles.chipsContainer}>
+              {ageRanges.map((range, index) => {
+                const isSelected = selectedAgeIndex === index;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.chip,
+                      isSelected && styles.chipSelected
+                    ]}
+                    onPress={() => setSelectedAgeIndex(index)}
+                  >
+                    <Text style={[
+                      styles.chipText,
+                      isSelected && styles.chipTextSelected
+                    ]}>
+                      {range.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
-          <TouchableOpacity style={styles.prefButton} onPress={handleAddPreference}>
-            <Text style={styles.prefLabel}>+ Add Preferences</Text>
-          </TouchableOpacity>
-
-          {/* Error Alert */}
-          {localError && (
-            <ErrorAlert
-              error={localError}
-              onRetry={handleAssessDiscontinuationRisk}
-              onDismiss={() => {
-                setLocalError(null);
-                setError(null);
-              }}
-              style={{ marginBottom: 16 }}
-            />
-          )}
-
-          {/* Risk Assessment Section */}
-          <TouchableOpacity
-            style={styles.riskAssessmentButton}
-            onPress={handleAssessDiscontinuationRisk}
-            disabled={contextLoading || deduplicator.isPending(generateAssessmentKey(assessmentData || {}))}
-          >
-            {contextLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.riskAssessmentButtonText}>
-                🔍 Assess My Discontinuation Risk
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Risk Assessment Result Card - From Context */}
-          {assessmentResult && (
-            <RiskAssessmentCard
-              riskLevel={assessmentResult.riskLevel}
-              confidence={assessmentResult.confidence}
-              recommendation={assessmentResult.recommendation}
-              contraceptiveMethod={assessmentResult.contraceptiveMethod}
-              style={styles.riskCard}
-            />
-          )}
-
-          <Modal
-            visible={modalVisible}
-            transparent
-            animationType="none"
-            onRequestClose={() => setModalVisible(false)}
-          >
-            <View style={styles.modalOverlay} pointerEvents="box-none">
-              <Animated.View
-                style={[styles.modalContainer, { transform: [{ translateY }] }]}
-                {...panResponder.panHandlers}
-              >
-                <View style={styles.modalHandle} />
-
-                <TouchableOpacity style={styles.recomButton} onPress={handleViewRecommendation}>
-                  <Text style={styles.modalHeader}>View Recommendation</Text>
-                </TouchableOpacity>
-
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalText}>Selected Age:</Text>
-                  <Text style={styles.modalAge}>{selectedLabel}</Text>
-                </View>
-
-                <View style={styles.modalButtons}>
-                  <View style={styles.recomRow}>
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/copperiud.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('copperIUD') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>Cu-IUD</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/implantt.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('implant') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>LNG/ETG</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/injectables.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('injectables') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>DMPA</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.recomRow}>
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/leviud.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('levIUD') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>LNG-IUD</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/patchh.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('patch') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>CHC</Text>
-                    </View>
-
-                    <View style={styles.recomItem}>
-                      <Image
-                        source={require('../../assets/image/pillss.png')}
-                        style={[styles.contaceptiveImg, { borderColor: getColor('pills') }]}
-                      />
-                      <Text style={styles.contraceptiveLabel}>POP</Text>
-                    </View>
-                  </View>
-                </View>
-              </Animated.View>
+          {/* Preferences Section */}
+          <View style={[styles.sectionContainer, { marginTop: 30 }]}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionHeader}>
+                <Image
+                  source={require('../../assets/image/star.png')} // Using generic health icon or similar if exists, else reuse age
+                  style={styles.sectionIcon}
+                />
+                <Text style={styles.sectionLabel}>Preferences</Text>
+              </View>
+              <Text style={styles.optionalBadge}>(Optional)</Text>
             </View>
-          </Modal>
+
+            <Text style={styles.subText}>Select up to 3 characteristics that matter to you.</Text>
+
+            <View style={styles.prefsList}>
+              {preferences.map((pref) => {
+                const selected = selectedPrefs.includes(pref.key);
+                return (
+                  <TouchableOpacity
+                    key={pref.key}
+                    activeOpacity={0.8}
+                    onPress={() => togglePreference(pref.key)}
+                    style={[
+                      styles.prefItem,
+                      selected && styles.prefItemSelected
+                    ]}
+                  >
+                    <View style={styles.prefItemContent}>
+                      <Image source={pref.icon} style={styles.prefItemIcon} />
+                      <View style={styles.prefTextContainer}>
+                        <Text style={styles.prefItemLabel}>{pref.label}</Text>
+                        <Text style={styles.prefItemDesc}>{pref.description}</Text>
+                      </View>
+                      <Ionicons
+                        name={selected ? "checkmark-circle" : "ellipse-outline"}
+                        size={24}
+                        color={selected ? "#2E8B57" : "#ccc"}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.viewRecButton} onPress={handleViewRecommendation}>
+            <Text style={styles.viewRecButtonText}>View Recommendation</Text>
+          </TouchableOpacity>
+
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -452,69 +320,128 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     color: colors.text.secondary,
   },
-  ageCont: {
-    elevation: 20,
+  sectionContainer: {
     backgroundColor: '#FBFBFB',
-    width: '100%',
-    borderRadius: 10,
-    marginTop: 25,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    shadowOpacity: 0.5,
-    shadowRadius: 100,
-    shadowOffset: { width: 2, height: 2 },
-    alignSelf: 'center',
+    borderRadius: 12,
+    marginTop: 20,
+    padding: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
-  ageHeader: {
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
   },
-  ageIcon: {
+  sectionIcon: {
     resizeMode: "contain",
-    height: 45,
-    width: 45,
+    height: 30,
+    width: 30,
   },
-  ageLabel: {
-    fontSize: typography.sizes["2xl"],
+  sectionLabel: {
+    fontSize: typography.sizes.xl,
     fontWeight: typography.weights.semibold,
     paddingLeft: spacing.sm,
   },
-  selectedAge: {
-    fontSize: typography.sizes.base,
-    color: colors.text.primary,
-    fontWeight: typography.weights.regular,
-    paddingLeft: spacing.sm,
-    marginTop: spacing.xs,
-    textAlign: "center",
+  optionalBadge: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic'
   },
-  sliderCont: {
-    width: '100%',
-    marginTop: 10,
+  subText: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 15,
+    marginTop: -10
   },
-  slider: {
-    width: "100%",
-    height: spacing["4xl"],
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  sliderLabel: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: -spacing.sm,
-  },
-  labelText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  prefButton: {
-    marginTop: 30,
-    width: '100%',
-    alignItems: 'center',
+  chip: {
     paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
-  prefLabel: {
-    textAlign: "center",
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+  chipSelected: {
+    backgroundColor: '#E45A92',
+    borderColor: '#E45A92',
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  chipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  prefsList: {
+    gap: 12
+  },
+  prefItem: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  prefItemSelected: {
+    borderColor: '#2E8B57',
+    backgroundColor: '#F0FDF4'
+  },
+  prefItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  prefItemIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 12,
+    resizeMode: 'contain'
+  },
+  prefTextContainer: {
+    flex: 1,
+  },
+  prefItemLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333'
+  },
+  prefItemDesc: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2
+  },
+  viewRecButton: {
+    marginTop: 40,
+    width: '100%',
+    backgroundColor: '#E45A92',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#E45A92',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5
+  },
+  viewRecButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold'
   },
   modalOverlay: {
     flex: 1,
@@ -537,38 +464,34 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     marginBottom: spacing.base,
   },
-  recomButton: {
+  recomButtonModal: {
     backgroundColor: '#E45A92',
     borderRadius: 30,
-    paddingVertical: 18,
+    paddingVertical: 15,
     width: '80%',
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    marginBottom: 20
   },
   modalHeader: {
-    fontSize: typography.sizes["2xl"],
-    fontWeight: typography.weights.bold,
-    color: colors.background.primary,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   modalContent: {
     alignItems: 'center',
-    marginTop: 15,
     marginBottom: 15,
   },
   modalText: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
-    color: colors.text.disabled,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
   },
   modalAge: {
     fontSize: 20,
     fontWeight: '700',
     color: '#E45A92',
-    marginTop: 5,
+    marginTop: 2,
   },
   modalButtons: {
     width: '100%',
@@ -579,59 +502,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 10,
-    flexWrap: 'wrap',
+    marginBottom: 15,
   },
   recomItem: {
     alignItems: 'center',
-    justifyContent: 'center',
     width: '30%',
-    marginBottom: 10,
   },
   contaceptiveImg: {
-    width: 70,
-    height: 70,
+    width: 65,
+    height: 65,
     resizeMode: 'contain',
     borderRadius: 35,
     borderWidth: 4,
     padding: 5,
     backgroundColor: '#fff',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   contraceptiveLabel: {
-    marginTop: 4,
-    fontSize: 13,
+    marginTop: 5,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#000',
+    color: '#333',
     textAlign: 'center',
-  },
-  riskAssessmentButton: {
-    marginTop: 30,
-    marginBottom: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: '#E45A92',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  riskAssessmentButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  riskCard: {
-    marginHorizontal: 0,
-    marginTop: 20,
   },
 });

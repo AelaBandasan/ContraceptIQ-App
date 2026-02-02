@@ -1,4 +1,35 @@
-.venv/
-venv/
+# MacOS
+.DS_Store
+
+# VS Code
+.vscode/settings.json
+
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python / Flask
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 env/
-node_modules
+venv/
+.venv/
+
+# Environment Variables (Secrets)
+.env
+.env.production
+.env.emulator
+.env.local
+
+# Expo
+.expo/
+web-build/
+
+# Build outputs
+android/app/build/
+ios/Pods/

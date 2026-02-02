@@ -1,6 +1,6 @@
 /**
  * Discontinuation Risk Assessment Service
- * 
+ *
  * Communicates with the backend API to assess contraceptive discontinuation risk.
  * Handles HTTP requests, error handling, validation, and retry logic.
  */
@@ -53,6 +53,43 @@ export interface UserAssessmentData {
   REASON_DISCONTINUED: number | string;
   HSBND_DESIRE_FOR_MORE_CHILDREN: number | string;
 }
+
+export interface PatientIntakeData {
+  // --- Phase 1: Guest Input ---
+  // Demographics
+  AGE: number;
+  REGION: number | string;
+  EDUC_LEVEL: number | string;
+  RELIGION: number | string;
+  ETHNICITY: number | string;
+  MARITAL_STATUS: number | string;
+  RESIDING_WITH_PARTNER: number;
+  HOUSEHOLD_HEAD_SEX: number;
+  OCCUPATION: number | string;
+  // Partner/History
+  HUSBANDS_EDUC: number | string;
+  HUSBAND_AGE: number;
+  PARTNER_EDUC: number | string;
+  HSBND_DESIRE_FOR_MORE_CHILDREN: number | string;
+  SMOKE_CIGAR: number;
+  PARITY: number;
+  DESIRE_FOR_MORE_CHILDREN: number | string;
+  WANT_LAST_CHILD: number | string;
+  WANT_LAST_PREGNANCY: number | string;
+  LAST_METHOD_DISCONTINUED: number | string;
+  REASON_DISCONTINUED: number | string;
+
+  // Computed Eligibility
+  method_eligibility: Record<string, number>;
+}
+
+export interface ClinicalData extends Pick<UserAssessmentData,
+  'CONTRACEPTIVE_METHOD' |
+  'MONTH_USE_CURRENT_METHOD' |
+  'PATTERN_USE' |
+  'TOLD_ABT_SIDE_EFFECTS' |
+  'LAST_SOURCE_TYPE'
+> { }
 
 export interface RiskAssessmentResponse {
   risk_level: 'LOW' | 'HIGH';
@@ -129,9 +166,6 @@ class DiscontinuationRiskService {
 
   /**
    * Check if the API server is healthy and models are loaded.
-   * 
-   * @returns Promise with health status
-   * @throws AppError if server is not accessible
    */
   async checkHealth(): Promise<HealthCheckResponse> {
     const logger = createModuleLogger('DiscontinuationRiskService');
@@ -139,41 +173,78 @@ class DiscontinuationRiskService {
       // Check network connectivity first
       const online = await isOnline();
       if (!online) {
-        const offlineError = createAppError(new Error('Device is offline'), {
-          operation: 'checkHealth',
-          offline: true
-        });
-        logger.warn('DiscontinuationRiskService', 'Health check - device offline');
+        const offlineError = createAppError(new Error('Device is offline'), 'checkHealth');
+        logger.warn('Health check - device offline');
         throw offlineError;
       }
 
       const response = await this.client.get<HealthCheckResponse>(
         '/api/health'
       );
-      logger.info('DiscontinuationRiskService', 'Health check passed', {
+      logger.info('Health check passed', {
         status: response.data.status,
         modelsLoaded: response.data.models_loaded
       });
       return response.data;
     } catch (error) {
-      const appError = error instanceof Error && 'type' in error && 'userMessage' in error 
+      const appError = error instanceof Error && 'type' in error && 'userMessage' in error
         ? error as any
-        : createAppError(error, { operation: 'checkHealth' });
-      
+        : createAppError(error, 'checkHealth');
+
       logger.error(
-        'DiscontinuationRiskService',
         'Health check failed',
-        appError as Error
+        undefined, // error object
+        { error: appError } // data
       );
       throw appError;
     }
+  }
+
+  /**
+   * Submit Patient Intake Data (Guest) and get code.
+   */
+  async submitPatientIntake(data: PatientIntakeData): Promise<{ code: string; expires_in: string }> {
+    const logger = createModuleLogger('DiscontinuationRiskService');
+    try {
+      const online = await isOnline();
+      if (!online) throw createAppError(new Error('Device is offline'), 'submitPatientIntake');
+
+      const response = await this.client.post<{ code: string; expires_in: string }>(
+        '/api/v1/patient-intake',
+        data
+      );
+
+      logger.info('Patient intake submitted', { code: response.data.code });
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to submit patient intake', undefined, { error });
+      throw createAppError(error, 'submitPatientIntake');
+    }
+  }
+
+  /**
+   * Fetch Patient Data by Code (Doctor).
+   */
+  async fetchPatientIntake(code: string): Promise<PatientIntakeData> {
+    const logger = createModuleLogger('DiscontinuationRiskService');
+    try {
+      const online = await isOnline();
+      if (!online) throw createAppError(new Error('Device is offline'), 'fetchPatientIntake');
+
+      const response = await this.client.get<PatientIntakeData>(
+        `/api/v1/patient-intake/${code}`
+      );
+
+      logger.info('Patient data fetched', { code });
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to fetch patient data', undefined, { error });
+      throw createAppError(error, 'fetchPatientIntake');
     }
   }
 
   /**
    * Get the list of 26 required features for prediction.
-   * 
-   * @returns Promise with list of required features and categories
    */
   async getRequiredFeatures(): Promise<RequiredFeaturesResponse> {
     const logger = createModuleLogger('DiscontinuationRiskService');
@@ -181,28 +252,25 @@ class DiscontinuationRiskService {
       // Check if device is online
       const online = await isOnline();
       if (!online) {
-        const appError = createAppError(new Error('No internet connection'), {
-          operation: 'getRequiredFeatures',
-          offline: true
-        });
-        logger.error('DiscontinuationRiskService', 'getRequiredFeatures offline', appError);
+        const appError = createAppError(new Error('No internet connection'), 'getRequiredFeatures');
+        logger.error('getRequiredFeatures offline', undefined, { error: appError });
         throw appError;
       }
 
       const response = await this.client.get<RequiredFeaturesResponse>(
         '/api/v1/features'
       );
-      logger.info('DiscontinuationRiskService', 'Features fetched successfully');
+      logger.info('Features fetched successfully');
       return response.data;
     } catch (error) {
-      const appError = error instanceof Error && 'type' in error && 'userMessage' in error 
+      const appError = error instanceof Error && 'type' in error && 'userMessage' in error
         ? error as any
-        : createAppError(error, { operation: 'getRequiredFeatures' });
-      
+        : createAppError(error, 'getRequiredFeatures');
+
       logger.error(
-        'DiscontinuationRiskService',
         'Failed to fetch required features',
-        appError as Error
+        undefined,
+        { error: appError }
       );
       throw appError;
     }
@@ -210,13 +278,6 @@ class DiscontinuationRiskService {
 
   /**
    * Assess discontinuation risk for a user.
-   * 
-   * Implements retry logic: retries up to 3 times on network errors.
-   * Checks network connectivity before attempting request.
-   * 
-   * @param data - User assessment data (26 features)
-   * @returns Promise with risk assessment result
-   * @throws AppError if all retries fail or validation fails
    */
   async assessDiscontinuationRisk(
     data: UserAssessmentData,
@@ -227,12 +288,8 @@ class DiscontinuationRiskService {
       // Check network connectivity first
       const online = await isOnline();
       if (!online) {
-        const offlineError = createAppError(new Error('Device is offline'), {
-          operation: 'assessDiscontinuationRisk',
-          offline: true
-        });
+        const offlineError = createAppError(new Error('Device is offline'), 'assessDiscontinuationRisk');
         logger.warn(
-          'DiscontinuationRiskService',
           'Assessment attempt while offline',
           { offline: true }
         );
@@ -241,7 +298,7 @@ class DiscontinuationRiskService {
 
       // Validate input data before sending
       this.validateInputData(data);
-      logger.debug('DiscontinuationRiskService', 'Input validation passed', { featureCount: Object.keys(data).length });
+      logger.debug('Input validation passed', { featureCount: Object.keys(data).length });
 
       // Make API request with retry logic
       const response = await this.client.post<RiskAssessmentResponse>(
@@ -250,9 +307,8 @@ class DiscontinuationRiskService {
       );
 
       logger.info(
-        'DiscontinuationRiskService',
         'Assessment completed successfully',
-        { riskLevel: response.data.risk_level, confidence: response.data.confidence_score }
+        { riskLevel: response.data.risk_level, confidence: response.data.confidence }
       );
 
       return response.data;
@@ -261,9 +317,9 @@ class DiscontinuationRiskService {
       if (error instanceof Error && 'type' in error) {
         if ((error as any).type === 'OfflineError') {
           logger.error(
-            'DiscontinuationRiskService',
             'Device offline - cannot perform assessment',
-            error as Error
+            undefined,
+            { error }
           );
           throw error;
         }
@@ -275,36 +331,27 @@ class DiscontinuationRiskService {
 
         // Validation errors (400) - don't retry, permanent issue
         if (error.response?.status === 400) {
-          const validationError = createAppError(error, {
-            operation: 'assessDiscontinuationRisk',
-            validationFailed: true,
-            details: apiError?.error
-          });
+          const validationError = createAppError(error, 'assessDiscontinuationRisk');
           logger.error(
-            'DiscontinuationRiskService',
             'Validation failed',
-            validationError as Error,
-            { details: apiError?.error }
+            undefined,
+            { error: validationError, details: apiError?.error }
           );
           throw validationError;
         }
 
         // Service unavailable (503) - models not loaded
         if (error.response?.status === 503) {
-          const serviceError = createAppError(error, {
-            operation: 'assessDiscontinuationRisk',
-            serviceUnavailable: true
-          });
+          const serviceError = createAppError(error, 'assessDiscontinuationRisk');
           logger.error(
-            'DiscontinuationRiskService',
             'Service unavailable (models not loaded)',
-            serviceError as Error
+            undefined,
+            { error: serviceError }
           );
-          
+
           // Retry on service unavailable
           if (retryCount < this.MAX_RETRIES) {
             logger.info(
-              'DiscontinuationRiskService',
               `Retrying after service unavailable (${retryCount + 1}/${this.MAX_RETRIES})`,
               { retryCount: retryCount + 1 }
             );
@@ -319,7 +366,6 @@ class DiscontinuationRiskService {
           if (isRetryableError(error as any)) {
             if (retryCount < this.MAX_RETRIES) {
               logger.warn(
-                'DiscontinuationRiskService',
                 `Network error, retrying (${retryCount + 1}/${this.MAX_RETRIES})`,
                 { code: error.code, retryCount: retryCount + 1 }
               );
@@ -330,30 +376,21 @@ class DiscontinuationRiskService {
         }
 
         // Other HTTP errors
-        const appError = createAppError(error, {
-          operation: 'assessDiscontinuationRisk',
-          httpStatus: error.response?.status,
-          retried: retryCount > 0
-        });
+        const appError = createAppError(error, 'assessDiscontinuationRisk');
         logger.error(
-          'DiscontinuationRiskService',
           'Assessment failed after retries',
-          appError as Error,
-          { retries: retryCount, status: error.response?.status }
+          undefined,
+          { error: appError, retries: retryCount, status: error.response?.status }
         );
         throw appError;
       }
 
       // Non-axios errors
-      const appError = createAppError(error, {
-        operation: 'assessDiscontinuationRisk',
-        retried: retryCount > 0
-      });
+      const appError = createAppError(error, 'assessDiscontinuationRisk');
       logger.error(
-        'DiscontinuationRiskService',
         'Assessment failed with unexpected error',
-        appError as Error,
-        { retries: retryCount }
+        undefined,
+        { error: appError, retries: retryCount }
       );
       throw appError;
     }
@@ -361,10 +398,6 @@ class DiscontinuationRiskService {
 
   /**
    * Validate input data before sending to API.
-   * Checks for required features and basic type validation.
-   * 
-   * @param data - User assessment data
-   * @throws AppError if validation fails
    */
   private validateInputData(data: Partial<UserAssessmentData>): void {
     const logger = createModuleLogger('DiscontinuationRiskService');
@@ -401,17 +434,12 @@ class DiscontinuationRiskService {
     if (missingFeatures.length > 0) {
       const validationError = createAppError(
         new Error(`Missing required features: ${missingFeatures.join(', ')}`),
-        {
-          operation: 'validateInputData',
-          missingFeatures,
-          missingCount: missingFeatures.length
-        }
+        'validateInputData'
       );
       logger.error(
-        'DiscontinuationRiskService',
         'Validation failed - missing features',
-        validationError as Error,
-        { missingFeatures, count: missingFeatures.length }
+        undefined,
+        { error: validationError, missingFeatures, count: missingFeatures.length }
       );
       throw validationError;
     }
@@ -420,55 +448,21 @@ class DiscontinuationRiskService {
     if (typeof data.AGE === 'number' && (data.AGE < 15 || data.AGE > 55)) {
       const validationError = createAppError(
         new Error('AGE must be between 15 and 55'),
-        {
-          operation: 'validateInputData',
-          field: 'AGE',
-          value: data.AGE,
-          validRange: '15-55'
-        }
+        'validateInputData'
       );
       logger.error(
-        'DiscontinuationRiskService',
         'Validation failed - invalid age',
-        validationError as Error,
-        { age: data.AGE }
+        undefined,
+        { error: validationError, age: data.AGE }
       );
       throw validationError;
     }
 
-    logger.debug('DiscontinuationRiskService', 'Input validation successful', { featureCount: Object.keys(data).length });
-  }
-
-  /**
-   * Extract error message from various error types.
-   * 
-   * @param error - Error object
-   * @returns Error message string
-   */
-  private extractErrorMessage(error: any): string {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.data?.error) {
-        return error.response.data.error;
-      }
-      if (error.message) {
-        return error.message;
-      }
-      if (error.code === 'ECONNABORTED') {
-        return 'Request timeout - please check your connection';
-      }
-      if (error.code === 'ECONNREFUSED') {
-        return 'Cannot connect to assessment service';
-      }
-    }
-
-    return error?.message || 'Unknown error occurred';
+    logger.debug('Input validation successful', { featureCount: Object.keys(data).length });
   }
 
   /**
    * Handle axios errors with logging.
-   * 
-   * @param error - Axios error
-   * @returns Rejected promise
    */
   private handleError(error: AxiosError): Promise<never> {
     console.error('API Error:', {
@@ -482,9 +476,6 @@ class DiscontinuationRiskService {
 
   /**
    * Utility function to delay execution (for retry backoff).
-   * 
-   * @param ms - Milliseconds to delay
-   * @returns Promise that resolves after delay
    */
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -500,9 +491,6 @@ let serviceInstance: DiscontinuationRiskService | null = null;
 
 /**
  * Get or create the singleton service instance.
- * 
- * @param baseURL - Optional custom API base URL
- * @returns Service instance
  */
 export function getDiscontinuationRiskService(
   baseURL?: string
@@ -515,10 +503,6 @@ export function getDiscontinuationRiskService(
 
 /**
  * Convenience function for assessing discontinuation risk.
- * Uses singleton service instance.
- * 
- * @param data - User assessment data
- * @returns Promise with risk assessment
  */
 export async function assessDiscontinuationRisk(
   data: UserAssessmentData
@@ -529,8 +513,6 @@ export async function assessDiscontinuationRisk(
 
 /**
  * Check if API is healthy (convenience function).
- * 
- * @returns Promise with health status
  */
 export async function checkApiHealth(): Promise<HealthCheckResponse> {
   const service = getDiscontinuationRiskService();
@@ -539,12 +521,30 @@ export async function checkApiHealth(): Promise<HealthCheckResponse> {
 
 /**
  * Get required features list (convenience function).
- * 
- * @returns Promise with required features
  */
 export async function fetchRequiredFeatures(): Promise<RequiredFeaturesResponse> {
   const service = getDiscontinuationRiskService();
   return service.getRequiredFeatures();
+}
+
+/**
+ * Submit Patient Intake Data (Guest).
+ */
+export async function submitPatientIntake(
+  data: PatientIntakeData
+): Promise<{ code: string; expires_in: string }> {
+  const service = getDiscontinuationRiskService();
+  return service.submitPatientIntake(data);
+}
+
+/**
+ * Fetch Patient Data by Code (Doctor).
+ */
+export async function fetchPatientIntake(
+  code: string
+): Promise<PatientIntakeData> {
+  const service = getDiscontinuationRiskService();
+  return service.fetchPatientIntake(code);
 }
 
 // Export service class for advanced usage

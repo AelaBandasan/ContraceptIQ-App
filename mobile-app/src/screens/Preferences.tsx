@@ -82,7 +82,7 @@ const Preferences = ({ navigation }: Props) => {
   };
 
   const handleViewRecommendation = () => {
-    navigation.navigate("ViewRecommendation");
+    navigation.navigate("ViewRecommendation", {});
   };
 
   return (

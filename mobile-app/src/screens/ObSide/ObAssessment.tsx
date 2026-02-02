@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
     StyleSheet, View, Text, TouchableOpacity,
-    Dimensions, ScrollView, FlatList, Image, StatusBar, Platform, TextInput
+    Dimensions, ScrollView, FlatList, Image, StatusBar, Platform, TextInput, Modal, ActivityIndicator, Alert, SectionList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu } from 'lucide-react-native';
+import { Menu, X } from 'lucide-react-native';
 import Animated, {
     useSharedValue, useAnimatedStyle, withRepeat,
     withTiming, withSequence
@@ -12,6 +12,21 @@ import Animated, {
 import { Picker } from '@react-native-picker/picker';
 
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+
+import { assessDiscontinuationRisk, UserAssessmentData, RiskAssessmentResponse } from '../../services/discontinuationRiskService';
+import RiskAssessmentCard from '../../components/RiskAssessmentCard';
+import { AlertTriangle, ChevronDown, CheckCircle2 } from 'lucide-react-native';
+
+interface PatientIntakeData {
+    details?: any;
+    method_eligibility?: Record<string, number>;
+}
+
+interface MethodSection {
+    title: string;
+    data: string[];
+    category: number;
+}
 
 // --- DATA CONFIGURATION ---
 const STEPS = [
@@ -73,15 +88,100 @@ const ObAssessment = ({ navigation, route }: any) => {
     const [screen, setScreen] = useState('welcome'); // 'welcome', 'onboarding', 'review'
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<any>({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [assessmentResult, setAssessmentResult] = useState<RiskAssessmentResponse | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [methodSelectorVisible, setMethodSelectorVisible] = useState(false);
     const isViewOnly = route?.params?.viewOnly;
 
     // Load data if view only
+    // Load data from params (View Only or Imported)
     useEffect(() => {
-        if (isViewOnly && route.params?.patientData) {
-            setFormData(route.params.patientData.details || {});
-            setScreen('review'); // Go directly to review
+        if (route.params?.patientData) {
+            const data = route.params.patientData;
+            // Handle both legacy mock structure (data.details) and flat API structure (data)
+            const initialForm = data.details || data;
+
+            setFormData(initialForm);
+
+            if (isViewOnly || route.params?.imported) {
+                // If view only or imported, go to review screen to verify details
+                setScreen('review');
+            }
         }
-    }, [isViewOnly]);
+    }, [route.params]);
+
+    // --- MEC SORTING LOGIC ---
+    const getSortedMethods = (): MethodSection[] => {
+        // Fallback mock eligibility if none provided (for manual testing)
+        const eligibility = route.params?.patientData?.method_eligibility || {
+            'Pills': 1, 'Implant': 1, 'Condom': 1, // Tier 1
+            'Injectable': 2, 'Patch': 2,           // Tier 2
+            'Copper IUD': 3, 'Intrauterine Device (IUD)': 3 // Tier 3
+        };
+
+        const allMethods = STEPS.find(s => s.id === 'CONTRACEPTIVE_METHOD')?.options || [];
+
+        const tier1: string[] = [];
+        const tier2: string[] = [];
+        const tier3: string[] = [];
+
+        allMethods.forEach(method => {
+            if (method === 'None' || method === 'Withdrawal') {
+                // Always allow basic methods? Or categorize them? 
+                // Assuming they are standard/always allowed -> Tier 1 for now or skip checking
+                tier1.push(method);
+                return;
+            }
+
+            const cat = eligibility[method]; // Get category
+
+            if (!cat) {
+                // If method not in eligibility list, maybe default to Tier 2 or 1? 
+                // Or separate "Unknown"? defaulting to Tier 2 for safety.
+                tier2.push(method);
+            } else if (cat === 1) {
+                tier1.push(method);
+            } else if (cat === 2) {
+                tier2.push(method);
+            } else if (cat === 3) {
+                tier3.push(method);
+            }
+            // Cat 4 is effectively filtered out by not pushing
+        });
+
+        const sections: MethodSection[] = [];
+        if (tier1.length > 0) sections.push({ title: 'Tier 1 - Preferred', data: tier1.sort(), category: 1 });
+        if (tier2.length > 0) sections.push({ title: 'Tier 2 - Generally Allowed', data: tier2.sort(), category: 2 });
+        if (tier3.length > 0) sections.push({ title: 'Tier 3 - Use With Caution', data: tier3.sort(), category: 3 });
+
+        return sections;
+    };
+
+    const handleMethodSelect = (method: string) => {
+        const sections = getSortedMethods();
+        // Find category
+        let category = 0;
+        for (const sec of sections) {
+            if (sec.data.includes(method)) {
+                category = sec.category;
+                break;
+            }
+        }
+
+        setMethodSelectorVisible(false);
+        updateVal(method);
+
+        if (category === 3) {
+            setTimeout(() => {
+                Alert.alert(
+                    "Note",
+                    "This method is MEC Category 3 for this patient.",
+                    [{ text: "OK" }]
+                );
+            }, 500);
+        }
+    };
 
     const step = STEPS[currentStep] || STEPS[0];
 
@@ -98,18 +198,89 @@ const ObAssessment = ({ navigation, route }: any) => {
         }
     };
 
-    const handleSubmit = () => {
+    const mapFormDataToApi = (data: any): UserAssessmentData => {
+        // Helper to get index + 1 (1-based) or default to 1
+        const getIndex = (key: string, list: string[] | undefined) => {
+            if (!list) return 1;
+            const idx = list.indexOf(data[key]);
+            return idx !== -1 ? idx + 1 : 1;
+        };
+
+        const getNumber = (key: string, def = 0) => {
+            const val = parseInt(data[key]);
+            return isNaN(val) ? def : val;
+        };
+
+        return {
+            AGE: getNumber('AGE', 25),
+            REGION: getIndex('REGION', STEPS.find(s => s.id === 'REGION')?.options),
+            EDUC_LEVEL: getIndex('EDUC_LEVEL', STEPS.find(s => s.id === 'EDUC_LEVEL')?.options),
+            RELIGION: getIndex('RELIGION', STEPS.find(s => s.id === 'RELIGION')?.options),
+            ETHNICITY: getIndex('ETHNICITY', STEPS.find(s => s.id === 'ETHNICITY')?.options),
+            MARITAL_STATUS: getIndex('MARITAL_STATUS', STEPS.find(s => s.id === 'MARITAL_STATUS')?.options),
+            RESIDING_WITH_PARTNER: data['RESIDING_WITH_PARTNER'] === 'Yes' ? 1 : 0,
+            HOUSEHOLD_HEAD_SEX: getIndex('HOUSEHOLD_HEAD_SEX', STEPS.find(s => s.id === 'HOUSEHOLD_HEAD_SEX')?.options),
+            OCCUPATION: getIndex('OCCUPATION', STEPS.find(s => s.id === 'OCCUPATION')?.options),
+            HUSBANDS_EDUC: getIndex('HUSBAND_EDUC_LEVEL', STEPS.find(s => s.id === 'HUSBAND_EDUC_LEVEL')?.options),
+            HUSBAND_AGE: getNumber('HUSBAND_AGE', 30),
+            PARTNER_EDUC: getIndex('HUSBAND_EDUC_LEVEL', STEPS.find(s => s.id === 'HUSBAND_EDUC_LEVEL')?.options), // Fallback if same field used
+            SMOKE_CIGAR: getIndex('SMOKE_CIGAR', STEPS.find(s => s.id === 'SMOKE_CIGAR')?.options),
+            PARITY: getNumber('PARITY', 0),
+            DESIRE_FOR_MORE_CHILDREN: getIndex('DESIRE_FOR_MORE_CHILDREN', STEPS.find(s => s.id === 'DESIRE_FOR_MORE_CHILDREN')?.options),
+            WANT_LAST_CHILD: getIndex('WANT_LAST_CHILD', STEPS.find(s => s.id === 'WANT_LAST_CHILD')?.options),
+            WANT_LAST_PREGNANCY: getIndex('WANT_LAST_PREGNANCY', STEPS.find(s => s.id === 'WANT_LAST_PREGNANCY')?.options),
+            CONTRACEPTIVE_METHOD: getIndex('CONTRACEPTIVE_METHOD', STEPS.find(s => s.id === 'CONTRACEPTIVE_METHOD')?.options),
+            MONTH_USE_CURRENT_METHOD: getNumber('MONTH_USE_CURRENT_METHOD', 1),
+            PATTERN_USE: getIndex('PATTERN_USE', STEPS.find(s => s.id === 'PATTERN_USE')?.options),
+            TOLD_ABT_SIDE_EFFECTS: data['TOLD_ABT_SIDE_EFFECTS']?.includes('Yes') ? 1 : 0,
+            LAST_SOURCE_TYPE: getIndex('LAST_SOURCE_TYPE', STEPS.find(s => s.id === 'LAST_SOURCE_TYPE')?.options),
+            LAST_METHOD_DISCONTINUED: getIndex('LAST_METHOD_DISCONTINUED', STEPS.find(s => s.id === 'LAST_METHOD_DISCONTINUED')?.options),
+            REASON_DISCONTINUED: getIndex('REASON_DISCONTINUED', STEPS.find(s => s.id === 'REASON_DISCONTINUED')?.options),
+            HSBND_DESIRE_FOR_MORE_CHILDREN: getIndex('HSBND_DESIRE_FOR_MORE_CHILDREN', STEPS.find(s => s.id === 'HSBND_DESIRE_FOR_MORE_CHILDREN')?.options),
+        };
+    };
+
+    const handleAssessSubmit = async () => {
+        setIsLoading(true);
+        try {
+            // 1. Map Data
+            const apiData = mapFormDataToApi(formData);
+
+            // 2. Call API
+            const result = await assessDiscontinuationRisk(apiData);
+
+            // 3. Navigate to Result Screen
+            navigation.navigate('AssessmentResultScreen', {
+                riskResult: result,
+                patientData: formData
+            });
+
+        } catch (error: any) {
+            Alert.alert("Assessment Failed", error.message || "Something went wrong. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const savePatientData = (status: string) => {
         const newPatient = {
             id: Date.now().toString(),
             name: formData.NAME || 'New Patient',
             lastVisit: 'Just now',
-            status: 'Waiting',
+            status: status,
             age: formData.AGE || '-',
             type: 'New Visit',
-            details: formData
+            details: formData,
+            assessmentResult: null // No assessment result when saving draft
         };
-        alert("Assessment Submitted!");
-        navigation.navigate('ObHomeScreen', { newPatient });
+        navigation.navigate('ObDrawer', {
+            screen: 'ObHomeScreen',
+            params: { newPatient }
+        });
+    };
+
+    const handleSaveDraft = () => {
+        savePatientData('Waiting');
     };
 
     const updateVal = (val: string) => {
@@ -229,6 +400,77 @@ const ObAssessment = ({ navigation, route }: any) => {
                                     return <Picker.Item key={val} label={val.toString()} value={val.toString()} />;
                                 })}
                             </Picker>
+                        ) : step.id === 'CONTRACEPTIVE_METHOD' ? (
+                            <View style={{ width: '100%' }}>
+                                <TouchableOpacity
+                                    style={styles.dropdownButton}
+                                    onPress={() => setMethodSelectorVisible(true)}
+                                >
+                                    <Text style={formData[step.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
+                                        {formData[step.id] || "Select Method"}
+                                    </Text>
+                                    <ChevronDown size={20} color="#64748B" />
+                                </TouchableOpacity>
+                                <Text style={styles.helperText}>Sorted by Medical Eligibility (MEC)</Text>
+                                <View style={{ height: 20 }} />
+
+                                <Modal
+                                    animationType="slide"
+                                    transparent={true}
+                                    visible={methodSelectorVisible}
+                                    onRequestClose={() => setMethodSelectorVisible(false)}
+                                >
+                                    <View style={styles.modalOverlay}>
+                                        <View style={styles.selectorContent}>
+                                            <View style={styles.selectorHeader}>
+                                                <Text style={styles.selectorTitle}>Select Contraceptive Method</Text>
+                                                <TouchableOpacity onPress={() => setMethodSelectorVisible(false)}>
+                                                    <X size={24} color="#1E293B" />
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            <SectionList
+                                                sections={getSortedMethods()}
+                                                keyExtractor={(item, index) => item + index}
+                                                renderItem={({ item, section }) => (
+                                                    <TouchableOpacity
+                                                        style={styles.methodItem}
+                                                        onPress={() => handleMethodSelect(item)}
+                                                    >
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                            {section.category === 3 && (
+                                                                <AlertTriangle size={18} color="#D97706" style={{ marginRight: 10 }} />
+                                                            )}
+                                                            <Text style={[
+                                                                styles.methodText,
+                                                                section.category === 3 && { color: '#B45309' }
+                                                            ]}>{item}</Text>
+                                                        </View>
+                                                        {formData[step.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
+                                                    </TouchableOpacity>
+                                                )}
+                                                renderSectionHeader={({ section: { title, category } }) => (
+                                                    <View style={[
+                                                        styles.sectionHeader,
+                                                        category === 1 ? { backgroundColor: '#DCFCE7' } :
+                                                            category === 2 ? { backgroundColor: '#E0F2FE' } :
+                                                                { backgroundColor: '#FEF3C7' }
+                                                    ]}>
+                                                        <Text style={[
+                                                            styles.sectionHeaderText,
+                                                            category === 1 ? { color: '#166534' } :
+                                                                category === 2 ? { color: '#0369A1' } :
+                                                                    { color: '#92400E' }
+                                                        ]}>{title}</Text>
+                                                    </View>
+                                                )}
+                                                stickySectionHeadersEnabled={false}
+                                                contentContainerStyle={{ paddingBottom: 20 }}
+                                            />
+                                        </View>
+                                    </View>
+                                </Modal>
+                            </View>
                         ) : step.type === 'select' ? (
                             <FlatList data={step.options} renderItem={({ item }) => (
                                 <TouchableOpacity style={[styles.optionBtn, formData[step.id] === item && styles.selectedBtn]} onPress={() => updateVal(item)}>
@@ -254,16 +496,42 @@ const ObAssessment = ({ navigation, route }: any) => {
             </View>
 
             <View style={styles.stepFooter}>
-                <View style={styles.pillBar}>
-                    <TouchableOpacity onPress={handleBack} style={styles.backBtn}><Text style={styles.backBtnText}>Back</Text></TouchableOpacity>
-                    {/* Maximize space in left -> Continue button expands */}
-                    {!isViewOnly && (
-                        <TouchableOpacity onPress={screen === 'review' ? handleSubmit : handleNext} style={[styles.nextBtn, { flex: 1, marginLeft: 15, justifyContent: 'center' }]}>
-                            <Text style={styles.nextBtnText}>{screen === 'review' ? "Submit" : "Continue"}</Text>
-                            <Text style={styles.arrow}> »</Text>
+                {screen === 'review' ? (
+                    <View style={styles.reviewFooterContainer}>
+                        <TouchableOpacity
+                            onPress={handleAssessSubmit}
+                            style={styles.primaryActionBtn}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator color="#FFF" />
+                            ) : (
+                                <Text style={styles.primaryActionBtnText}>Generate Risk Assessment</Text>
+                            )}
                         </TouchableOpacity>
-                    )}
-                </View>
+
+                        <TouchableOpacity
+                            onPress={handleSaveDraft}
+                            style={styles.secondaryActionBtn}
+                        >
+                            <Text style={styles.secondaryActionBtnText}>Save Draft & Exit</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.pillBar}>
+                        <TouchableOpacity onPress={handleBack} style={styles.backBtn}><Text style={styles.backBtnText}>Back</Text></TouchableOpacity>
+                        {/* Maximize space in left -> Continue button expands */}
+                        {!isViewOnly && (
+                            <TouchableOpacity
+                                onPress={handleNext}
+                                style={[styles.nextBtn, { flex: 1, marginLeft: 15, justifyContent: 'center' }]}
+                            >
+                                <Text style={styles.nextBtnText}>Continue</Text>
+                                <Text style={styles.arrow}> »</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
             </View>
         </SafeAreaView>
     );
@@ -400,5 +668,158 @@ const styles = StyleSheet.create({
         color: '#1E293B',
         borderWidth: 1,
         borderColor: '#E2E8F0',
+    },
+    // New Footer Styles for Review Screen
+    reviewFooterContainer: {
+        width: '100%',
+        alignItems: 'center',
+        gap: 12,
+    },
+    primaryActionBtn: {
+        backgroundColor: '#E45A92',
+        borderRadius: 30,
+        height: 56,
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#E45A92',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    primaryActionBtnText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    secondaryActionBtn: {
+        backgroundColor: 'transparent',
+        paddingVertical: 12,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    secondaryActionBtnText: {
+        color: '#E45A92',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: '#FFF',
+        borderRadius: 20,
+        padding: 20,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#101828',
+    },
+    closeModalBtn: {
+        marginTop: 20,
+        backgroundColor: '#d3347a',
+        paddingVertical: 15,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    closeModalBtnText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    // Selector Styles
+    dropdownButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 18,
+        backgroundColor: '#F8FAFC',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    dropdownTextSelected: {
+        fontSize: 16,
+        color: '#1E293B',
+        fontWeight: '600',
+    },
+    dropdownTextPlaceholder: {
+        fontSize: 16,
+        color: '#94A3B8',
+    },
+    helperText: {
+        fontSize: 12,
+        color: '#64748B',
+        marginTop: 8,
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    selectorContent: {
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 20,
+        height: '80%', // Bottom sheet style
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+    },
+    selectorHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F5F9',
+    },
+    selectorTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1E293B',
+    },
+    sectionHeader: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        marginBottom: 10,
+        marginTop: 15,
+    },
+    sectionHeaderText: {
+        fontSize: 13,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    methodItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 10,
+        borderRadius: 12,
+        marginBottom: 5,
+        backgroundColor: '#F8FAFC',
+    },
+    methodText: {
+        fontSize: 16,
+        color: '#334155',
+        fontWeight: '500',
     }
 });
