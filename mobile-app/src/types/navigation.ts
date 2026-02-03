@@ -34,6 +34,7 @@ export type RootStackParamList = {
   };
   ConsultationCodeScreen: {
     patientData: any;
+    riskResult?: any; // Should ideally use RiskAssessmentResponse from service
   };
   GuestAssessment: {
     preFilledData?: {

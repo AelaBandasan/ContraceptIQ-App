@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Clipboard } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ArrowLeft, Copy, CheckCircle2 } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { submitPatientIntake, PatientIntakeData } from '../services/discontinuationRiskService';
 
 const ConsultationCodeScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
-    const { patientData } = route.params as { patientData: any } || {};
+    const { patientData, riskResult } = route.params as { patientData: any, riskResult?: any } || {};
 
     const [loading, setLoading] = useState(false);
     const [code, setCode] = useState<string | null>(null);
@@ -90,6 +90,35 @@ const ConsultationCodeScreen = () => {
                         </View>
                     )}
                 </View>
+
+                {/* Risk Result Section */}
+                {riskResult && (
+                    <View style={[styles.card, { marginTop: 16, backgroundColor: riskResult.risk_level === 'HIGH' ? '#FEF2F2' : '#F0FDF4' }]}>
+                        <Text style={styles.codeLabel}>DISCONTINUATION RISK ASSESSMENT</Text>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                            <Ionicons
+                                name={riskResult.risk_level === 'HIGH' ? 'alert-circle' : 'checkmark-circle'}
+                                size={32}
+                                color={riskResult.risk_level === 'HIGH' ? '#EF4444' : '#22C55E'}
+                            />
+                            <Text style={[
+                                styles.riskLevelText,
+                                { color: riskResult.risk_level === 'HIGH' ? '#EF4444' : '#166534' }
+                            ]}>
+                                {riskResult.risk_level} RISK
+                            </Text>
+                        </View>
+
+                        <Text style={styles.recommendationText}>
+                            {riskResult.recommendation}
+                        </Text>
+
+                        <Text style={styles.confidenceText}>
+                            AI Confidence: {(riskResult.confidence * 100).toFixed(1)}%
+                        </Text>
+                    </View>
+                )}
 
                 <View style={styles.infoBox}>
                     <Text style={styles.infoTitle}>What is this?</Text>
@@ -242,6 +271,23 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    riskLevelText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginLeft: 10,
+    },
+    recommendationText: {
+        fontSize: 14,
+        color: '#334155',
+        textAlign: 'center',
+        marginBottom: 8,
+        lineHeight: 20,
+    },
+    confidenceText: {
+        fontSize: 12,
+        color: '#64748B',
+        fontStyle: 'italic',
     }
 });
 

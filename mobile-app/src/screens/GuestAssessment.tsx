@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, ChevronRight } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { assessDiscontinuationRisk, UserAssessmentData } from '../services/discontinuationRiskService';
+import { ActivityIndicator, Alert } from 'react-native';
 
 // --- PHASE 1 DATA FIELDS (Guest Input) ---
 const STEPS = [
@@ -38,6 +40,7 @@ const STEPS = [
 const GuestAssessment = ({ navigation, route }: any) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<any>({});
+    const [loading, setLoading] = useState(false);
 
     const step = STEPS[currentStep];
 
@@ -54,28 +57,88 @@ const GuestAssessment = ({ navigation, route }: any) => {
         }
     }, [preFilledData]);
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
         } else {
             // Assessment Complete -> Go to Consultation Code Generation
+            setLoading(true);
+            try {
+                // Map form data to UserAssessmentData
+                // NOTE: This mapping assumes form values match API expectations or are converted here.
+                // For this implementation, we will perform necessary conversions.
+                const mapToApiData = (data: any): UserAssessmentData => {
+                    const getVal = (key: string, defaultVal: number = 0) => {
+                        const val = data[key];
+                        if (!val) return defaultVal;
+                        if (typeof val === 'number') return val;
+                        // Handle numeric strings
+                        if (!isNaN(Number(val))) return Number(val);
+                        // Handle "Yes"/"No"
+                        if (val === 'Yes') return 1;
+                        if (val === 'No') return 0;
+                        // Handle others as string or map specific enums if needed
+                        return val;
+                    };
 
-            const patientData = {
-                details: formData,
-                // Full MEC Calculation (Mock Logic adjusted for demo)
-                // In production, this would use the real engine or backend logic
-                method_eligibility: {
-                    'Pills': parseInt(formData['AGE'] || '25') > 35 && formData['SMOKE_CIGAR'] === 'Current daily' ? 3 : 1,
-                    'Implant': 1,
-                    'Condom': 1,
-                    'Injectable': 1,
-                    'Patch': 2,
-                    'Copper IUD': 1,
-                    'Intrauterine Device (IUD)': 1
+                    return {
+                        AGE: getVal('AGE', 25),
+                        REGION: getVal('REGION', 1), // Default or map string to ID
+                        EDUC_LEVEL: getVal('EDUC_LEVEL', 1),
+                        RELIGION: getVal('RELIGION', 1),
+                        ETHNICITY: getVal('ETHNICITY', 1),
+                        MARITAL_STATUS: getVal('MARITAL_STATUS', 1),
+                        RESIDING_WITH_PARTNER: getVal('RESIDING_WITH_PARTNER'),
+                        HOUSEHOLD_HEAD_SEX: getVal('HOUSEHOLD_HEAD_SEX') === 'Male' ? 1 : 2,
+                        OCCUPATION: getVal('OCCUPATION', 1),
+                        HUSBANDS_EDUC: getVal('HUSBANDS_EDUC', 1),
+                        HUSBAND_AGE: getVal('HUSBAND_AGE', 30),
+                        PARTNER_EDUC: getVal('PARTNER_EDUC', 1),
+                        SMOKE_CIGAR: getVal('SMOKE_CIGAR') === 'Thinking about quitting' || getVal('SMOKE_CIGAR') === 'Current daily' ? 1 : 0,
+                        PARITY: getVal('PARITY'),
+                        DESIRE_FOR_MORE_CHILDREN: getVal('DESIRE_FOR_MORE_CHILDREN'),
+                        WANT_LAST_CHILD: getVal('WANT_LAST_CHILD'),
+                        WANT_LAST_PREGNANCY: getVal('WANT_LAST_PREGNANCY'),
+                        CONTRACEPTIVE_METHOD: 1, // Default or derived
+                        MONTH_USE_CURRENT_METHOD: 1,
+                        PATTERN_USE: 1,
+                        TOLD_ABT_SIDE_EFFECTS: 0,
+                        LAST_SOURCE_TYPE: 1,
+                        LAST_METHOD_DISCONTINUED: getVal('LAST_METHOD_DISCONTINUED', 0),
+                        REASON_DISCONTINUED: getVal('REASON_DISCONTINUED', 0),
+                        HSBND_DESIRE_FOR_MORE_CHILDREN: getVal('HSBND_DESIRE_FOR_MORE_CHILDREN'),
+                    };
+                };
+
+                const apiData = mapToApiData(formData);
+                let riskResult = null;
+
+                try {
+                    riskResult = await assessDiscontinuationRisk(apiData);
+                } catch (err) {
+                    console.log('ML Assessment failed, proceeding without risk score', err);
+                    // Optionally alert user or just flow through
                 }
-            };
 
-            navigation.navigate('ConsultationCodeScreen', { patientData });
+                const patientData = {
+                    details: formData,
+                    method_eligibility: {
+                        'Pills': parseInt(formData['AGE'] || '25') > 35 && formData['SMOKE_CIGAR'] === 'Current daily' ? 3 : 1,
+                        'Implant': 1,
+                        'Condom': 1,
+                        'Injectable': 1,
+                        'Patch': 2,
+                        'Copper IUD': 1,
+                        'Intrauterine Device (IUD)': 1
+                    }
+                };
+
+                navigation.navigate('ConsultationCodeScreen', { patientData, riskResult });
+            } catch (error) {
+                Alert.alert("Error", "Something went wrong during assessment.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -158,13 +221,19 @@ const GuestAssessment = ({ navigation, route }: any) => {
 
             {/* Footer */}
             <View style={styles.footer}>
-                <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+                <TouchableOpacity onPress={handleBack} style={styles.backBtn} disabled={loading}>
                     <Text style={styles.backBtnText}>Back</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleNext} style={styles.nextBtn}>
-                    <Text style={styles.nextBtnText}>Next</Text>
-                    <ChevronRight size={20} color="#000" />
+                <TouchableOpacity onPress={handleNext} style={styles.nextBtn} disabled={loading}>
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#000" />
+                    ) : (
+                        <>
+                            <Text style={styles.nextBtnText}>Next</Text>
+                            <ChevronRight size={20} color="#000" />
+                        </>
+                    )}
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
