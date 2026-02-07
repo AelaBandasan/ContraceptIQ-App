@@ -81,6 +81,7 @@ export interface PatientIntakeData {
 
   // Computed Eligibility
   method_eligibility: Record<string, number>;
+  mec_recommendations?: string[];
 }
 
 export interface ClinicalData extends Pick<UserAssessmentData,
@@ -223,6 +224,24 @@ class DiscontinuationRiskService {
   }
 
   /**
+   * Retrieve Patient Intake Data by Code (Doctor)
+   */
+  async getPatientIntake(code: string): Promise<PatientIntakeData> {
+    const logger = createModuleLogger('DiscontinuationRiskService');
+    try {
+      const online = await isOnline();
+      if (!online) throw createAppError(new Error('Device is offline'), 'getPatientIntake');
+
+      const response = await this.client.get<PatientIntakeData>(`/api/v1/patient-intake/${code}`);
+      logger.info('Patient intake retrieved', { code });
+      return response.data;
+    } catch (error) {
+      logger.error('Failed to retrieve patient intake', undefined, { error });
+      throw error;
+    }
+  }
+
+  /**
    * Fetch Patient Data by Code (Doctor).
    */
   async fetchPatientIntake(code: string): Promise<PatientIntakeData> {
@@ -335,7 +354,12 @@ class DiscontinuationRiskService {
           logger.error(
             'Validation failed',
             undefined,
-            { error: validationError, details: apiError?.error }
+            {
+              error: validationError,
+              details: apiError?.error,
+              validationErrors: apiError?.validation_errors, // Log specific field errors
+              missingFeatures: apiError?.missing_features   // Log missing features
+            }
           );
           throw validationError;
         }

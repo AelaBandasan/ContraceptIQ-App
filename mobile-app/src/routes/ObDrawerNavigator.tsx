@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { LogOut, LayoutDashboard, FileText } from 'lucide-react-native';
-import ObHomeScreen from '../screens/ObSide/ObHomeScreen';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import { ObDrawerParamList } from '../types/navigation';
 
@@ -68,15 +67,7 @@ const ObDrawerNavigator = ({ route }: any) => {
                 },
             }}
         >
-            <Drawer.Screen
-                name="ObHomeScreen"
-                component={ObHomeScreen}
-                initialParams={{ doctorName }}
-                options={{
-                    title: 'Dashboard',
-                    drawerIcon: ({ color }) => <LayoutDashboard size={22} color={color} />
-                }}
-            />
+          
             <Drawer.Screen
                 name="ObAssessment"
                 component={ObAssessment}
@@ -85,6 +76,7 @@ const ObDrawerNavigator = ({ route }: any) => {
                     drawerIcon: ({ color }) => <FileText size={22} color={color} />
                 }}
             />
+          
         </Drawer.Navigator>
     );
 };

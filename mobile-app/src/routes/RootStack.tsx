@@ -6,18 +6,15 @@ import LoginforOB from '../screens/ObSide/LoginforOB';
 import Recommendation from '../screens/Recommendation';
 import Preferences from '../screens/Preferences';
 import ViewRecom from '../screens/ViewRecom';
-import ObRecom from '../screens/ObSide/ObRecom';
-import ObPref from '../screens/ObSide/ObPref';
-import ObViewRecom from '../screens/ObSide/ObViewRecom';
 import SignupforOB from '../screens/ObSide/SignupforOB';
-import ObDrawerNavigator from './ObDrawerNavigator';
+import ObTabNavigator from './ObTabNavigator'; // Use Tab Navigator
+import ObAssessment from '../screens/ObSide/ObAssessment'; // Added
 import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
 import GuestAssessment from '../screens/GuestAssessment';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
 const RootStack = () => {
   return (
     <Stack.Navigator
@@ -26,15 +23,18 @@ const RootStack = () => {
     >
       <Stack.Screen name="UserStartingScreen" component={UserStartingScreen} />
       <Stack.Screen name="LoginforOB" component={LoginforOB} />
+
+      {/* ... other screens ... */}
+
       <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
       <Stack.Screen name="Recommendation" component={Recommendation} />
       <Stack.Screen name="Preferences" component={Preferences} />
       <Stack.Screen name="ViewRecommendation" component={ViewRecom} />
-      <Stack.Screen name="ObRecom" component={ObRecom} />
-      <Stack.Screen name="ObPref" component={ObPref} />
-      <Stack.Screen name="ObViewRecom" component={ObViewRecom} />
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
-      <Stack.Screen name="ObDrawer" component={ObDrawerNavigator} />
+
+      {/* Doctor Flow */}
+      <Stack.Screen name="ObDrawer" component={ObTabNavigator} />
+      <Stack.Screen name="ObAssessment" component={ObAssessment} />
       <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />

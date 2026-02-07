@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
+import Logo from '../../assets/tempLogo.png';
 import React from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
@@ -17,6 +18,9 @@ const UserStartingScreen = ({ navigation }: any) => {
                     <Text style={styles.title}>ContraceptIQ</Text>
                     <Text style={styles.text}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor </Text>
                 </View>
+
+                <Image source={Logo} style={styles.logo} />
+
 
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
@@ -116,5 +120,12 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
         fontWeight: '400',
         top: hp('0.5%') // Relative top adjustment
+    },
+    logo: {
+        width: wp('80%'),
+        height: wp('80%'),
+        resizeMode: 'contain',
+        alignSelf: 'center',
+        marginTop: hp('20%'),
     },
 })

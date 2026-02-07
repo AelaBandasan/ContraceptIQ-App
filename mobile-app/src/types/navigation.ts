@@ -23,10 +23,7 @@ export type RootStackParamList = {
       'POP': 1 | 2 | 3 | 4;
     };
   };
-  ObRecom: undefined;
-  ObPref: undefined;
-  ObViewRecom: undefined;
-  ObHomeScreen: undefined;
+
   ObDrawer: { doctorName?: string };
   AssessmentResultScreen: {
     riskResult: any; // Using 'any' to avoid circular dependencies for now, or import type if possible
@@ -42,6 +39,13 @@ export type RootStackParamList = {
       prefs: string[];
     };
   };
+  ObAssessment: {
+    patientData: any;
+    mec_recommendations?: any;
+    consultationId?: string;
+    doctorName?: string;
+    isDoctorAssessment?: boolean;
+  };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -56,8 +60,8 @@ export type DrawerParamList = {
 
 // OB Drawer Navigator
 export type ObDrawerParamList = {
-  ObHomeScreen: { doctorName?: string };
   ObAssessment: undefined;
+  Dashboard: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack

@@ -1,8 +1,12 @@
-import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput, Platform, Pressable, ActivityIndicator, ScrollView } from 'react-native'
+import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, Image, TextInput, Platform, Pressable, ActivityIndicator, ScrollView, Alert, View } from 'react-native'
+import Logo from '../../../assets/tempLogo.png';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react-native';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../config/firebaseConfig';
 
 const COLORS = {
   primary: '#E45A92',
@@ -20,14 +24,49 @@ const LoginforOB = ({ navigation }: any) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      // 1. Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Verify user exists in Firestore 'users' collection
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const doctorName = userData.fullName || "Dr. " + (userData.email ? userData.email.split('@')[0] : 'User');
+
+        // Navigate only if verification passes
+        navigation.navigate('ObDrawer', { doctorName });
+      } else {
+        // User is authenticated but not in our DB (e.g. deleted account or unauthorized)
+        await signOut(auth);
+        Alert.alert('Access Denied', 'User not found in the database. Please contact support.');
+      }
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      let errorMessage = 'An error occurred during sign in.';
+
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      }
+
+      Alert.alert('Login Failed', errorMessage);
+    } finally {
       setIsLoading(false);
-      const namePart = email.split('@')[0];
-      const doctorName = "Dr. " + namePart.charAt(0).toUpperCase() + namePart.slice(1);
-      navigation.navigate('ObDrawer', { doctorName });
-    }, 2000);
+    }
   };
 
   const fillDemoCredentials = () => {
@@ -45,11 +84,7 @@ const LoginforOB = ({ navigation }: any) => {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
           <View style={styles.logoSection}>
             <View style={styles.logoContainer}>
-              <Image
-                source={require('../../../assets/tempLogo.png')} // Replace with your logo path
-                style={styles.logo}
-                resizeMode="contain"
-              />
+              <Image source={Logo} style={styles.logo} resizeMode="contain" />
             </View>
             <Text style={styles.title}>ContraceptIQ</Text>
             <Text style={styles.welcomeText}>Create your OB Account</Text>

@@ -1,8 +1,11 @@
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Clipboard } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ArrowLeft, Copy, CheckCircle2 } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { submitPatientIntake, PatientIntakeData } from '../services/discontinuationRiskService';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 
 const ConsultationCodeScreen = () => {
     const navigation = useNavigation();
@@ -18,6 +21,7 @@ const ConsultationCodeScreen = () => {
     }, []);
 
     const generateCode = async () => {
+        console.log("Generating code for patient:", patientData?.NAME);
         if (!patientData) {
             Alert.alert("Error", "No patient data found.");
             return;
@@ -33,10 +37,29 @@ const ConsultationCodeScreen = () => {
                 method_eligibility: patientData.method_eligibility || {}
             };
 
+            console.log("Submitting intake data...");
             const result = await submitPatientIntake(intakeData);
+            console.log("Intake result:", result);
+
+            // Save to Firestore for OB Retrieval
+            console.log("Saving to Firestore...");
+            await setDoc(doc(db, 'consultations', result.code), {
+                code: result.code,
+                patientData: {
+                    ...intakeData,
+                    mec_recommendations: patientData.mec_recommendations || []
+                },
+                riskResult: riskResult || null,
+                createdAt: new Date().toISOString(),
+                expiresIn: result.expires_in,
+                status: 'waiting' // Initial status
+            });
+            console.log("Saved to Firestore successfully.");
+
             setCode(result.code);
             setExpiresIn(result.expires_in);
         } catch (error: any) {
+            console.error("Generate Code Error:", error);
             Alert.alert("Submission Failed", error.message || "Could not generate consultation code.");
         } finally {
             setLoading(false);
