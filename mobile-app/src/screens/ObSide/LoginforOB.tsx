@@ -1,8 +1,12 @@
-import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput, Platform, Pressable, ActivityIndicator } from 'react-native'
+import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, Image, TextInput, Platform, Pressable, ActivityIndicator, ScrollView, Alert, View } from 'react-native'
+import Logo from '../../../assets/tempLogo.png';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react-native';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../config/firebaseConfig';
 
 const COLORS = {
   primary: '#E45A92',
@@ -20,11 +24,49 @@ const LoginforOB = ({ navigation }: any) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      // 1. Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Verify user exists in Firestore 'users' collection
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const doctorName = userData.fullName || "Dr. " + (userData.email ? userData.email.split('@')[0] : 'User');
+
+        // Navigate only if verification passes
+        navigation.navigate('ObDrawer', { doctorName });
+      } else {
+        // User is authenticated but not in our DB (e.g. deleted account or unauthorized)
+        await signOut(auth);
+        Alert.alert('Access Denied', 'User not found in the database. Please contact support.');
+      }
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      let errorMessage = 'An error occurred during sign in.';
+
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
+      }
+
+      Alert.alert('Login Failed', errorMessage);
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const fillDemoCredentials = () => {
@@ -34,116 +76,113 @@ const LoginforOB = ({ navigation }: any) => {
   };
 
   return (
-
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}
       >
-        <View style={styles.logoSection}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/tempLogo.png')} // Replace with your logo path
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.title}>ContraceptIQ</Text>
-          <Text style={styles.welcomeText}>Create your OB Account</Text>
-          <Text style={styles.subtext}>Your expertise. Smarter contraceptive care.</Text>
-        </View>
-
-        <Pressable style={styles.demoBanner} onPress={fillDemoCredentials}>
-          <View style={styles.demoContent}>
-            <Text style={styles.demoTitle}>🎉 Demo Credentials</Text>
-            <Text style={styles.demoText}>Email: ob@gmail.com</Text>
-            <Text style={styles.demoText}>Password: password</Text>
-            <Text style={styles.demoHint}>Tap here to auto-fill</Text>
-          </View>
-        </Pressable>
-
-        <View style={styles.form}>
-          {/* Email */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputWrapper}>
-              <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+          <View style={styles.logoSection}>
+            <View style={styles.logoContainer}>
+              <Image source={Logo} style={styles.logo} resizeMode="contain" />
             </View>
+            <Text style={styles.title}>ContraceptIQ</Text>
+            <Text style={styles.welcomeText}>Create your OB Account</Text>
+            <Text style={styles.subtext}>Your expertise. Smarter contraceptive care.</Text>
           </View>
 
-          {/* Password */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
-              <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
+          <Pressable style={styles.demoBanner} onPress={fillDemoCredentials}>
+            <View style={styles.demoContent}>
+              <Text style={styles.demoTitle}>🎉 Demo Credentials</Text>
+              <Text style={styles.demoText}>Email: ob@gmail.com</Text>
+              <Text style={styles.demoText}>Password: password</Text>
+              <Text style={styles.demoHint}>Tap here to auto-fill</Text>
+            </View>
+          </Pressable>
+
+          <View style={styles.form}>
+            {/* Email */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            {/* Password */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color="#9CA3AF" />
+                  ) : (
+                    <Eye size={20} color="#9CA3AF" />
+                  )}
+                </Pressable>
+              </View>
+              {/* Forgot Password */}
+              <Pressable style={styles.forgotPassword}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </Pressable>
+
+              {/* Login Button */}
               <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
+                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
               >
-                {showPassword ? (
-                  <EyeOff size={20} color="#9CA3AF" />
-                ) : (
-                  <Eye size={20} color="#9CA3AF" />
-                )}
+                <LinearGradient
+                  colors={['#d3347a', '#e83c91']}
+                  style={styles.buttonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <ArrowRight size={20} color="#FFFFFF" />
+                    </>
+                  )}
+                </LinearGradient>
               </Pressable>
             </View>
-            {/* Forgot Password */}
-            <Pressable style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </Pressable>
 
-            {/* Login Button */}
-            <Pressable
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <LinearGradient
-                colors={['#d3347a', '#e83c91']}
-                style={styles.buttonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Text style={styles.loginButtonText}>Sign In</Text>
-                    <ArrowRight size={20} color="#FFFFFF" />
-                  </>
-                )}
-              </LinearGradient>
-            </Pressable>
+            <View style={styles.registerSection}>
+              <Text style={styles.registerText}>Don't have an account? </Text>
+              <Pressable onPress={() => navigation.navigate('SignupforOB')}>
+                <Text style={styles.registerLink}>Sign Up</Text>
+              </Pressable>
+            </View>
           </View>
-
-          <View style={styles.registerSection}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
-            <Pressable onPress={() => navigation.navigate('SignupforOB')}>
-              <Text style={styles.registerLink}>Sign Up</Text>
-            </Pressable>
-          </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

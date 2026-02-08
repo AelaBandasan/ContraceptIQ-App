@@ -5,27 +5,25 @@ import {
   View,
   TouchableOpacity,
   Image,
-  Dimensions,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import type { DrawerScreenProps } from '../types/navigation';
-import { HeaderWithMenu, ScreenContainer } from '../components';
-import { colors, spacing, typography, borderRadius, shadows } from '../theme';
+import { colors, spacing, typography } from '../theme';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 type Props = DrawerScreenProps<'Home'>;
 
-const { width } = Dimensions.get('window');
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const contraceptiveMethods = [
-    { id: '1', name: 'Pills', image: null },
-    { id: '2', name: 'Patch', image: null },
-    { id: '3', name: 'IUD', image: null },
-    { id: '4', name: 'Implants', image: null },
-    { id: '5', name: 'Injections', image: null },
+    { id: '1', name: 'Pills', image: require('../../assets/image/pillss.png') },
+    { id: '2', name: 'Patch', image: require('../../assets/image/patchh.png') },
+    { id: '3', name: 'IUD', image: require('../../assets/image/copperiud.png') },
+    { id: '4', name: 'Implants', image: require('../../assets/image/implantt.png') },
+    { id: '5', name: 'Injections', image: require('../../assets/image/injectables.png') },
   ];
 
   return (
@@ -33,11 +31,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+        contentContainerStyle={{ paddingTop: hp('1.2%'), paddingBottom: hp('11%') }}
       >
         {/* Header with menu button */}
         <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
-          <Ionicons name="menu" size={35} color="#000" />
+          <Ionicons name="menu" size={hp('4%')} color="#000" />
         </TouchableOpacity>
 
         {/* Title section */}
@@ -65,7 +63,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           >
             {contraceptiveMethods.map((method) => (
               <TouchableOpacity key={method.id} style={styles.methodItem}>
-                <View style={styles.methodPics} />
+                <Image source={method.image} style={styles.methodPics} />
                 <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>
             ))}
@@ -100,26 +98,26 @@ const styles = StyleSheet.create({
   },
   containerOne: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: wp('5%'),
     backgroundColor: '#fff',
   },
   menuButton: {
-    marginTop: 10,
+    marginTop: hp('1.2%'),
     alignSelf: 'flex-start',
-    marginBottom: 10,
+    marginBottom: hp('1.2%'),
   },
   title: {
-    fontSize: 24,
+    fontSize: hp('3%'), // Resized
     fontWeight: '600',
     textAlign: 'left',
-    marginTop: 10,
+    marginTop: hp('1.2%'),
   },
   tagline: {
-    fontSize: typography.sizes.lg,
+    fontSize: hp('2%'), // Resized
     fontStyle: 'italic',
     textAlign: 'left',
-    marginTop: spacing.xs,
-    paddingBottom: spacing.md,
+    marginTop: hp('0.5%'),
+    paddingBottom: hp('1.5%'),
   },
   infographicContainer: {
     paddingBottom: spacing.md,
@@ -134,52 +132,52 @@ const styles = StyleSheet.create({
   },
   containerTwo: {
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 32,
+    marginTop: hp('2.5%'),
+    marginBottom: hp('4%'),
   },
   containerThree: {
-    paddingBottom: 12,
+    paddingBottom: hp('1.5%'),
   },
   containerFour: {
-    marginTop: spacing.md,
+    marginTop: hp('2%'),
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: hp('2.5%'), // Resized
     fontWeight: '500',
-    paddingBottom: 4,
-    marginTop: 10,
+    paddingBottom: hp('0.5%'),
+    marginTop: hp('1.2%'),
   },
   info: {
-    fontSize: typography.sizes.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.xs,
+    fontSize: hp('1.8%'), // Resized
+    paddingTop: hp('0.5%'),
+    paddingBottom: hp('0.5%'),
     textAlign: 'justify',
   },
   methodsScrollView: {
-    marginTop: spacing.sm,
+    marginTop: hp('1%'),
   },
   methodsContainer: {
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: wp('2%'),
   },
   methodItem: {
     alignItems: 'center',
-    marginRight: spacing.lg,
+    marginRight: wp('5%'),
   },
   methodPics: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 8,
+    width: wp('20%'),
+    height: wp('20%'),
+    borderRadius: wp('10%'),
+    marginBottom: hp('1%'),
     backgroundColor: '#eee',
   },
   methodName: {
-    fontSize: 16,
-    lineHeight: 20,
-    marginTop: 8,
-    marginBottom: 10,
+    fontSize: hp('2%'),
+    lineHeight: hp('2.5%'),
+    marginTop: hp('1%'),
+    marginBottom: hp('1.2%'),
   },
   infoSection: {
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.lg,
+    marginTop: hp('2%'),
+    paddingHorizontal: wp('3%'),
   },
 });

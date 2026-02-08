@@ -10,10 +10,42 @@ export type RootStackParamList = {
   MainDrawer: undefined;
   Recommendation: undefined;
   Preferences: undefined;
-  ViewRecommendation: undefined;
-  ObRecom: undefined;
-  ObPref: undefined;
-  ObViewRecom: undefined;
+  ViewRecommendation: {
+    ageLabel?: string;
+    ageValue?: number;
+    prefs?: string[];
+    mecResults?: {
+      'Cu-IUD': 1 | 2 | 3 | 4;
+      'LNG-IUD': 1 | 2 | 3 | 4;
+      'Implant': 1 | 2 | 3 | 4;
+      'DMPA': 1 | 2 | 3 | 4;
+      'CHC': 1 | 2 | 3 | 4;
+      'POP': 1 | 2 | 3 | 4;
+    };
+  };
+
+  ObDrawer: { doctorName?: string };
+  AssessmentResultScreen: {
+    riskResult: any; // Using 'any' to avoid circular dependencies for now, or import type if possible
+    patientData: any;
+  };
+  ConsultationCodeScreen: {
+    patientData: any;
+    riskResult?: any; // Should ideally use RiskAssessmentResponse from service
+  };
+  GuestAssessment: {
+    preFilledData?: {
+      AGE: string;
+      prefs: string[];
+    };
+  };
+  ObAssessment: {
+    patientData: any;
+    mec_recommendations?: any;
+    consultationId?: string;
+    doctorName?: string;
+    isDoctorAssessment?: boolean;
+  };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -24,6 +56,12 @@ export type DrawerParamList = {
   'Did You Know?': undefined;
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
+};
+
+// OB Drawer Navigator
+export type ObDrawerParamList = {
+  ObAssessment: undefined;
+  Dashboard: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack
@@ -37,9 +75,12 @@ export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
     NativeStackNavigationProp<RootStackParamList>
   >;
 
+import type { RouteProp } from '@react-navigation/native';
+
 // Screen props for type-safe screen components
 export type RootStackScreenProps<T extends keyof RootStackParamList> = {
   navigation: RootStackNavigationProp<T>;
+  route: RouteProp<RootStackParamList, T>;
 };
 
 export type DrawerScreenProps<T extends keyof DrawerParamList> = {

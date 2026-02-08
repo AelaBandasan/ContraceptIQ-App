@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Allow anyone to sign up/login (User & OB)
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    
+    // Consultation Rules
+    match /consultations/{consultationId} {
+      // Allow creating a consultation (Patient Guest Mode)
+      allow create: if true;
+      
+      // Allow reading (Doctors need to query, Patients need to listen)
+      allow read: if true;
+      
+      // Allow updating (Doctors claiming, updating assessments)
+      // Ideally check request.auth != null, but for debugging/demo start with true
+      allow update: if true; 
+    }
+  }
+}
