@@ -76,11 +76,11 @@ const RADIUS = {
 };
 
 const TYPOGRAPHY = {
-  heading: { fontSize: 20, fontWeight: "700", letterSpacing: -0.3 },
-  subheading: { fontSize: 16, fontWeight: "600", letterSpacing: -0.2 },
-  body: { fontSize: 14, fontWeight: "500", letterSpacing: -0.1 },
-  caption: { fontSize: 12, fontWeight: "500", letterSpacing: 0 },
-  small: { fontSize: 11, fontWeight: "400", letterSpacing: 0.2 },
+  heading: { fontSize: 20, fontWeight: "700" as const, letterSpacing: -0.3 },
+  subheading: { fontSize: 16, fontWeight: "600" as const, letterSpacing: -0.2 },
+  body: { fontSize: 14, fontWeight: "500" as const, letterSpacing: -0.1 },
+  caption: { fontSize: 12, fontWeight: "500" as const, letterSpacing: 0 },
+  small: { fontSize: 11, fontWeight: "400" as const, letterSpacing: 0.2 },
 };
 
 // ============================================================================

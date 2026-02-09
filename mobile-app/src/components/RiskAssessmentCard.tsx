@@ -61,11 +61,11 @@ const RADIUS = {
 };
 
 const TYPOGRAPHY = {
-  sectionTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
-  cardTitle: { fontSize: 16, fontWeight: "700", letterSpacing: -0.2 },
-  body: { fontSize: 14, fontWeight: "500", letterSpacing: -0.1 },
-  caption: { fontSize: 12, fontWeight: "500", letterSpacing: 0 },
-  small: { fontSize: 11, fontWeight: "400", letterSpacing: 0.2 },
+  sectionTitle: { fontSize: 18, fontWeight: "800" as const, letterSpacing: -0.3 },
+  cardTitle: { fontSize: 16, fontWeight: "700" as const, letterSpacing: -0.2 },
+  body: { fontSize: 14, fontWeight: "500" as const, letterSpacing: -0.1 },
+  caption: { fontSize: 12, fontWeight: "500" as const, letterSpacing: 0 },
+  small: { fontSize: 11, fontWeight: "400" as const, letterSpacing: 0.2 },
 };
 
 // ============================================================================

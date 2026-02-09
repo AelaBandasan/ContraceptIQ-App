@@ -9,25 +9,27 @@ import {
 } from "react-native";
 import React, { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import type { DrawerNavigationProp } from "@react-navigation/drawer";
+import type { UserTabScreenProps, ObTabScreenProps } from '../types/navigation';
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, typography, spacing, borderRadius, shadows } from "../theme";
 import { useAssessment } from "../context/AssessmentContext";
 import { ErrorAlert } from "../components/ErrorAlert";
 import { createAppError, AppError } from "../utils/errorHandler";
+import ObHeader from "../components/ObHeader";
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
-};
+type Props = UserTabScreenProps<"What's Right for Me?"> | ObTabScreenProps<'ObAssessment'>;
 
 const { width, height } = Dimensions.get("window");
 
-const Whatsrightforme: React.FC<Props> = ({ navigation }) => {
+const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const [localError, setLocalError] = useState<AppError | null>(null);
+
+  // Check if we are in Doctor/OB mode
+  const { isDoctorAssessment } = (route?.params as any) || {};
 
   // Get assessment context for persisting state
   const { assessmentData, updateAssessmentData, error, setError } =
@@ -43,12 +45,16 @@ const Whatsrightforme: React.FC<Props> = ({ navigation }) => {
       setLocalError(null);
       setError(null);
       setIsModalVisible(false);
-      navigation.navigate("Recommendation");
+      if (isDoctorAssessment) {
+        (navigation as any).navigate("ObRecommendations");
+      } else {
+        (navigation as any).navigate("Recommendation");
+      }
     } catch (err) {
-      const appError = createAppError(err, {
+      const appError = createAppError(err, JSON.stringify({
         operation: "handleContinue",
         component: "Whatsrightforme",
-      });
+      }));
       setLocalError(appError);
       setError(appError.userMessage);
     }
@@ -60,16 +66,20 @@ const Whatsrightforme: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={isDoctorAssessment ? ['left', 'right', 'bottom'] : undefined}>
+      {isDoctorAssessment && <ObHeader title="Assessment" subtitle="Patient Eval" />}
+
       <View style={styles.containerOne}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.toggleDrawer()}
-            style={styles.menuButton}
-          >
-            <Ionicons name="menu" size={35} color={"#000"} />
-          </TouchableOpacity>
-        </View>
+        {!isDoctorAssessment && (
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              onPress={() => navigation.toggleDrawer()}
+              style={styles.menuButton}
+            >
+              <Ionicons name="menu" size={35} color={"#000"} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         <ScrollView
           ref={scrollRef}
@@ -272,6 +282,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     alignItems: "center",
+    elevation: 10,
   },
   indicator: {
     height: 12,

@@ -1,13 +1,14 @@
+import type { CompositeNavigationProp, CompositeScreenProps, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import type { CompositeNavigationProp } from '@react-navigation/native';
 
 // Root Stack Navigator - handles authentication and main flows
 export type RootStackParamList = {
   UserStartingScreen: undefined;
   LoginforOB: undefined;
   SignupforOB: undefined;
-  MainDrawer: undefined;
+  MainDrawer: undefined; // Replaced MainTabs
   Recommendation: undefined;
   Preferences: undefined;
   ViewRecommendation: {
@@ -26,12 +27,12 @@ export type RootStackParamList = {
 
   ObDrawer: { doctorName?: string };
   AssessmentResultScreen: {
-    riskResult: any; // Using 'any' to avoid circular dependencies for now, or import type if possible
+    riskResult: any;
     patientData: any;
   };
   ConsultationCodeScreen: {
     patientData: any;
-    riskResult?: any; // Should ideally use RiskAssessmentResponse from service
+    riskResult?: any;
   };
   GuestAssessment: {
     preFilledData?: {
@@ -50,23 +51,55 @@ export type RootStackParamList = {
 
 // Drawer Navigator - main app navigation for authenticated users
 export type DrawerParamList = {
-  Home: undefined;
-  "What's Right for Me?": undefined;
-  'Contraceptive Methods': undefined;
-  'Did You Know?': undefined;
+  MainTabs: undefined; // The Bottom Tab Navigator
+  Preferences: undefined;
+  Recommendation: undefined;
+  'Emergency Contraception': undefined;
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
 };
 
+// User Tab Navigator - main app navigation for authenticated users
+export type UserTabParamList = {
+  Home: undefined;
+  "What's Right for Me?": undefined; // Changed to match SideMenu route name for consistency or keep as 'Find Method'
+  'Contraceptive Methods': undefined;
+  'Did You Know?': undefined;
+};
+
 // OB Drawer Navigator
 export type ObDrawerParamList = {
-  ObAssessment: undefined;
-  Dashboard: undefined;
+  ObMainTabs: undefined; // The OB Bottom Tab Navigator
+  ObHistory: undefined;
+  ObMethods: undefined; // Direct link if needed, though it's in tabs too
+  ObMecGuide: undefined;
+  ObEducation: undefined;
+  ObEmergency: undefined;
+  ObAbout: undefined;
+  ObFeedback: undefined;
+  ObSettings: undefined;
+  ObAssessment: undefined; // Kept for backward compatibility if needed
+};
+
+// OB Tab Navigator
+export type ObTabParamList = {
+  ObHome: undefined;
+  ObAssessment: { isDoctorAssessment: boolean };
+  ObRecommendations: { isDoctorAssessment?: boolean };
+  ObMethods: { isDoctorAssessment?: boolean };
+  ObProfile: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack
 export type RootStackNavigationProp<T extends keyof RootStackParamList> =
   NativeStackNavigationProp<RootStackParamList, T>;
+
+// Navigation prop types for screens in the User Tabs
+export type UserTabScreenNavigationProp<T extends keyof UserTabParamList> =
+  CompositeNavigationProp<
+    BottomTabNavigationProp<UserTabParamList, T>,
+    DrawerNavigationProp<DrawerParamList>
+  >;
 
 // Navigation prop types for screens in the Drawer
 export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
@@ -75,14 +108,36 @@ export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
     NativeStackNavigationProp<RootStackParamList>
   >;
 
-import type { RouteProp } from '@react-navigation/native';
-
 // Screen props for type-safe screen components
 export type RootStackScreenProps<T extends keyof RootStackParamList> = {
   navigation: RootStackNavigationProp<T>;
   route: RouteProp<RootStackParamList, T>;
 };
 
+export type UserTabScreenProps<T extends keyof UserTabParamList> = {
+  navigation: UserTabScreenNavigationProp<T>;
+  route: RouteProp<UserTabParamList, T>;
+};
+
 export type DrawerScreenProps<T extends keyof DrawerParamList> = {
   navigation: DrawerScreenNavigationProp<T>;
+  route: RouteProp<DrawerParamList, T>;
 };
+
+// Navigation prop types for screens in the OB Drawer
+export type ObDrawerScreenNavigationProp<T extends keyof ObDrawerParamList> =
+  CompositeNavigationProp<
+    DrawerNavigationProp<ObDrawerParamList, T>,
+    NativeStackNavigationProp<RootStackParamList>
+  >;
+
+export type ObDrawerScreenProps<T extends keyof ObDrawerParamList> = {
+  navigation: ObDrawerScreenNavigationProp<T>;
+  route: RouteProp<ObDrawerParamList, T>;
+};
+
+// Screen props for OB Tabs
+export type ObTabScreenProps<T extends keyof ObTabParamList> = CompositeScreenProps<
+  BottomTabScreenProps<ObTabParamList, T>,
+  ObDrawerScreenProps<'ObMainTabs'>
+>;

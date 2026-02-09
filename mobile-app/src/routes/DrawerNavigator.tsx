@@ -1,36 +1,42 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import SideMenu from '../components/SideMenu';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
 import Contraceptivemethods from '../screens/Contraceptivemethods';
 import Diduknow from '../screens/Diduknow';
 import Contrafaqs from '../screens/Contrafaqs';
 import AboutUs from '../screens/AboutUs';
-import Recommendation from '../screens/Recommendation';
 import Preferences from '../screens/Preferences';
-import ViewRecom from '../screens/ViewRecom';
+import Recommendation from '../screens/Recommendation';
+import EmergencyContraception from '../screens/EmergencyContraception';
+import UserTabNavigator from './UserTabNavigator';
+import { DrawerParamList } from '../types/navigation';
 
-// LoginforOB removed from drawer
-
-const Drawer = createDrawerNavigator();
+const Drawer = createDrawerNavigator<DrawerParamList>();
 
 const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Home"
-      screenOptions={{ headerShown: false }}
+      initialRouteName="MainTabs"
+      drawerContent={(props) => <SideMenu {...props} />}
+      screenOptions={{
+        headerShown: false,
+        drawerStyle: {
+          width: '80%',
+        },
+      }}
     >
-      <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="What's Right for Me?" component={Whatsrightforme} />
-      <Drawer.Screen
-        name="Contraceptive Methods"
-        component={Contraceptivemethods}
-      />
-      <Drawer.Screen name="Did You Know?" component={Diduknow} />
+      <Drawer.Screen name="MainTabs" component={UserTabNavigator} />
+      {/* 
+          MainTabs covers Home, Find Method, Methods, Learn. 
+          We only need to add screens that are NOT in the tabs but accessible via Drawer 
+      */}
       <Drawer.Screen name="Contraceptive FAQs" component={Contrafaqs} />
       <Drawer.Screen name="About Us" component={AboutUs} />
-
-
+      <Drawer.Screen name="Preferences" component={Preferences} />
+      <Drawer.Screen name="Recommendation" component={Recommendation} />
+      <Drawer.Screen name="Emergency Contraception" component={EmergencyContraception} />
     </Drawer.Navigator>
   );
 };

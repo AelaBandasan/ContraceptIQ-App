@@ -61,41 +61,41 @@ export async function guardedNavigate(
   try {
     // Run validation if provided
     if (validate) {
-      logger.debug('NavigationGuard', `Validating navigation to ${screenName}`);
+      logger.debug(`Validating navigation to ${screenName}`);
       const isValid = await Promise.resolve(validate());
-      
+
       if (!isValid) {
         const error = new Error(`Validation failed for navigation to ${screenName}`);
-        logger.warn('NavigationGuard', 'Validation failed', { screenName });
+        logger.warn('Validation failed', { screenName });
         throw error;
       }
     }
 
     // Run cleanup if provided
     if (cleanup) {
-      logger.debug('NavigationGuard', `Running cleanup before ${screenName}`);
+      logger.debug(`Running cleanup before ${screenName}`);
       await Promise.resolve(cleanup());
     }
 
     // Navigate
-    logger.info('NavigationGuard', `Navigating to ${screenName}`, { params });
-    navigation.navigate(screenName as never, params as never);
+    logger.info(`Navigating to ${screenName}`, { params });
+    navigation.navigate(screenName as any, params as any);
 
     // Success callback
     if (onSuccess) {
       onSuccess();
     }
   } catch (error) {
-    const appError = createAppError(error, {
+    const appError = createAppError(error, JSON.stringify({
       operation: 'guardedNavigate',
       screenName,
       params,
-    });
+    }));
 
-    logger.error('NavigationGuard', `Navigation to ${screenName} failed`, appError as Error);
+    logger.error(`Navigation to ${screenName} failed`, appError as Error);
 
     if (onError) {
-      onError(appError as Error);
+      onError(appError as unknown as Error);
     } else {
       // Re-throw if no error handler
       throw appError;
@@ -117,21 +117,21 @@ export async function guardedGoBack(
 ): Promise<void> {
   try {
     if (cleanup) {
-      logger.debug('NavigationGuard', 'Running cleanup before going back');
+      logger.debug('Running cleanup before going back');
       await Promise.resolve(cleanup());
     }
 
-    logger.info('NavigationGuard', 'Navigating back');
+    logger.info('Navigating back');
     navigation.goBack();
   } catch (error) {
-    const appError = createAppError(error, {
+    const appError = createAppError(error, JSON.stringify({
       operation: 'guardedGoBack',
-    });
+    }));
 
-    logger.error('NavigationGuard', 'Go back failed', appError as Error);
+    logger.error('Go back failed', appError as Error);
 
     if (onError) {
-      onError(appError as Error);
+      onError(appError as unknown as Error);
     } else {
       throw appError;
     }
@@ -148,20 +148,20 @@ export function canNavigate(navigation: NavigationProp<any>): boolean {
   try {
     // Check if navigation object is valid
     if (!navigation || typeof navigation.navigate !== 'function') {
-      logger.warn('NavigationGuard', 'Invalid navigation object');
+      logger.warn('Invalid navigation object');
       return false;
     }
 
     // Check if current route exists
     const state = navigation.getState();
     if (!state || !state.routes || state.routes.length === 0) {
-      logger.warn('NavigationGuard', 'Invalid navigation state');
+      logger.warn('Invalid navigation state');
       return false;
     }
 
     return true;
   } catch (error) {
-    logger.error('NavigationGuard', 'Error checking navigation state', error as Error);
+    logger.error('Error checking navigation state', error as Error);
     return false;
   }
 }
@@ -182,7 +182,7 @@ export function getCurrentScreenName(navigation: NavigationProp<any>): string | 
     const currentRoute = state.routes[state.index];
     return currentRoute?.name || null;
   } catch (error) {
-    logger.error('NavigationGuard', 'Error getting current screen', error as Error);
+    logger.error('Error getting current screen', error as Error);
     return null;
   }
 }

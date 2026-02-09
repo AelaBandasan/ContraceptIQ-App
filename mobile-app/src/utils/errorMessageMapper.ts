@@ -5,7 +5,7 @@
  * and appropriate UI actions for the mobile app.
  */
 
-import { AppError } from './errorHandler';
+import { AppError, ErrorType } from './errorHandler';
 
 export interface ErrorDisplay {
   title: string;
@@ -49,7 +49,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   const appError = error as AppError;
 
   // Offline errors
-  if (appError.type === 'OfflineError') {
+  if (appError.type === ErrorType.OfflineError) {
     return {
       title: 'No Internet Connection',
       message: appError.userMessage || 'Your device is offline. Please check your internet connection and try again.',
@@ -62,7 +62,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Timeout errors
-  if (appError.type === 'TimeoutError') {
+  if (appError.type === ErrorType.TimeoutError) {
     return {
       title: 'Request Timeout',
       message: appError.userMessage || 'The request took too long. Please check your connection and try again.',
@@ -75,7 +75,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Network errors
-  if (appError.type === 'NetworkError') {
+  if (appError.type === ErrorType.NetworkError) {
     return {
       title: 'Connection Failed',
       message: appError.userMessage || 'Unable to connect to the assessment service. Please try again.',
@@ -88,7 +88,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Validation errors
-  if (appError.type === 'ValidationError') {
+  if (appError.type === ErrorType.ValidationError) {
     return {
       title: 'Invalid Input',
       message: appError.userMessage || 'Please check your answers and ensure all fields are filled correctly.',
@@ -101,7 +101,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Unauthorized errors
-  if (appError.type === 'UnauthorizedError') {
+  if (appError.type === ErrorType.UnauthorizedError) {
     return {
       title: 'Authentication Required',
       message: appError.userMessage || 'Please log in again to continue.',
@@ -114,7 +114,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Forbidden errors
-  if (appError.type === 'ForbiddenError') {
+  if (appError.type === ErrorType.ForbiddenError) {
     return {
       title: 'Access Denied',
       message: appError.userMessage || 'You do not have permission to perform this action.',
@@ -125,7 +125,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Not found errors
-  if (appError.type === 'NotFoundError') {
+  if (appError.type === ErrorType.NotFoundError) {
     return {
       title: 'Resource Not Found',
       message: appError.userMessage || 'The requested resource could not be found.',
@@ -136,7 +136,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Conflict errors (duplicate request, etc.)
-  if (appError.type === 'ConflictError') {
+  if (appError.type === ErrorType.ConflictError) {
     return {
       title: 'Action Could Not Be Completed',
       message: appError.userMessage || 'This action conflicts with existing data. Please try again.',
@@ -148,7 +148,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Too many requests (rate limit)
-  if (appError.type === 'TooManyRequestsError') {
+  if (appError.type === ErrorType.TooManyRequestsError) {
     return {
       title: 'Too Many Requests',
       message: appError.userMessage || 'Please wait a moment before trying again.',
@@ -161,7 +161,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Server errors
-  if (appError.type === 'InternalServerError' || appError.type === 'ServiceUnavailableError') {
+  if (appError.type === ErrorType.InternalServerError || appError.type === ErrorType.ServiceUnavailableError) {
     return {
       title: 'Service Unavailable',
       message: appError.userMessage || 'The assessment service is temporarily unavailable. Please try again later.',
@@ -174,7 +174,7 @@ export function getErrorDisplay(error: AppError | string | Error): ErrorDisplay 
   }
 
   // Bad gateway errors
-  if (appError.type === 'BadGatewayError') {
+  if (appError.type === ErrorType.BadGatewayError) {
     return {
       title: 'Service Error',
       message: appError.userMessage || 'Unable to reach the assessment service. Please try again.',
@@ -228,17 +228,17 @@ export function getRetryDelay(error: AppError | string | Error, attemptNumber: n
   const appError = error as AppError;
 
   // Rate limit errors: wait longer
-  if (appError.type === 'TooManyRequestsError') {
+  if (appError.type === ErrorType.TooManyRequestsError) {
     return 5000 + (attemptNumber * 2000); // 5s + 2s per attempt
   }
 
   // Service unavailable: exponential backoff
-  if (appError.type === 'ServiceUnavailableError') {
+  if (appError.type === ErrorType.ServiceUnavailableError) {
     return 2000 * Math.pow(2, attemptNumber - 1); // 2s, 4s, 8s...
   }
 
   // Network errors: exponential backoff
-  if (appError.type === 'NetworkError' || appError.type === 'TimeoutError') {
+  if (appError.type === ErrorType.NetworkError || appError.type === ErrorType.TimeoutError) {
     return 1000 * Math.pow(2, attemptNumber - 1); // 1s, 2s, 4s...
   }
 
@@ -258,30 +258,30 @@ export function getErrorCategory(error: AppError | string | Error): string {
 
   const appError = error as AppError;
 
-  if (appError.type === 'OfflineError' || appError.type === 'NetworkError' || appError.type === 'TimeoutError') {
+  if (appError.type === ErrorType.OfflineError || appError.type === ErrorType.NetworkError || appError.type === ErrorType.TimeoutError) {
     return 'network';
   }
 
-  if (appError.type === 'ValidationError') {
+  if (appError.type === ErrorType.ValidationError) {
     return 'validation';
   }
 
   if (
-    appError.type === 'UnauthorizedError' ||
-    appError.type === 'ForbiddenError'
+    appError.type === ErrorType.UnauthorizedError ||
+    appError.type === ErrorType.ForbiddenError
   ) {
     return 'auth';
   }
 
   if (
-    appError.type === 'InternalServerError' ||
-    appError.type === 'ServiceUnavailableError' ||
-    appError.type === 'BadGatewayError'
+    appError.type === ErrorType.InternalServerError ||
+    appError.type === ErrorType.ServiceUnavailableError ||
+    appError.type === ErrorType.BadGatewayError
   ) {
     return 'server';
   }
 
-  if (appError.type === 'TooManyRequestsError') {
+  if (appError.type === ErrorType.TooManyRequestsError) {
     return 'rate_limit';
   }
 

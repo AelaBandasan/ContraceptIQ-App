@@ -1,14 +1,14 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     StyleSheet, View, Text, TouchableOpacity, FlatList,
-    RefreshControl, Modal, TextInput, Alert, ActivityIndicator, Image
+    RefreshControl, Modal, TextInput, Alert, ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Plus, Clock, Search, X, User } from 'lucide-react-native';
+import { Plus, Clock, X } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
 import { claimGuest, fetchDoctorQueue, ConsultationRecord } from '../../services/doctorService';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import ObHeader from '../../components/ObHeader';
 
 /**
  * Doctor Dashboard
@@ -85,7 +85,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
         <TouchableOpacity
             style={styles.card}
             onPress={() => navigation.navigate('ObAssessment', {
-                patientData: item.patientData, // Assuming structure is kept
+                patientData: item.patientData,
                 mec_recommendations: item.patientData.mec_recommendations,
                 consultationId: item.code,
                 doctorName: doctorName,
@@ -116,16 +116,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
-            <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-                <View>
-                    <Text style={styles.greeting}>Welcome back,</Text>
-                    <Text style={styles.drName}>{doctorName}</Text>
-                </View>
-                <TouchableOpacity style={styles.profileBtn}>
-                    <User color="#FFF" size={20} />
-                </TouchableOpacity>
-            </View>
+            <ObHeader title="Welcome back," subtitle={doctorName} />
 
             {/* Quick Action */}
             <View style={styles.actionContainer}>
@@ -210,24 +201,7 @@ export default DoctorDashboardScreen;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8FAFC' },
-    header: {
-        backgroundColor: '#E45A92',
-        paddingHorizontal: 20,
-        // paddingTop is handled inline via insets
-        paddingBottom: 40,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-    },
-    greeting: { color: '#FFDBEB', fontSize: 14, fontWeight: '500' },
-    drName: { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' },
-    profileBtn: {
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        padding: 10,
-        borderRadius: 12
-    },
+    // Header styles removed as we use ObHeader
     actionContainer: {
         marginTop: -30, // Pull up to overlap slightly with the curved header
         paddingHorizontal: 20,

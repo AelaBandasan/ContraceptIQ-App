@@ -34,11 +34,146 @@ export interface AppError {
   originalError?: Error;
   shouldRetry: boolean;
   timestamp: string;
+  name: string;
 }
 
 // ============================================================================
 // ERROR FACTORY
 // ============================================================================
+
+/**
+ * Handle HTTP error responses
+ */
+const handleHttpError = (error: any, timestamp: string): AppError => {
+  const status = error.response?.status;
+  const data = error.response?.data;
+
+  switch (status) {
+    case 400:
+      return {
+        type: ErrorType.ValidationError,
+        message: data?.error || 'Bad request',
+        userMessage:
+          data?.message ||
+          'The information you provided is incomplete or invalid. Please review and try again.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: false,
+        timestamp,
+        name: 'ValidationError',
+      };
+
+    case 401:
+      return {
+        type: ErrorType.UnauthorizedError,
+        message: 'Unauthorized',
+        userMessage: 'Your session has expired. Please log in again.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: false,
+        timestamp,
+        name: 'UnauthorizedError',
+      };
+
+    case 403:
+      return {
+        type: ErrorType.ForbiddenError,
+        message: 'Forbidden',
+        userMessage: 'You do not have permission to perform this action.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: false,
+        timestamp,
+        name: 'ForbiddenError',
+      };
+
+    case 404:
+      return {
+        type: ErrorType.NotFoundError,
+        message: 'Resource not found',
+        userMessage: 'The requested resource could not be found.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: false,
+        timestamp,
+        name: 'NotFoundError',
+      };
+
+    case 409:
+      return {
+        type: ErrorType.ConflictError,
+        message: 'Conflict',
+        userMessage: 'This resource already exists or there is a conflict. Please try again.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: false,
+        timestamp,
+        name: 'ConflictError',
+      };
+
+    case 429:
+      return {
+        type: ErrorType.TooManyRequestsError,
+        message: 'Too many requests',
+        userMessage:
+          'You have made too many requests. Please wait a moment and try again.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: true,
+        timestamp,
+        name: 'TooManyRequestsError',
+      };
+
+    case 500:
+      return {
+        type: ErrorType.InternalServerError,
+        message: 'Internal server error',
+        userMessage:
+          'The server encountered an error. Our team has been notified. Please try again later.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: true,
+        timestamp,
+        name: 'InternalServerError',
+      };
+
+    case 502:
+      return {
+        type: ErrorType.BadGatewayError,
+        message: 'Bad gateway',
+        userMessage: 'The server is temporarily unavailable. Please try again later.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: true,
+        timestamp,
+        name: 'BadGatewayError',
+      };
+
+    case 503:
+      return {
+        type: ErrorType.ServiceUnavailableError,
+        message: 'Service unavailable',
+        userMessage: 'The service is currently unavailable. Please try again later.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: true,
+        timestamp,
+        name: 'ServiceUnavailableError',
+      };
+
+    default:
+      return {
+        type: ErrorType.ServerError,
+        message: `Server error: ${status}`,
+        userMessage: 'An error occurred on the server. Please try again later.',
+        statusCode: status,
+        originalError: error,
+        shouldRetry: true,
+        timestamp,
+        name: 'ServerError',
+      };
+  }
+};
 
 /**
  * Create an AppError from various error sources
@@ -64,6 +199,7 @@ export const createAppError = (
       originalError: error,
       shouldRetry: true,
       timestamp,
+      name: 'TimeoutError',
     };
   }
 
@@ -77,6 +213,7 @@ export const createAppError = (
       originalError: error,
       shouldRetry: true,
       timestamp,
+      name: 'NetworkError',
     };
   }
 
@@ -90,6 +227,7 @@ export const createAppError = (
       originalError: error,
       shouldRetry: false,
       timestamp,
+      name: 'ValidationError',
     };
   }
 
@@ -103,6 +241,7 @@ export const createAppError = (
       originalError: error,
       shouldRetry: true,
       timestamp,
+      name: 'OfflineError',
     };
   }
 
@@ -115,131 +254,8 @@ export const createAppError = (
     originalError: error,
     shouldRetry: false,
     timestamp,
+    name: 'UnknownError',
   };
-};
-
-/**
- * Handle HTTP error responses
- */
-const handleHttpError = (error: any, timestamp: string): AppError => {
-  const status = error.response?.status;
-  const data = error.response?.data;
-
-  switch (status) {
-    case 400:
-      return {
-        type: ErrorType.ValidationError,
-        message: data?.error || 'Bad request',
-        userMessage:
-          data?.message ||
-          'The information you provided is incomplete or invalid. Please review and try again.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: false,
-        timestamp,
-      };
-
-    case 401:
-      return {
-        type: ErrorType.UnauthorizedError,
-        message: 'Unauthorized',
-        userMessage: 'Your session has expired. Please log in again.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: false,
-        timestamp,
-      };
-
-    case 403:
-      return {
-        type: ErrorType.ForbiddenError,
-        message: 'Forbidden',
-        userMessage: 'You do not have permission to perform this action.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: false,
-        timestamp,
-      };
-
-    case 404:
-      return {
-        type: ErrorType.NotFoundError,
-        message: 'Resource not found',
-        userMessage: 'The requested resource could not be found.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: false,
-        timestamp,
-      };
-
-    case 409:
-      return {
-        type: ErrorType.ConflictError,
-        message: 'Conflict',
-        userMessage: 'This resource already exists or there is a conflict. Please try again.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: false,
-        timestamp,
-      };
-
-    case 429:
-      return {
-        type: ErrorType.TooManyRequestsError,
-        message: 'Too many requests',
-        userMessage:
-          'You have made too many requests. Please wait a moment and try again.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: true,
-        timestamp,
-      };
-
-    case 500:
-      return {
-        type: ErrorType.InternalServerError,
-        message: 'Internal server error',
-        userMessage:
-          'The server encountered an error. Our team has been notified. Please try again later.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: true,
-        timestamp,
-      };
-
-    case 502:
-      return {
-        type: ErrorType.BadGatewayError,
-        message: 'Bad gateway',
-        userMessage: 'The server is temporarily unavailable. Please try again later.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: true,
-        timestamp,
-      };
-
-    case 503:
-      return {
-        type: ErrorType.ServiceUnavailableError,
-        message: 'Service unavailable',
-        userMessage: 'The service is currently unavailable. Please try again later.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: true,
-        timestamp,
-      };
-
-    default:
-      return {
-        type: ErrorType.ServerError,
-        message: `Server error: ${status}`,
-        userMessage: 'An error occurred on the server. Please try again later.',
-        statusCode: status,
-        originalError: error,
-        shouldRetry: true,
-        timestamp,
-      };
-  }
 };
 
 // ============================================================================

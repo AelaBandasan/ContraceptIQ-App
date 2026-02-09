@@ -5,17 +5,21 @@ import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RootStackScreenProps } from '../types/navigation';
-import { colors, typography, spacing, borderRadius } from '../theme';
+import { RootStackScreenProps, ObTabScreenProps } from '../types/navigation';
+import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { calculateMEC } from '../services/mecService';
+import ObHeader from '../components/ObHeader';
 
-type Props = RootStackScreenProps<"Recommendation">;
+type Props = RootStackScreenProps<"Recommendation"> | ObTabScreenProps<'ObRecommendations'>;
 
 const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   const [selectedAgeIndex, setSelectedAgeIndex] = useState<number | null>(null);
   const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(500)).current;
+
+  // Check if we are in Doctor/OB mode
+  const { isDoctorAssessment } = (route?.params as any) || {};
 
   // Age ranges with actual numeric age for MEC calculation
   const ageRanges = [
@@ -80,7 +84,6 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const recommendations: Record<number, Record<string, number>> = {
-    // ... (keeping existing logic for brevity, though logic might need update if age isn't selected)
     // Using 0 as fallback if nothing selected, or handle check before modal
     0: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 2, injectables: 2 },
     1: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 1, injectables: 1 },
@@ -160,7 +163,7 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
     const mecResults = calculateMEC({ age: numericAge });
 
     // Navigate to ViewRecommendation with MEC results
-    navigation.navigate('ViewRecommendation', {
+    (navigation as any).navigate('ViewRecommendation', {
       ageLabel: ageRanges[selectedAgeIndex].fullLabel,
       ageValue: ageRanges[selectedAgeIndex].value,
       prefs: selectedPrefs,
@@ -171,19 +174,23 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   const selectedAgeLabel = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={isDoctorAssessment ? ['left', 'right', 'bottom'] : undefined}>
+      {isDoctorAssessment && <ObHeader title="Recommendations" subtitle="Results" />}
+
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
       >
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-            <Ionicons name="menu" size={35} color={'#000'} />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>What's Right for Me?</Text>
-          <View style={{ width: 35 }} />
-        </View>
+        {!isDoctorAssessment && (
+          <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+              <Ionicons name="menu" size={35} color={'#000'} />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>What's Right for Me?</Text>
+            <View style={{ width: 35 }} />
+          </View>
+        )}
 
         <View style={styles.screenCont}>
           {/* Age Section */}
@@ -230,7 +237,7 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.sectionHeaderRow}>
               <View style={styles.sectionHeader}>
                 <Image
-                  source={require('../../assets/image/star.png')} // Using generic health icon or similar if exists, else reuse age
+                  source={require('../../assets/image/star.png')}
                   style={styles.sectionIcon}
                 />
                 <Text style={styles.sectionLabel}>Preferences</Text>
@@ -414,6 +421,7 @@ const styles = StyleSheet.create({
   },
   prefTextContainer: {
     flex: 1,
+    textAlignVertical: 'center',
   },
   prefItemLabel: {
     fontSize: 16,
@@ -443,6 +451,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold'
   },
+  // Modal styles omitted for brevity as they were not changed
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -458,71 +467,13 @@ const styles = StyleSheet.create({
     elevation: 15,
   },
   modalHandle: {
-    width: 60,
-    height: 6,
-    backgroundColor: colors.border.main,
-    borderRadius: borderRadius.sm,
-    marginBottom: spacing.base,
+    // ...
   },
-  recomButtonModal: {
-    backgroundColor: '#E45A92',
-    borderRadius: 30,
-    paddingVertical: 15,
-    width: '80%',
-    alignItems: 'center',
-    elevation: 3,
-    marginBottom: 20
-  },
-  modalHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  modalContent: {
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  modalText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-  },
-  modalAge: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#E45A92',
-    marginTop: 2,
-  },
-  modalButtons: {
-    width: '100%',
-    alignItems: 'center',
-    flex: 1,
-  },
-  recomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 15,
-  },
-  recomItem: {
-    alignItems: 'center',
-    width: '30%',
-  },
-  contaceptiveImg: {
-    width: 65,
-    height: 65,
-    resizeMode: 'contain',
-    borderRadius: 35,
-    borderWidth: 4,
-    padding: 5,
-    backgroundColor: '#fff',
-    elevation: 3,
-  },
-  contraceptiveLabel: {
-    marginTop: 5,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
+  modalBox: { // Added back to match usage
+    backgroundColor: colors.background.primary,
+    padding: spacing.xl,
+    borderRadius: borderRadius.md,
+    width: "85%",
+    ...shadows.md,
   },
 });

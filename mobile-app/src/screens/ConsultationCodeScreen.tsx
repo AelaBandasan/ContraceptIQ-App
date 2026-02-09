@@ -154,7 +154,6 @@ const ConsultationCodeScreen = () => {
 
             <View style={styles.footer}>
                 <TouchableOpacity
-                    style={styles.doneButton}
                     onPress={() => (navigation as any).navigate('MainDrawer')}
                 >
                     <Text style={styles.doneButtonText}>Done</Text>

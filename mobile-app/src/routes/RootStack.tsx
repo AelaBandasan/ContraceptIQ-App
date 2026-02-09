@@ -7,7 +7,7 @@ import Recommendation from '../screens/Recommendation';
 import Preferences from '../screens/Preferences';
 import ViewRecom from '../screens/ViewRecom';
 import SignupforOB from '../screens/ObSide/SignupforOB';
-import ObTabNavigator from './ObTabNavigator'; // Use Tab Navigator
+import ObDrawerNavigator from './ObDrawerNavigator';
 import ObAssessment from '../screens/ObSide/ObAssessment'; // Added
 import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
@@ -33,7 +33,7 @@ const RootStack = () => {
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
 
       {/* Doctor Flow */}
-      <Stack.Screen name="ObDrawer" component={ObTabNavigator} />
+      <Stack.Screen name="ObDrawer" component={ObDrawerNavigator} />
       <Stack.Screen name="ObAssessment" component={ObAssessment} />
       <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
