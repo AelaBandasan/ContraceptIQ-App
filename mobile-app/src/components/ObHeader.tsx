@@ -8,10 +8,20 @@ import { colors } from '../theme';
 interface ObHeaderProps {
     title: string;
     subtitle?: string;
+    appName?: string;
+    appSubtitle?: string;
+    date?: string;
     showMenu?: boolean;
 }
 
-const ObHeader: React.FC<ObHeaderProps> = ({ title, subtitle, showMenu = true }) => {
+const ObHeader: React.FC<ObHeaderProps> = ({
+    title,
+    subtitle,
+    appName = "ContraceptIQ",
+    appSubtitle = "Clinical Decision Support Tool",
+    date,
+    showMenu = true
+}) => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
 
@@ -20,7 +30,12 @@ const ObHeader: React.FC<ObHeaderProps> = ({ title, subtitle, showMenu = true })
     };
 
     return (
-        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <View style={styles.topInfo}>
+                <View />
+                {date && <Text style={styles.dateText}>{date}</Text>}
+            </View>
+
             <View style={styles.contentContainer}>
                 {showMenu && (
                     <TouchableOpacity
@@ -30,9 +45,9 @@ const ObHeader: React.FC<ObHeaderProps> = ({ title, subtitle, showMenu = true })
                         <Menu color="#FFF" size={24} />
                     </TouchableOpacity>
                 )}
-                <View>
+                <View style={styles.doctorInfo}>
                     <Text style={styles.greeting}>{title}</Text>
-                    {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+                    <Text style={styles.subtitle}>{subtitle}</Text>
                 </View>
             </View>
         </View>
@@ -43,9 +58,32 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: '#E45A92', // colors.primary
         paddingHorizontal: 20,
-        paddingBottom: 40,
+        paddingBottom: 30,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
+    },
+    topInfo: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 20,
+        opacity: 0.9,
+    },
+    appName: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+        letterSpacing: 0.5,
+    },
+    appSubtitle: {
+        color: '#FFDBEB',
+        fontSize: 10,
+        fontWeight: '500',
+    },
+    dateText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '500',
     },
     contentContainer: {
         flexDirection: 'row',
@@ -56,6 +94,9 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 14,
         marginRight: 16,
+    },
+    doctorInfo: {
+        flex: 1,
     },
     greeting: {
         color: '#FFDBEB',

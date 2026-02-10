@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 import { LogOut, User, ChevronRight, Settings } from 'lucide-react-native';
+import ObHeader from '../../components/ObHeader';
 
 const ProfileScreen = ({ navigation }: any) => {
     const handleLogout = async () => {
@@ -24,10 +25,8 @@ const ProfileScreen = ({ navigation }: any) => {
     const doctorName = "Dr. " + (email.split('@')[0] || "Bandasan");
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>My Profile</Text>
-            </View>
+        <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+            <ObHeader title="My Profile" subtitle={doctorName} />
 
             {/* Profile Card */}
             <View style={styles.profileCard}>

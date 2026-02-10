@@ -65,11 +65,12 @@ const CustomObDrawerContent = (props: any) => {
                 style={[styles.menuItem, focused && styles.menuItemActive]}
                 onPress={() => navigation.navigate(item.route)}
             >
-                <Icon
-                    size={22}
-                    color={focused ? colors.primary : colors.text.secondary}
-                    style={styles.icon}
-                />
+                <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+                    <Icon
+                        size={20}
+                        color="#FFFFFF"
+                    />
+                </View>
                 <Text style={[styles.menuLabel, focused && styles.menuLabelActive]}>
                     {item.label}
                 </Text>
@@ -263,8 +264,17 @@ const styles = StyleSheet.create({
     menuItemActive: {
         backgroundColor: '#FCE7F3', // Light pink background for active
     },
-    icon: {
-        marginRight: 20,
+    iconContainer: {
+        width: 42,
+        height: 42,
+        backgroundColor: colors.primary, // Solid vibrant pink for all icons
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    iconContainerActive: {
+        // Same as base now
     },
     menuLabel: {
         fontSize: 16,

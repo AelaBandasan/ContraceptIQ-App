@@ -85,6 +85,7 @@ export type ObDrawerParamList = {
 export type ObTabParamList = {
   ObHome: undefined;
   ObAssessment: { isDoctorAssessment: boolean };
+  ObHistory: undefined;
   ObRecommendations: { isDoctorAssessment?: boolean };
   ObMethods: { isDoctorAssessment?: boolean };
   ObProfile: undefined;

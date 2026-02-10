@@ -93,12 +93,13 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
                 style={[styles.menuItem, focused && styles.menuItemActive]}
                 onPress={() => navigation.navigate(item.route, item.params)}
             >
-                <Ionicons
-                    name={focused ? item.activeIcon : item.icon}
-                    size={22}
-                    color={focused ? colors.primary : colors.text.secondary}
-                    style={styles.icon}
-                />
+                <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+                    <Ionicons
+                        name={focused ? item.activeIcon : item.icon}
+                        size={20}
+                        color="#FFFFFF"
+                    />
+                </View>
                 <Text style={[styles.menuLabel, focused && styles.menuLabelActive]}>
                     {item.label}
                 </Text>
@@ -130,12 +131,16 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
 
                     {/* Special Actions */}
                     <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
-                        <Ionicons name="mail-outline" size={22} color={colors.text.secondary} style={styles.icon} />
+                        <View style={styles.iconContainer}>
+                            <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+                        </View>
                         <Text style={styles.menuLabel}>Send Feedback</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.menuItem} onPress={handlePrivacy}>
-                        <Ionicons name="shield-checkmark-outline" size={22} color={colors.text.secondary} style={styles.icon} />
+                        <View style={styles.iconContainer}>
+                            <Ionicons name="shield-checkmark-outline" size={20} color="#FFFFFF" />
+                        </View>
                         <Text style={styles.menuLabel}>Privacy & Disclaimer</Text>
                     </TouchableOpacity>
                 </View>
@@ -203,8 +208,17 @@ const styles = StyleSheet.create({
     menuItemActive: {
         backgroundColor: colors.primaryLight + '20', // Low opacity primary
     },
-    icon: {
-        marginRight: spacing.lg,
+    iconContainer: {
+        width: 42,
+        height: 42,
+        backgroundColor: colors.primary, // Solid vibrant pink for all icons
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    iconContainerActive: {
+        // Same as base now
     },
     menuLabel: {
         fontSize: typography.sizes.base,

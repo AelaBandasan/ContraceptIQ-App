@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ObHeader from '../../components/ObHeader';
 
 const MEC_CATEGORIES = [
     { category: '1', color: '#4CAF50', desc: 'No restriction for use.' },
@@ -11,10 +12,8 @@ const MEC_CATEGORIES = [
 
 const MecGuideScreen = () => {
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>MEC Guide / Color Legend</Text>
-            </View>
+        <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+            <ObHeader title="MEC Guide" subtitle="Color Legend" />
             <ScrollView contentContainerStyle={styles.content}>
                 <Text style={styles.intro}>
                     Medical Eligibility Criteria for Contraceptive Use (MEC) categories:

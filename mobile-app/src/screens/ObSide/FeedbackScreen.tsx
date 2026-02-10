@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme';
+import ObHeader from '../../components/ObHeader';
 
 const FeedbackScreen = () => {
     const [feedback, setFeedback] = useState('');
@@ -12,10 +13,8 @@ const FeedbackScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Send Feedback</Text>
-            </View>
+        <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+            <ObHeader title="Send Feedback" subtitle="How are we doing?" />
             <View style={styles.content}>
                 <Text style={styles.label}>How can we improve ContraceptIQ?</Text>
                 <TextInput

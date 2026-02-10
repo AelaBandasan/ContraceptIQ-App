@@ -1,7 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { LayoutDashboard, ClipboardList, User, Award, Book } from 'lucide-react-native';
+import { LayoutDashboard, ClipboardList, User, Award, Book, History } from 'lucide-react-native';
 import DoctorDashboardScreen from '../screens/ObSide/DoctorDashboardScreen';
+import ObHistoryScreen from '../screens/ObSide/ObHistoryScreen';
 import Whatsrightforme from '../screens/Whatsrightforme'; // Reusing for New Assessment
 import Recommendation from '../screens/Recommendation';   // Reusing
 import Contraceptivemethods from '../screens/Contraceptivemethods'; // Reusing
@@ -31,7 +32,7 @@ const ObTabNavigator = () => {
                     ...shadows.lg,
                 },
                 tabBarLabelStyle: {
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: '500',
                     paddingBottom: 4,
                 }
@@ -55,6 +56,16 @@ const ObTabNavigator = () => {
                     tabBarLabel: 'Assess',
                     tabBarIcon: ({ color, size }) => (
                         <ClipboardList color={color} size={size} />
+                    )
+                }}
+            />
+            <Tab.Screen
+                name="ObHistory"
+                component={ObHistoryScreen}
+                options={{
+                    tabBarLabel: 'Recent',
+                    tabBarIcon: ({ color, size }) => (
+                        <History color={color} size={size} />
                     )
                 }}
             />
