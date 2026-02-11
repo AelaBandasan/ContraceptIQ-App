@@ -12,9 +12,9 @@ const STEPS = [
     { id: 'NAME', label: "What's your Name?", type: 'text', sub: "Let's get to know you first." },
     // Demographics
     { id: 'AGE', label: "What's your Age?", type: 'wheel', sub: "This helps in personalizing results." },
-    { id: 'REGION', label: "Your Region", type: 'select', options: ['NCR', 'CAR', 'Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5', 'Region 6', 'Region 7', 'Region 8', 'Region 9', 'Region 10', 'Region 11', 'Region 12', 'Region 13', 'BARMM'] },
-    { id: 'EDUC_LEVEL', label: "Education Level", type: 'select', options: ['No formal education', 'Primary', 'Secondary', 'Senior High', 'College undergraduate', 'College graduate'] },
-    { id: 'RELIGION', label: "What is your Religion?", type: 'select', options: ['Catholic', 'Christian', 'Muslim', 'INC', 'Prefer not to say'] },
+    { id: 'REGION', label: "Where do you live?", type: 'select', options: ['NCR', 'CAR', 'Region I – Ilocos', 'Region II – Cagayan Valley', 'Region III – Central Luzon', 'Region IV-A – CALABARZON', 'Region IV-B – MIMAROPA', 'Region V – Bicol', 'Region VI – Western Visayas', 'Region VII – Central Visayas', 'Region VIII – Eastern Visayas', 'Region IX – Zamboanga Peninsula', 'Region X – Northern Mindanao', 'Region XI – Davao Region', 'Region XII – SOCCSKSARGEN', 'Region XIII – Caraga', 'BARMM'] },
+    { id: 'EDUC_LEVEL', label: "What is the highest level of education you finished?", type: 'select', options: ['No formal education', 'Primary', 'Secondary', 'Senior High School', 'Vocational/Technical', 'College Undergraduate', 'College Graduate'] },
+    { id: 'RELIGION', label: "What is your Religion?", type: 'select', options: ['Roman Catholic', 'Christian', 'Muslim', 'Iglesia ni Cristo', 'No Religion', 'Other Religion', 'Prefer not to say'] },
     { id: 'ETHNICITY', label: "Your Ethnicity", type: 'dropdown', options: ['Tagalog', 'Cebuano', 'Ilocano'] },
     { id: 'MARITAL_STATUS', label: "Marital Status", type: 'select', options: ['Single', 'Married', 'Living with partner', 'Separated', 'Divorced', 'Widowed'] },
     { id: 'RESIDING_WITH_PARTNER', label: "Residing with partner?", type: 'select', options: ['Yes', 'No'] },
@@ -41,6 +41,7 @@ const GuestAssessment = ({ navigation, route }: any) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<any>({});
     const [loading, setLoading] = useState(false);
+    const [showReview, setShowReview] = useState(false);
 
     const step = STEPS[currentStep];
 
@@ -58,14 +59,16 @@ const GuestAssessment = ({ navigation, route }: any) => {
     }, [preFilledData]);
 
     const handleNext = async () => {
-        if (currentStep < STEPS.length - 1) {
+        if (!showReview && currentStep < STEPS.length - 1) {
             setCurrentStep(currentStep + 1);
+        } else if (!showReview && currentStep === STEPS.length - 1) {
+            setShowReview(true);
         } else {
             // Assessment Complete -> Go to Consultation Code Generation
             setLoading(true);
             try {
                 const patientData = {
-                    details: formData,
+                    ...formData,
                     method_eligibility: {
                         'Pills': parseInt(formData['AGE'] || '25') > 35 && formData['SMOKE_CIGAR'] === 'Current daily' ? 3 : 1,
                         'Implant': 1,
@@ -85,14 +88,20 @@ const GuestAssessment = ({ navigation, route }: any) => {
                     "Message: " + (error.message || JSON.stringify(error))
                 );
             } finally {
+                setShowReview(false);
                 setLoading(false);
             }
         }
     };
 
     const handleBack = () => {
-        if (currentStep > 0) setCurrentStep(currentStep - 1);
-        else navigation.goBack();
+        if (showReview) {
+            setShowReview(false);
+        } else if (currentStep > 0) {
+            setCurrentStep(currentStep - 1);
+        } else {
+            navigation.goBack();
+        }
     };
 
     const updateVal = (val: string) => {
@@ -122,49 +131,88 @@ const GuestAssessment = ({ navigation, route }: any) => {
 
             {/* Content */}
             <View style={styles.content}>
-                <Text style={styles.questionLabel}>{step.label}</Text>
-                <Text style={styles.questionSub}>{step.sub}</Text>
+                {showReview ? (
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                        <Text style={styles.questionLabel}>Patient Review</Text>
+                        <Text style={styles.questionSub}>Review patient history & MEC.</Text>
 
-                <View style={styles.inputContainer}>
-                    {step.type === 'text' ? (
-                        <TextInput
-                            style={styles.textInput}
-                            placeholder="Type here..."
-                            placeholderTextColor="#94A3B8"
-                            value={formData[step.id] || ''}
-                            onChangeText={updateVal}
-                        />
-                    ) : step.type === 'wheel' ? (
-                        <View style={{ backgroundColor: '#F8FAFC', borderRadius: 16 }}>
-                            <Picker selectedValue={formData[step.id] || '25'} onValueChange={updateVal}>
-                                {Array.from({ length: step.range ? (step.range[1] - step.range[0] + 1) : 50 }, (_, i) => {
-                                    const val = (step.range ? step.range[0] : 18) + i;
-                                    return <Picker.Item key={val} label={val.toString()} value={val.toString()} />;
-                                })}
-                            </Picker>
+                        {/* MEC Recommendations Section */}
+                        <View style={{ marginBottom: 20 }}>
+                            <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>MEC Recommendations</Text>
+                            <View style={[styles.cardSection, { backgroundColor: '#FFF5F9', borderColor: '#FCE7F3' }]}>
+                                <View style={styles.reviewRow}>
+                                    <View>
+                                        <Text style={styles.reviewL}>System Recommended</Text>
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                                            {/* Logic to show recommended methods - hardcoded for now to match UI screenshot example */}
+                                            <View style={{ backgroundColor: '#E45A92', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                                                <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 14 }}>Pills</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
                         </View>
-                    ) : step.type === 'select' ? (
-                        <FlatList
-                            data={step.options}
-                            showsVerticalScrollIndicator={false}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={[styles.optionBtn, formData[step.id] === item && styles.selectedBtn]}
-                                    onPress={() => { updateVal(item); }}
-                                >
-                                    <Text style={[styles.optionText, formData[step.id] === item && styles.selectedText]}>{item}</Text>
-                                </TouchableOpacity>
+
+                        <Text style={styles.sectionTitle}>Patient Demographics & History</Text>
+                        <View style={styles.cardSection}>
+                            {STEPS.map((s, idx) => (
+                                <View key={s.id} style={styles.reviewRow}>
+                                    <View>
+                                        <Text style={styles.reviewL}>{s.label}</Text>
+                                        <Text style={styles.reviewV}>{formData[s.id] || '---'}</Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    </ScrollView>
+                ) : (
+                    <>
+                        <Text style={styles.questionLabel}>{step.label}</Text>
+                        <Text style={styles.questionSub}>{step.sub}</Text>
+
+                        <View style={styles.inputContainer}>
+                            {step.type === 'text' ? (
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="Type here..."
+                                    placeholderTextColor="#94A3B8"
+                                    value={formData[step.id] || ''}
+                                    onChangeText={updateVal}
+                                />
+                            ) : step.type === 'wheel' ? (
+                                <View style={{ backgroundColor: '#F8FAFC', borderRadius: 16 }}>
+                                    <Picker selectedValue={formData[step.id] || '25'} onValueChange={updateVal}>
+                                        {Array.from({ length: step.range ? (step.range[1] - step.range[0] + 1) : 50 }, (_, i) => {
+                                            const val = (step.range ? step.range[0] : 18) + i;
+                                            return <Picker.Item key={val} label={val.toString()} value={val.toString()} />;
+                                        })}
+                                    </Picker>
+                                </View>
+                            ) : step.type === 'select' ? (
+                                <FlatList
+                                    data={step.options}
+                                    showsVerticalScrollIndicator={false}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={[styles.optionBtn, formData[step.id] === item && styles.selectedBtn]}
+                                            onPress={() => { updateVal(item); }}
+                                        >
+                                            <Text style={[styles.optionText, formData[step.id] === item && styles.selectedText]}>{item}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            ) : (
+                                <View style={styles.dropdown}>
+                                    <Picker selectedValue={formData[step.id]} onValueChange={updateVal}>
+                                        <Picker.Item label="Select..." value="" />
+                                        {step.options?.map(o => <Picker.Item key={o} label={o} value={o} />)}
+                                    </Picker>
+                                </View>
                             )}
-                        />
-                    ) : (
-                        <View style={styles.dropdown}>
-                            <Picker selectedValue={formData[step.id]} onValueChange={updateVal}>
-                                <Picker.Item label="Select..." value="" />
-                                {step.options?.map(o => <Picker.Item key={o} label={o} value={o} />)}
-                            </Picker>
                         </View>
-                    )}
-                </View>
+                    </>
+                )}
             </View>
 
             {/* Footer */}
@@ -173,13 +221,19 @@ const GuestAssessment = ({ navigation, route }: any) => {
                     <Text style={styles.backBtnText}>Back</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleNext} style={styles.nextBtn} disabled={loading}>
+                <TouchableOpacity
+                    onPress={handleNext}
+                    style={[styles.nextBtn, showReview && { backgroundColor: '#E45A92' }]}
+                    disabled={loading}
+                >
                     {loading ? (
-                        <ActivityIndicator size="small" color="#000" />
+                        <ActivityIndicator size="small" color={showReview ? "#FFF" : "#000"} />
                     ) : (
                         <>
-                            <Text style={styles.nextBtnText}>Next</Text>
-                            <ChevronRight size={20} color="#000" />
+                            <Text style={[styles.nextBtnText, showReview && { color: '#FFF' }]}>
+                                {showReview ? "Confirm & Generate Code" : "Next"}
+                            </Text>
+                            <ChevronRight size={20} color={showReview ? "#FFF" : "#000"} />
                         </>
                     )}
                 </TouchableOpacity>
@@ -311,5 +365,37 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#000',
         fontWeight: 'bold',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1E293B',
+        marginBottom: 12,
+        marginTop: 10,
+    },
+    cardSection: {
+        backgroundColor: '#F8FAFC',
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        marginBottom: 20,
+    },
+    reviewRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F5F9',
+    },
+    reviewL: {
+        fontSize: 13,
+        color: '#64748B',
+        marginBottom: 4,
+    },
+    reviewV: {
+        fontSize: 16,
+        color: '#1E293B',
+        fontWeight: '700',
     },
 });

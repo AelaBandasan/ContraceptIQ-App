@@ -7,9 +7,10 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { UserTabScreenProps } from '../types/navigation';
 import { colors, spacing, typography } from '../theme';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -17,6 +18,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 type Props = UserTabScreenProps<'Home'>;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const contraceptiveMethods = [
     { id: '1', name: 'Pills', image: require('../../assets/image/pillss.png') },
     { id: '2', name: 'Patch', image: require('../../assets/image/patchh.png') },
@@ -26,23 +28,28 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+            style={styles.gradient}
+          >
+            <Ionicons name="menu" size={24} color="#FFF" />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
+          <Text style={styles.headerTagline}>Smart Support, Informed Choices.</Text>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: hp('1.2%'), paddingBottom: hp('11%') }}
+        contentContainerStyle={{ paddingBottom: hp('11%') }}
       >
-        {/* Header with menu button */}
-        <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
-          <Ionicons name="menu" size={hp('4%')} color="#000" />
-        </TouchableOpacity>
-
-        {/* Title section */}
-        <View style={styles.containerTwo}>
-          <Text style={styles.title}>ContraceptIQ</Text>
-          <Text style={styles.tagline}>Smart Support, Informed Choices.</Text>
-        </View>
-
         {/* Infographic */}
         <View style={styles.containerThree}>
           <Image
@@ -146,7 +153,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.footerText}>Privacy & Disclaimer</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -162,10 +169,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp('5%'),
     backgroundColor: '#fff',
   },
+  header: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: wp('5%'),
+    paddingBottom: hp('2.5%'),
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: hp('2%'), // Added gap between header and content
+  },
+  headerTitleContainer: {
+    marginLeft: 15,
+  },
+  headerAppTitle: {
+    fontSize: hp('3%'),
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  headerTagline: {
+    fontSize: hp('1.8%'),
+    color: '#FFDBEB',
+    fontStyle: 'italic',
+  },
   menuButton: {
-    marginTop: hp('1.2%'),
-    alignSelf: 'flex-start',
-    marginBottom: hp('1.2%'),
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  gradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: hp('3%'), // Resized
@@ -279,7 +315,7 @@ const styles = StyleSheet.create({
   secondaryActionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: hp('3%'),
+    marginBottom: hp('1.5%'), // Reduced from 3%
   },
   secondaryCard: {
     backgroundColor: '#FFF',

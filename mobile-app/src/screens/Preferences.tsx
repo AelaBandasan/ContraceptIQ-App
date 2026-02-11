@@ -3,14 +3,16 @@ import React, { useState } from 'react';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackScreenProps } from '../types/navigation';
 import { typography, spacing } from '../theme';
 
 type Props = RootStackScreenProps<"Preferences">;
 
 const Preferences = ({ navigation }: Props) => {
+  const insets = useSafeAreaInsets();
   const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
 
   const preferences = [
@@ -86,20 +88,27 @@ const Preferences = ({ navigation }: Props) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+            style={styles.gradient}
+          >
+            <Ionicons name="menu" size={24} color="#FFF" />
+          </LinearGradient>
+        </TouchableOpacity>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
+          <Text style={styles.headerText}>What's Right for Me?</Text>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 20, paddingBottom: 100 }}
       >
-
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-            <Ionicons name="menu" size={35} color={'#000'} />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>What's Right for Me?</Text>
-          <View style={{ width: 35 }} />
-        </View>
 
         <View style={styles.screenCont}>
           <Text style={styles.header2}>Preferences</Text>
@@ -136,7 +145,7 @@ const Preferences = ({ navigation }: Props) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -152,20 +161,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#E45A92', // colors.primary
     paddingHorizontal: 20,
-    marginTop: 10,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
   },
+  titleContainer: {
+    marginLeft: 15,
+  },
+  headerAppTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFDBEB',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   menuButton: {
-    padding: 5,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  gradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 21,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   screenCont: {
     paddingHorizontal: 20,

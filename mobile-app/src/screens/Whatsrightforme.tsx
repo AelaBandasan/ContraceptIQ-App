@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import React, { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import type { UserTabScreenProps, ObTabScreenProps } from '../types/navigation';
 import { ScrollView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, borderRadius, shadows } from "../theme";
 import { useAssessment } from "../context/AssessmentContext";
 import { ErrorAlert } from "../components/ErrorAlert";
@@ -23,6 +24,7 @@ type Props = UserTabScreenProps<"What's Right for Me?"> | ObTabScreenProps<'ObAs
 const { width, height } = Dimensions.get("window");
 
 const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
@@ -66,18 +68,28 @@ const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={isDoctorAssessment ? ['left', 'right', 'bottom'] : undefined}>
+    <View style={styles.safeArea}>
       {isDoctorAssessment && <ObHeader title="Assessment" subtitle="Patient Eval" />}
 
       <View style={styles.containerOne}>
         {!isDoctorAssessment && (
-          <View style={styles.headerContainer}>
+          <View style={[styles.guestHeader, { paddingTop: insets.top + 10 }]}>
             <TouchableOpacity
-              onPress={() => navigation.toggleDrawer()}
+              onPress={() => (navigation as any).toggleDrawer()}
               style={styles.menuButton}
             >
-              <Ionicons name="menu" size={35} color={"#000"} />
+              <LinearGradient
+                colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+                style={styles.gradient}
+              >
+                <Ionicons name="menu" size={24} color="#FFF" />
+              </LinearGradient>
             </TouchableOpacity>
+
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
+              <Text style={styles.headerTagline}>Smart Support.</Text>
+            </View>
           </View>
         )}
 
@@ -195,7 +207,7 @@ const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </Modal>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -210,16 +222,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  headerContainer: {
+  guestHeader: {
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    marginTop: 10,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
     zIndex: 10,
-    position: "absolute",
-    top: 0,
-    left: 0,
+    marginBottom: 5, // Small gap for visual separation
+  },
+  headerTitleContainer: {
+    marginLeft: 15,
+  },
+  headerAppTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  headerTagline: {
+    fontSize: 14,
+    color: '#FFDBEB',
+    fontStyle: 'italic',
   },
   menuButton: {
     padding: 5,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gradient: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     // alignItems: 'center', // Can cause issues with paging

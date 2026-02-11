@@ -1,20 +1,30 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, typography, spacing } from '../theme';
 
 const EmergencyContraception = () => {
     const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
+        <View style={styles.safeArea}>
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-                    <Ionicons name="menu" size={30} color={colors.text.primary} />
+                    <LinearGradient
+                        colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+                        style={styles.gradient}
+                    >
+                        <Ionicons name="menu" size={24} color="#FFF" />
+                    </LinearGradient>
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Emergency Contraception</Text>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
+                    <Text style={styles.headerTitle}>Emergency Contraception</Text>
+                </View>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
@@ -57,7 +67,7 @@ const EmergencyContraception = () => {
                     </Text>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -67,21 +77,41 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background.secondary,
     },
     header: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.xl,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
-        backgroundColor: colors.background.primary,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.light,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+    },
+    headerTitleContainer: {
+        flex: 1,
+        marginLeft: 15,
+    },
+    headerAppTitle: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#FFDBEB',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     menuButton: {
         marginRight: spacing.md,
+        width: 42,
+        height: 42,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    gradient: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerTitle: {
-        fontSize: typography.sizes['2xl'],
-        fontWeight: typography.weights.semibold,
-        color: colors.text.primary,
+        fontSize: typography.sizes.xl,
+        fontWeight: typography.weights.bold,
+        color: '#FFF',
     },
     content: {
         padding: spacing.lg,

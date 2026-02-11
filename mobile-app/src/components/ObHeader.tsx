@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme';
 
 interface ObHeaderProps {
@@ -42,7 +43,12 @@ const ObHeader: React.FC<ObHeaderProps> = ({
                         style={styles.menuBtn}
                         onPress={openDrawer}
                     >
-                        <Menu color="#FFF" size={24} />
+                        <LinearGradient
+                            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+                            style={styles.gradient}
+                        >
+                            <Menu color="#FFF" size={24} />
+                        </LinearGradient>
                     </TouchableOpacity>
                 )}
                 <View style={styles.doctorInfo}>
@@ -90,10 +96,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     menuBtn: {
-        backgroundColor: 'rgba(255,255,255,0.25)',
-        padding: 12,
-        borderRadius: 14,
+        width: 42,
+        height: 42,
+        borderRadius: 12,
+        overflow: 'hidden',
         marginRight: 16,
+    },
+    gradient: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     doctorInfo: {
         flex: 1,
