@@ -1,94 +1,140 @@
-import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, Image, TextInput, Platform, Pressable, ActivityIndicator, ScrollView, Alert, View } from 'react-native'
-import Logo from '../../../assets/tempLogo.png';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react-native';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../config/firebaseConfig';
+import {
+  KeyboardAvoidingView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  Platform,
+  Pressable,
+  ActivityIndicator,
+  ScrollView,
+  Alert,
+  View,
+} from "react-native";
+import Logo from "../../../assets/tempLogo.png";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react-native";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../config/firebaseConfig";
 
 const COLORS = {
-  primary: '#E45A92',
-  primaryDark: '#D3347A',
-  textPrimary: '#0F172A',
-  border: '#E2E8F0',
-  white: '#FFFFFF',
-  placeholder: '#94A3B8',
-  error: '#EF4444',
+  primary: "#E45A92",
+  primaryDark: "#D3347A",
+  textPrimary: "#0F172A",
+  border: "#E2E8F0",
+  white: "#FFFFFF",
+  placeholder: "#94A3B8",
+  error: "#EF4444",
 };
 
 const LoginforOB = ({ navigation }: any) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleBackToUser = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "UserStartingScreen" }],
+    });
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
     setIsLoading(true);
     try {
       // 1. Sign in with Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const user = userCredential.user;
 
       // 2. Verify user exists in Firestore 'users' collection
-      const userDocRef = doc(db, 'users', user.uid);
+      const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const doctorName = userData.fullName || "Dr. " + (userData.email ? userData.email.split('@')[0] : 'User');
+        const doctorName =
+          userData.fullName ||
+          "Dr. " + (userData.email ? userData.email.split("@")[0] : "User");
 
         // Navigate only if verification passes
-        navigation.navigate('ObDrawer', { doctorName });
+        navigation.navigate("ObDrawer", { doctorName });
       } else {
         // User is authenticated but not in our DB (e.g. deleted account or unauthorized)
         await signOut(auth);
-        Alert.alert('Access Denied', 'User not found in the database. Please contact support.');
+        Alert.alert(
+          "Access Denied",
+          "User not found in the database. Please contact support.",
+        );
       }
     } catch (error: any) {
       console.error("Login Error:", error);
-      let errorMessage = 'An error occurred during sign in.';
+      let errorMessage = "An error occurred during sign in.";
 
-      if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address format.';
-      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid email or password.';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Too many failed attempts. Please try again later.';
+      if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address format.";
+      } else if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password" ||
+        error.code === "auth/invalid-credential"
+      ) {
+        errorMessage = "Invalid email or password.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later.";
       }
 
-      Alert.alert('Login Failed', errorMessage);
+      Alert.alert("Login Failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const fillDemoCredentials = () => {
-    setEmail('ob@gmail.com');
-    setPassword('password');
+    setEmail("ob@gmail.com");
+    setPassword("password");
     setShowPassword(true);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <Pressable style={styles.backLink} onPress={handleBackToUser}>
+          <Text style={styles.backLinkText}>Back to user login</Text>
+        </Pressable>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.logoSection}>
             <View style={styles.logoContainer}>
               <Image source={Logo} style={styles.logo} resizeMode="contain" />
             </View>
             <Text style={styles.title}>ContraceptIQ</Text>
             <Text style={styles.welcomeText}>Create your OB Account</Text>
-            <Text style={styles.subtext}>Your expertise. Smarter contraceptive care.</Text>
+            <Text style={styles.subtext}>
+              Your expertise. Smarter contraceptive care.
+            </Text>
           </View>
 
           <Pressable style={styles.demoBanner} onPress={fillDemoCredentials}>
@@ -149,12 +195,15 @@ const LoginforOB = ({ navigation }: any) => {
 
               {/* Login Button */}
               <Pressable
-                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                style={[
+                  styles.loginButton,
+                  isLoading && styles.loginButtonDisabled,
+                ]}
                 onPress={handleLogin}
                 disabled={isLoading}
               >
                 <LinearGradient
-                  colors={['#d3347a', '#e83c91']}
+                  colors={["#d3347a", "#e83c91"]}
                   style={styles.buttonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -173,7 +222,7 @@ const LoginforOB = ({ navigation }: any) => {
 
             <View style={styles.registerSection}>
               <Text style={styles.registerText}>Don't have an account? </Text>
-              <Pressable onPress={() => navigation.navigate('SignupforOB')}>
+              <Pressable onPress={() => navigation.navigate("SignupforOB")}>
                 <Text style={styles.registerLink}>Sign Up</Text>
               </Pressable>
             </View>
@@ -185,16 +234,26 @@ const LoginforOB = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+  backLink: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  backLinkText: {
+    color: "#E45A92",
+    fontWeight: "600",
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
   },
   logoSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
     marginBottom: 32,
   },
@@ -204,57 +263,57 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   headerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
-    color: '#111827',
+    fontWeight: "800",
+    color: "#111827",
     marginBottom: 8,
   },
   welcomeText: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 4,
   },
   subtext: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   demoBanner: {
-    backgroundColor: '#FFF7ED',
+    backgroundColor: "#FFF7ED",
     borderWidth: 1,
-    borderColor: '#FFEDD5',
+    borderColor: "#FFEDD5",
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
   },
   demoContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   demoTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#E45A92',
+    fontWeight: "700",
+    color: "#E45A92",
     marginBottom: 8,
   },
   demoText: {
     fontSize: 13,
-    color: '#E45A92',
+    color: "#E45A92",
     marginBottom: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   demoHint: {
     fontSize: 12,
-    color: '#E45A92',
+    color: "#E45A92",
     marginTop: 8,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   form: {
     marginBottom: 24,
@@ -264,16 +323,16 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
     marginBottom: 8,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 56,
@@ -284,46 +343,46 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
+    color: "#111827",
   },
   eyeIcon: {
     padding: 4,
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: 24,
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#E45A92',
-    fontWeight: '600',
+    color: "#E45A92",
+    fontWeight: "600",
     paddingTop: 10,
   },
   loginButton: {
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   loginButtonDisabled: {
     opacity: 0.6,
   },
   buttonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     gap: 8,
   },
   loginButtonText: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   signInButton: {
     backgroundColor: "#E45A92",
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: "#E45A92",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -331,19 +390,19 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   registerSection: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   registerText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   registerLink: {
     fontSize: 14,
-    color: '#E45A92',
-    fontWeight: '700',
+    color: "#E45A92",
+    fontWeight: "700",
   },
 });
 
