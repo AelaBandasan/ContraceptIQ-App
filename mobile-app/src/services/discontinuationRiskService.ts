@@ -18,6 +18,7 @@ import {
   AppError,
 } from '../utils/errorHandler';
 import { isOnline } from '../utils/networkUtils';
+import { assessOffline } from './onDeviceRiskService';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -307,12 +308,22 @@ class DiscontinuationRiskService {
       // Check network connectivity first
       const online = await isOnline();
       if (!online) {
-        const offlineError = createAppError(new Error('Device is offline'), 'assessDiscontinuationRisk');
-        logger.warn(
-          'Assessment attempt while offline',
+        logger.info(
+          'Device offline — falling back to on-device ML inference',
           { offline: true }
         );
-        throw offlineError;
+        try {
+          const offlineResult = await assessOffline(data as Record<string, any>);
+          logger.info('On-device assessment completed', {
+            riskLevel: offlineResult.risk_level,
+            confidence: offlineResult.confidence,
+            source: 'on-device',
+          });
+          return offlineResult;
+        } catch (offlineError) {
+          logger.error('On-device assessment failed, cannot proceed offline', undefined, { error: offlineError });
+          throw createAppError(new Error('Device is offline and on-device model unavailable'), 'assessDiscontinuationRisk');
+        }
       }
 
       // Validate input data before sending

@@ -26,6 +26,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "onnxruntime-react-native",
+      "expo-asset"
+    ]
   }
 }

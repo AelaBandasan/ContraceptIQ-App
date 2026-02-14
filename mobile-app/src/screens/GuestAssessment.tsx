@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, ChevronRight } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { UserAssessmentData } from '../services/discontinuationRiskService';
+import { UserAssessmentData, assessDiscontinuationRisk } from '../services/discontinuationRiskService';
 import { ActivityIndicator, Alert } from 'react-native';
 
 // --- PHASE 1 DATA FIELDS (Guest Input) ---
@@ -81,7 +81,17 @@ const GuestAssessment = ({ navigation, route }: any) => {
                     mec_recommendations: ['Pills']
                 };
 
-                navigation.navigate('ConsultationCodeScreen', { patientData, riskResult: null });
+                // Run discontinuation risk assessment (works online or offline)
+                let riskResult = null;
+                try {
+                    riskResult = await assessDiscontinuationRisk(
+                        patientData as UserAssessmentData
+                    );
+                } catch (riskError: any) {
+                    console.warn('Risk assessment failed, proceeding without:', riskError.message);
+                }
+
+                navigation.navigate('ConsultationCodeScreen', { patientData, riskResult });
             } catch (error: any) {
                 console.error("Guest Assessment Error:", error);
                 Alert.alert("Submission Error",
