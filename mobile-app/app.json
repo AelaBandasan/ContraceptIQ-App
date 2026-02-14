@@ -28,7 +28,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "onnxruntime-react-native",
+      "./plugins/with-onnxruntime-react-native",
       "expo-asset"
     ]
   }
