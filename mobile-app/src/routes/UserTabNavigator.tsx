@@ -47,16 +47,7 @@ const UserTabNavigator = () => {
                     ),
                 }}
             />
-            <Tab.Screen
-                name="What's Right for Me?"
-                component={Whatsrightforme}
-                options={{
-                    tabBarLabel: 'Find Method',
-                    tabBarIcon: ({ color, size }) => (
-                        <Search color={color} size={size} />
-                    ),
-                }}
-            />
+
             <Tab.Screen
                 name="Contraceptive Methods"
                 component={Contraceptivemethods}

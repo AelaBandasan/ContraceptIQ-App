@@ -2,6 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, BackHandler, Alert, ScrollView } from 'react-native';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
+import {
+    Sliders,
+    Award,
+    AlertTriangle,
+    HelpCircle,
+    Info,
+    Mail,
+    ShieldCheck,
+    LogOut
+} from 'lucide-react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
 import { useAssessmentData } from '../context/AssessmentContext';
 
@@ -20,23 +30,20 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
         {
             label: 'My Preferences',
             route: 'Preferences',
-            icon: 'options-outline',
-            activeIcon: 'options',
+            Icon: Sliders,
             show: hasAssessment, // Only show if assessment started/done
         },
         {
             label: 'Recommendations',
-            route: 'Recommendation', // Navigates to Recommendation screen
-            icon: 'ribbon-outline',
-            activeIcon: 'ribbon',
+            route: 'Recommendation',
+            Icon: Award,
             show: hasAssessment,
         },
         // Extras
         {
             label: 'Emergency Contraception',
             route: 'Emergency Contraception',
-            icon: 'warning-outline',
-            activeIcon: 'warning',
+            Icon: AlertTriangle,
             show: true,
         },
     ];
@@ -45,14 +52,12 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
         {
             label: 'FAQs',
             route: 'Contraceptive FAQs',
-            icon: 'help-circle-outline',
-            activeIcon: 'help-circle',
+            Icon: HelpCircle,
         },
         {
             label: 'About Us',
             route: 'About Us',
-            icon: 'information-circle-outline',
-            activeIcon: 'information-circle',
+            Icon: Info,
         },
     ];
 
@@ -94,10 +99,10 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
                 onPress={() => navigation.navigate(item.route, item.params)}
             >
                 <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-                    <Ionicons
-                        name={focused ? item.activeIcon : item.icon}
-                        size={20}
-                        color="#FFFFFF"
+                    <item.Icon
+                        size={22}
+                        color={colors.primary}
+                        strokeWidth={2.5} // Heavier weight
                     />
                 </View>
                 <Text style={[styles.menuLabel, focused && styles.menuLabelActive]}>
@@ -132,14 +137,14 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
                     {/* Special Actions */}
                     <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
                         <View style={styles.iconContainer}>
-                            <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+                            <Mail size={22} color={colors.primary} strokeWidth={2.5} />
                         </View>
                         <Text style={styles.menuLabel}>Send Feedback</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.menuItem} onPress={handlePrivacy}>
                         <View style={styles.iconContainer}>
-                            <Ionicons name="shield-checkmark-outline" size={20} color="#FFFFFF" />
+                            <ShieldCheck size={22} color={colors.primary} strokeWidth={2.5} />
                         </View>
                         <Text style={styles.menuLabel}>Privacy & Disclaimer</Text>
                     </TouchableOpacity>
@@ -149,7 +154,7 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
             {/* Footer */}
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.exitButton} onPress={handleExit}>
-                    <Ionicons name="log-out-outline" size={22} color={colors.error} />
+                    <LogOut size={22} color={colors.error} strokeWidth={2.5} />
                     <Text style={styles.exitText}>Exit App</Text>
                 </TouchableOpacity>
                 <Text style={styles.versionText}>Version 1.0.1</Text>
@@ -209,16 +214,16 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primaryLight + '20', // Low opacity primary
     },
     iconContainer: {
-        width: 42,
-        height: 42,
-        backgroundColor: colors.primary, // Solid vibrant pink for all icons
-        borderRadius: 14,
+        width: 44, // Slightly wider to match screenshot
+        height: 44,
+        backgroundColor: '#FFF5F9', // Light pink background like screenshot
+        borderRadius: 12, // Rounded square
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
     },
     iconContainerActive: {
-        // Same as base now
+        backgroundColor: '#FFE4EF', // Slightly deeper pink when active
     },
     menuLabel: {
         fontSize: typography.sizes.base,

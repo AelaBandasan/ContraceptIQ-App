@@ -23,6 +23,7 @@ export type RootStackParamList = {
       'CHC': 1 | 2 | 3 | 4;
       'POP': 1 | 2 | 3 | 4;
     };
+    isDoctorAssessment?: boolean;
   };
 
   ObDrawer: { doctorName?: string };
@@ -46,6 +47,9 @@ export type RootStackParamList = {
     consultationId?: string;
     doctorName?: string;
     isDoctorAssessment?: boolean;
+  };
+  MethodDetail: {
+    methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
   };
 };
 
@@ -99,7 +103,10 @@ export type RootStackNavigationProp<T extends keyof RootStackParamList> =
 export type UserTabScreenNavigationProp<T extends keyof UserTabParamList> =
   CompositeNavigationProp<
     BottomTabNavigationProp<UserTabParamList, T>,
-    DrawerNavigationProp<DrawerParamList>
+    CompositeNavigationProp<
+      DrawerNavigationProp<DrawerParamList>,
+      NativeStackNavigationProp<RootStackParamList>
+    >
   >;
 
 // Navigation prop types for screens in the Drawer

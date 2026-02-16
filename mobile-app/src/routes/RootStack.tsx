@@ -12,6 +12,7 @@ import ObAssessment from '../screens/ObSide/ObAssessment'; // Added
 import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
 import GuestAssessment from '../screens/GuestAssessment';
+import MethodDetail from '../screens/MethodDetail';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,6 +39,7 @@ const RootStack = () => {
       <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
+      <Stack.Screen name="MethodDetail" component={MethodDetail} />
     </Stack.Navigator>
   );
 };

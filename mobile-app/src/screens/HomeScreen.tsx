@@ -64,7 +64,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.ctaContainer}>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => navigation.navigate("What's Right for Me?")}
+            onPress={() => navigation.navigate("Recommendation")}
           >
             <View style={styles.primaryButtonContent}>
               <Ionicons name="sparkles" size={20} color="#FFF" style={{ marginRight: 8 }} />

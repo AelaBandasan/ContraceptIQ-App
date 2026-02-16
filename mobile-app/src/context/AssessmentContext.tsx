@@ -8,7 +8,10 @@
  *   const { assessment, updateAssessment } = useAssessment();
  */
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const STORAGE_KEY = '@contraceptiq_assessment_state';
 
 // ============================================================================
 // TYPES
@@ -83,6 +86,10 @@ export interface AssessmentState {
 
   // Flag for whether assessment needs to be refreshed
   isDirty: boolean;
+
+  // Added for recommendation flow synchronization
+  selectedAgeIndex: number | null;
+  selectedPrefs: string[];
 }
 
 /**
@@ -112,6 +119,10 @@ export interface AssessmentContextType extends AssessmentState {
   // Utilities
   reset: () => void; // Clear all state
   isAssessmentValid: () => boolean; // Check if all required fields present
+
+  // Setters for Recommendation flow
+  setSelectedAgeIndex: (index: number | null) => void;
+  setSelectedPrefs: (prefs: string[]) => void;
 }
 
 // ============================================================================
@@ -161,6 +172,8 @@ const initialState: AssessmentState = {
   error: null,
   lastAssessmentTime: null,
   isDirty: false,
+  selectedAgeIndex: null,
+  selectedPrefs: [],
 };
 
 /**
@@ -179,6 +192,38 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [state, setState] = useState<AssessmentState>(initialState);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load state from local storage on mount
+  useEffect(() => {
+    const loadState = async () => {
+      try {
+        const savedState = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedState) {
+          setState(JSON.parse(savedState));
+        }
+      } catch (e) {
+        console.error("Failed to load assessment state", e);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+    loadState();
+  }, []);
+
+  // Save state to local storage when it changes
+  useEffect(() => {
+    if (isInitialized) {
+      const saveState = async () => {
+        try {
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.error("Failed to save assessment state", e);
+        }
+      };
+      saveState();
+    }
+  }, [state, isInitialized]);
 
   // Assessment data management
   const setAssessmentData = (data: AssessmentData) => {
@@ -315,6 +360,14 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
     setState(initialState);
   };
 
+  const setSelectedAgeIndex = (index: number | null) => {
+    setState(prev => ({ ...prev, selectedAgeIndex: index }));
+  };
+
+  const setSelectedPrefs = (prefs: string[]) => {
+    setState(prev => ({ ...prev, selectedPrefs: prefs }));
+  };
+
   const value: AssessmentContextType = {
     ...state,
     setAssessmentData,
@@ -329,6 +382,8 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
     markClean,
     reset,
     isAssessmentValid,
+    setSelectedAgeIndex,
+    setSelectedPrefs,
   };
 
   return (

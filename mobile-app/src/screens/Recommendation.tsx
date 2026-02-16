@@ -11,12 +11,18 @@ import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { calculateMEC } from '../services/mecService';
 import ObHeader from '../components/ObHeader';
 
+import { useAssessment } from '../context/AssessmentContext';
+
 type Props = RootStackScreenProps<"Recommendation"> | ObTabScreenProps<'ObRecommendations'>;
 
 const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const [selectedAgeIndex, setSelectedAgeIndex] = useState<number | null>(null);
-  const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
+  const {
+    selectedAgeIndex,
+    setSelectedAgeIndex,
+    selectedPrefs,
+    setSelectedPrefs
+  } = useAssessment();
   const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(500)).current;
 
@@ -169,7 +175,8 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
       ageLabel: ageRanges[selectedAgeIndex].fullLabel,
       ageValue: ageRanges[selectedAgeIndex].value,
       prefs: selectedPrefs,
-      mecResults
+      mecResults,
+      isDoctorAssessment // Pass flag to next screen
     });
   };
 
