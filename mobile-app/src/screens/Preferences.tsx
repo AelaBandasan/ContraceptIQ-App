@@ -6,10 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackScreenProps } from '../types/navigation';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { typography, spacing, colors } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
-import { calculateMEC, calculateMatchScore, MECCategory, getMECColor } from '../services/mecService';
+import { calculateMEC, calculateMatchScore, MECCategory, getMECColor, getMECLabel } from '../services/mecService';
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
@@ -21,7 +21,7 @@ const prefLabels: Record<string, string> = {
   longterm: "Long-term protection",
 };
 
-type Props = RootStackScreenProps<"Preferences">;
+type Props = DrawerScreenProps<"Preferences">;
 
 const Preferences = ({ navigation }: Props) => {
   const insets = useSafeAreaInsets();
@@ -117,8 +117,8 @@ const Preferences = ({ navigation }: Props) => {
             </View>
           </View>
 
-          {/* Top 3 Recommendations */}
-          <Text style={[styles.header2, { marginTop: 25 }]}>Top Recommendations</Text>
+          {/* Personalized Recommendations */}
+          <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
           <Text style={styles.header3}>Based on your preferences and age</Text>
 
           {topRecommendations.map((item, index) => (
@@ -128,23 +128,36 @@ const Preferences = ({ navigation }: Props) => {
               onPress={() => navigation.navigate('ViewRecommendation', {
                 ageLabel: selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '',
                 prefs: chosenPrefs,
-                // Passing current mec results
               })}
             >
-              <View style={[styles.rankBadge, { backgroundColor: item.color }]}>
-                <Text style={styles.rankText}>#{index + 1}</Text>
-              </View>
+              <View style={[styles.rankBadge, { backgroundColor: item.color }]} />
               <Image source={item.image} style={styles.recomIcon} />
               <View style={styles.recomInfo}>
                 <Text style={styles.recomName}>{item.name}</Text>
-                <Text style={styles.matchText}>{item.matchScore}% Match</Text>
+                <Text style={styles.matchText}>{item.matchScore}% Match based on preferences</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#CCC" />
             </TouchableOpacity>
           ))}
+
+          {/* CONSULT WITH DOCTOR BUTTON */}
+          <TouchableOpacity
+            style={styles.consultButton}
+            onPress={() => {
+              const currentNumericAge = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].numericAge : 25;
+              const preFilledData = {
+                AGE: currentNumericAge.toString(),
+                prefs: chosenPrefs
+              };
+              navigation.navigate('GuestAssessment', { preFilledData });
+            }}
+          >
+            <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
+            <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </View >
   );
 };
 
@@ -368,10 +381,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  matchText: {
-    fontSize: 12,
-    color: '#4A90E2',
-    fontWeight: '600',
+  mecLabelText: {
+    fontSize: 11,
+    fontWeight: '700',
     marginTop: 2,
+  },
+  matchText: {
+    fontSize: 11,
+    color: '#666',
+    marginTop: 1,
+  },
+  consultButton: {
+    backgroundColor: '#E45A92',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  consultButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

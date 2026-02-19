@@ -3,10 +3,10 @@ import React from 'react'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { UserTabScreenProps } from '../types/navigation';
+import { UserTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, spacing, typography } from '../theme';
 
-type Props = UserTabScreenProps<'Did You Know?'>;
+type Props = UserTabScreenProps<'Did You Know?'> | DrawerScreenProps<'Did You Know?'>;
 
 const Diduknow = ({ navigation }: Props) => {
   const insets = useSafeAreaInsets();

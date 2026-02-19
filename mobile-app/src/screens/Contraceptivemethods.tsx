@@ -4,11 +4,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { UserTabScreenProps, ObTabScreenProps } from '../types/navigation';
+import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import ObHeader from '../components/ObHeader';
 import { colors, spacing, typography, shadows, borderRadius } from '../theme';
 
-type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'>;
+type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'> | DrawerScreenProps<'Contraceptive Methods'>;
 
 interface MethodItem {
   id: string;
@@ -137,7 +137,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
             key={item.id}
             style={styles.methodCard}
             activeOpacity={0.9}
-            onPress={() => navigation.navigate('MethodDetail', { methodId: item.id as any })}
+            onPress={() => (navigation as any).navigate('MethodDetail', { methodId: item.id as any })}
           >
             <View style={styles.cardContent}>
               <View style={styles.textContainer}>

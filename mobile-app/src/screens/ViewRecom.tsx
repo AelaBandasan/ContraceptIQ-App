@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { RootStackScreenProps } from '../types/navigation';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getMECColor, getMECLabel, MECCategory, calculateMatchScore, calculateMEC } from '../services/mecService';
@@ -19,7 +19,7 @@ const prefLabels: Record<string, string> = {
   longterm: "Long-term protection",
 };
 
-type Props = RootStackScreenProps<'ViewRecommendation'>;
+type Props = DrawerScreenProps<'ViewRecommendation'>;
 
 const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
@@ -149,8 +149,17 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-          <Text style={styles.headerText}>Recommendations</Text>
+          <Text style={styles.headerText}>Recommended for You</Text>
         </View>
+
+        <TouchableOpacity onPress={() => (navigation as any).navigate('ColorMapping')} style={styles.infoButton}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+            style={styles.gradient}
+          >
+            <Ionicons name="information-circle-outline" size={24} color="#FFF" />
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -210,10 +219,27 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* CONSULT WITH DOCTOR BUTTON - Only show in OB/Doctor mode */}
-        {isDoctorAssessment ? (
+        {/* CONSULT WITH DOCTOR BUTTON */}
+        {!isDoctorAssessment && (
           <TouchableOpacity
             style={styles.consultButton}
+            onPress={() => {
+              const preFilledData = {
+                AGE: currentNumericAge.toString(),
+                prefs: finalPrefs
+              };
+              navigation.navigate('GuestAssessment', { preFilledData });
+            }}
+          >
+            <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
+            <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        )}
+
+        {/* SAVE RESULT BUTTON / DOCTOR ACTION */}
+        {isDoctorAssessment ? (
+          <TouchableOpacity
+            style={[styles.consultButton, { backgroundColor: '#4A90E2' }]}
             onPress={() => {
               const preFilledData = {
                 AGE: ageValue ? ageValue.toString() : '25',
@@ -222,8 +248,8 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
               navigation.navigate('GuestAssessment', { preFilledData });
             }}
           >
-            <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
-            <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
+            <Text style={styles.consultButtonText}>Perform Clinical Assessment</Text>
+            <Ionicons name="medical-outline" size={24} color="#fff" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -277,6 +303,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   titleContainer: {
+    flex: 1,
     marginLeft: 15,
   },
   headerAppTitle: {
@@ -455,5 +482,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#E45A92',
     fontWeight: '700',
+  },
+  infoButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: 44,
+    height: 44,
   },
 });

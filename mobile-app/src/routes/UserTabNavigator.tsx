@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, Search, List, BookOpen } from 'lucide-react-native';
+import { Home as HomeIcon, List, BookOpen } from 'lucide-react-native';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
 import Contraceptivemethods from '../screens/Contraceptivemethods';
@@ -43,10 +43,11 @@ const UserTabNavigator = () => {
                 options={{
                     tabBarLabel: 'Home',
                     tabBarIcon: ({ color, size }) => (
-                        <Home color={color} size={size} />
+                        <HomeIcon color={color} size={size} />
                     ),
                 }}
             />
+
 
             <Tab.Screen
                 name="Contraceptive Methods"

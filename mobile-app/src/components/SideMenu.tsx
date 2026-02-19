@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, Linking, BackHandler, Alert, 
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import {
+    Home as HomeIcon,
+    List,
+    BookOpen,
     Sliders,
     Award,
     AlertTriangle,
@@ -22,24 +25,34 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
 
     // Function to check if a route is focused
     const isFocused = (routeName: string) => {
-        return state.routes[state.index].name === routeName;
+        const currentRoute = state.routes[state.index];
+
+        // Check if direct drawer route
+        if (currentRoute.name === routeName) return true;
+
+        // Check if nested in MainTabs
+        if (currentRoute.name === 'MainTabs' && currentRoute.state) {
+            const tabState = currentRoute.state as any;
+            const tabRoute = tabState.routes[tabState.index];
+            return tabRoute.name === routeName;
+        }
+
+        return false;
     };
 
     const menuItems = [
-        // Conditionally shown items
         {
             label: 'My Preferences',
             route: 'Preferences',
             Icon: Sliders,
-            show: hasAssessment, // Only show if assessment started/done
+            show: hasAssessment,
         },
         {
-            label: 'Recommendations',
+            label: 'Recommended for You',
             route: 'Recommendation',
             Icon: Award,
             show: hasAssessment,
         },
-        // Extras
         {
             label: 'Emergency Contraception',
             route: 'Emergency Contraception',

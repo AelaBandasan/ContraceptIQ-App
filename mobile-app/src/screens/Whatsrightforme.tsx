@@ -10,7 +10,7 @@ import {
 import React, { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import type { UserTabScreenProps, ObTabScreenProps } from '../types/navigation';
+import type { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, borderRadius, shadows } from "../theme";
@@ -19,7 +19,7 @@ import { ErrorAlert } from "../components/ErrorAlert";
 import { createAppError, AppError } from "../utils/errorHandler";
 import ObHeader from "../components/ObHeader";
 
-type Props = UserTabScreenProps<"What's Right for Me?"> | ObTabScreenProps<'ObAssessment'>;
+type Props = UserTabScreenProps<"Find Method"> | ObTabScreenProps<'ObAssessment'> | DrawerScreenProps<'Find Method'>;
 
 const { width, height } = Dimensions.get("window");
 

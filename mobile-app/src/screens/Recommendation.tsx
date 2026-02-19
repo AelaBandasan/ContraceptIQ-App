@@ -6,14 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackScreenProps, ObTabScreenProps } from '../types/navigation';
+import { RootStackScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { calculateMEC } from '../services/mecService';
 import ObHeader from '../components/ObHeader';
 
 import { useAssessment } from '../context/AssessmentContext';
 
-type Props = RootStackScreenProps<"Recommendation"> | ObTabScreenProps<'ObRecommendations'>;
+type Props = ObTabScreenProps<'ObRecommendations'> | DrawerScreenProps<'Recommendation'>;
 
 const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
@@ -200,6 +200,15 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
             <Text style={styles.headerText}>What's Right for Me?</Text>
           </View>
+
+          <TouchableOpacity onPress={() => (navigation as any).navigate('ColorMapping')} style={styles.infoButton}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+              style={styles.gradient}
+            >
+              <Ionicons name="information-circle-outline" size={24} color="#FFF" />
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -296,7 +305,7 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <TouchableOpacity style={styles.viewRecButton} onPress={handleViewRecommendation}>
-            <Text style={styles.viewRecButtonText}>View Recommendation</Text>
+            <Text style={styles.viewRecButtonText}>View Recommendations for You</Text>
           </TouchableOpacity>
 
         </View>
@@ -327,6 +336,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   titleContainer: {
+    flex: 1,
     marginLeft: 15,
   },
   headerAppTitle: {
@@ -441,6 +451,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#eee',
+  },
+  infoButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: 44,
+    height: 44,
   },
   prefItemSelected: {
     borderColor: '#2E8B57',
