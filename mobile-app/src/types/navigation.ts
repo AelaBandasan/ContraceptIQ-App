@@ -8,22 +8,7 @@ export type RootStackParamList = {
   UserStartingScreen: undefined;
   LoginforOB: undefined;
   SignupforOB: undefined;
-  MainDrawer: undefined; // Replaced MainTabs
-  Recommendation: undefined;
-  Preferences: undefined;
-  ViewRecommendation: {
-    ageLabel?: string;
-    ageValue?: number;
-    prefs?: string[];
-    mecResults?: {
-      'Cu-IUD': 1 | 2 | 3 | 4;
-      'LNG-IUD': 1 | 2 | 3 | 4;
-      'Implant': 1 | 2 | 3 | 4;
-      'DMPA': 1 | 2 | 3 | 4;
-      'CHC': 1 | 2 | 3 | 4;
-      'POP': 1 | 2 | 3 | 4;
-    };
-  };
+  MainDrawer: undefined;
 
   ObDrawer: { doctorName?: string };
   AssessmentResultScreen: {
@@ -47,13 +32,35 @@ export type RootStackParamList = {
     doctorName?: string;
     isDoctorAssessment?: boolean;
   };
+  MethodDetail: {
+    methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
+  };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
 export type DrawerParamList = {
-  MainTabs: undefined; // The Bottom Tab Navigator
+  MainTabs: undefined;
+  Home: undefined;
+  'Find Method': undefined;
+  'Contraceptive Methods': undefined;
+  'Did You Know?': undefined;
   Preferences: undefined;
   Recommendation: undefined;
+  ColorMapping: undefined;
+  ViewRecommendation: {
+    ageLabel?: string;
+    ageValue?: number;
+    prefs?: string[];
+    mecResults?: {
+      'Cu-IUD': 1 | 2 | 3 | 4;
+      'LNG-IUD': 1 | 2 | 3 | 4;
+      'Implant': 1 | 2 | 3 | 4;
+      'DMPA': 1 | 2 | 3 | 4;
+      'CHC': 1 | 2 | 3 | 4;
+      'POP': 1 | 2 | 3 | 4;
+    };
+    isDoctorAssessment?: boolean;
+  };
   'Emergency Contraception': undefined;
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
@@ -63,7 +70,7 @@ export type DrawerParamList = {
 // User Tab Navigator - main app navigation for authenticated users
 export type UserTabParamList = {
   Home: undefined;
-  "What's Right for Me?": undefined; // Changed to match SideMenu route name for consistency or keep as 'Find Method'
+  'Find Method': undefined;
   'Contraceptive Methods': undefined;
   'Did You Know?': undefined;
 };
@@ -100,7 +107,10 @@ export type RootStackNavigationProp<T extends keyof RootStackParamList> =
 export type UserTabScreenNavigationProp<T extends keyof UserTabParamList> =
   CompositeNavigationProp<
     BottomTabNavigationProp<UserTabParamList, T>,
-    DrawerNavigationProp<DrawerParamList>
+    CompositeNavigationProp<
+      DrawerNavigationProp<DrawerParamList>,
+      NativeStackNavigationProp<RootStackParamList>
+    >
   >;
 
 // Navigation prop types for screens in the Drawer

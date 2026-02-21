@@ -11,11 +11,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { UserTabScreenProps } from '../types/navigation';
+import type { UserTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, spacing, typography } from '../theme';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
-type Props = UserTabScreenProps<'Home'>;
+type Props = UserTabScreenProps<'Home'> | DrawerScreenProps<'Home'>;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -30,7 +30,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.safeArea}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={() => navigation.toggleDrawer()} style={styles.menuButton}>
+        <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
           <LinearGradient
             colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
             style={styles.gradient}
@@ -43,6 +43,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
           <Text style={styles.headerTagline}>Smart Support, Informed Choices.</Text>
         </View>
+
       </View>
 
       <ScrollView
@@ -64,7 +65,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.ctaContainer}>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => navigation.navigate("What's Right for Me?")}
+            onPress={() => (navigation as any).navigate("Recommendation")}
           >
             <View style={styles.primaryButtonContent}>
               <Ionicons name="sparkles" size={20} color="#FFF" style={{ marginRight: 8 }} />
@@ -78,7 +79,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.secondaryActionsContainer}>
           <TouchableOpacity
             style={styles.secondaryCard}
-            onPress={() => navigation.navigate('Contraceptive Methods')}
+            onPress={() => (navigation as any).navigate('Contraceptive Methods')}
           >
             <Ionicons name="list-outline" size={22} color={colors.primary} />
             <Text style={styles.secondaryCardText}>Browse Methods</Text>
@@ -86,7 +87,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.secondaryCard}
-            onPress={() => navigation.navigate('Did You Know?')}
+            onPress={() => (navigation as any).navigate('Did You Know?')}
           >
             <Ionicons name="book-outline" size={22} color={colors.primary} />
             <Text style={styles.secondaryCardText}>Learn Hub</Text>
@@ -97,7 +98,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.containerFour}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={styles.headerTitle}>Contraceptive Methods</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Contraceptive Methods')}>
+            <TouchableOpacity onPress={() => (navigation as any).navigate('Contraceptive Methods')}>
               <Text style={{ color: colors.primary, fontSize: hp('1.5%') }}>See all →</Text>
             </TouchableOpacity>
           </View>
@@ -108,7 +109,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             contentContainerStyle={styles.methodsContainer}
           >
             {contraceptiveMethods.map((method) => (
-              <TouchableOpacity key={method.id} style={styles.methodItem} onPress={() => navigation.navigate('Contraceptive Methods')}>
+              <TouchableOpacity key={method.id} style={styles.methodItem} onPress={() => (navigation as any).navigate('Contraceptive Methods')}>
                 <Image source={method.image} style={styles.methodPics} />
                 <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>
@@ -120,7 +121,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.infoSection}>
           <Text style={styles.headerTitle}>Did You Know?</Text>
 
-          <TouchableOpacity style={styles.eduCard} onPress={() => navigation.navigate('Did You Know?')}>
+          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('Did You Know?')}>
             <Ionicons name="help-circle-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.eduCardTitle}>What is contraception?</Text>
@@ -128,7 +129,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.eduCard} onPress={() => navigation.navigate('Did You Know?')}>
+          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('Did You Know?')}>
             <Ionicons name="book-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.eduCardTitle}>Guide to birth control</Text>
@@ -140,7 +141,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* 7️⃣ Emergency Contraception */}
         <TouchableOpacity
           style={styles.emergencyCard}
-          onPress={() => navigation.navigate('Emergency Contraception')}
+          onPress={() => (navigation as any).navigate('Emergency Contraception')}
         >
           <Ionicons name="warning-outline" size={24} color="#D97706" />
           <Text style={styles.emergencyText}>Need emergency contraception?</Text>
@@ -336,6 +337,12 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontWeight: '600',
     fontSize: hp('1.6%'),
+  },
+  infoButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: 44,
+    height: 44,
   },
   eduCard: {
     flexDirection: 'row',

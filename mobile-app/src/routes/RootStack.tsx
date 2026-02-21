@@ -3,15 +3,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DrawerNavigator from './DrawerNavigator';
 import UserStartingScreen from '../screens/UserStartingScreen';
 import LoginforOB from '../screens/ObSide/LoginforOB';
-import Recommendation from '../screens/Recommendation';
-import Preferences from '../screens/Preferences';
-import ViewRecom from '../screens/ViewRecom';
-import SignupforOB from '../screens/ObSide/SignupforOB';
-import ObDrawerNavigator from './ObDrawerNavigator';
-import ObAssessment from '../screens/ObSide/ObAssessment'; // Added
-import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
 import GuestAssessment from '../screens/GuestAssessment';
+import MethodDetail from '../screens/MethodDetail';
+import SignupforOB from '../screens/ObSide/SignupforOB';
+import ObDrawerNavigator from './ObDrawerNavigator';
+import ObAssessment from '../screens/ObSide/ObAssessment';
+import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -27,9 +25,6 @@ const RootStack = () => {
       {/* ... other screens ... */}
 
       <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
-      <Stack.Screen name="Recommendation" component={Recommendation} />
-      <Stack.Screen name="Preferences" component={Preferences} />
-      <Stack.Screen name="ViewRecommendation" component={ViewRecom} />
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
 
       {/* Doctor Flow */}
@@ -38,6 +33,7 @@ const RootStack = () => {
       <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
+      <Stack.Screen name="MethodDetail" component={MethodDetail} />
     </Stack.Navigator>
   );
 };

@@ -1,21 +1,22 @@
-import React from "react";
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, BackHandler, Alert, ScrollView } from 'react-native';
+import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Linking,
-  BackHandler,
-  Alert,
-  ScrollView,
-} from "react-native";
-import {
-  DrawerContentComponentProps,
-  DrawerContentScrollView,
-} from "@react-navigation/drawer";
-import { Ionicons } from "@expo/vector-icons";
-import { colors, typography, spacing, borderRadius } from "../theme";
-import { useAssessmentData } from "../context/AssessmentContext";
+    Home as HomeIcon,
+    List,
+    BookOpen,
+    Sliders,
+    Award,
+    AlertTriangle,
+    HelpCircle,
+    Info,
+    Mail,
+    ShieldCheck,
+    LogOut
+} from 'lucide-react-native';
+import { colors, typography, spacing, borderRadius } from '../theme';
+import { useAssessmentData } from '../context/AssessmentContext';
 
 const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
   const { state, navigation } = props;
@@ -23,36 +24,66 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
   const hasAssessment =
     !!assessmentData && Object.keys(assessmentData).length > 0;
 
-  // Function to check if a route is focused
-  const isFocused = (routeName: string) => {
-    return state.routes[state.index].name === routeName;
-  };
+    // Function to check if a route is focused
+    const isFocused = (routeName: string) => {
+        const currentRoute = state.routes[state.index];
 
-  const menuItems = [
-    // Conditionally shown items
-    {
-      label: "My Preferences",
-      route: "Preferences",
-      icon: "options-outline",
-      activeIcon: "options",
-      show: hasAssessment, // Only show if assessment started/done
-    },
-    {
-      label: "Recommendations",
-      route: "Recommendation", // Navigates to Recommendation screen
-      icon: "ribbon-outline",
-      activeIcon: "ribbon",
-      show: hasAssessment,
-    },
-    // Extras
-    {
-      label: "Emergency Contraception",
-      route: "Emergency Contraception",
-      icon: "warning-outline",
-      activeIcon: "warning",
-      show: true,
-    },
-  ];
+        // Check if direct drawer route
+        if (currentRoute.name === routeName) return true;
+
+        // Check if nested in MainTabs
+        if (currentRoute.name === 'MainTabs' && currentRoute.state) {
+            const tabState = currentRoute.state as any;
+            const tabRoute = tabState.routes[tabState.index];
+            return tabRoute.name === routeName;
+        }
+
+        return false;
+    };
+
+    const menuItems = [
+        {
+            label: 'My Preferences',
+            route: 'Preferences',
+            Icon: Sliders,
+            show: hasAssessment,
+        },
+        {
+            label: 'Recommended for You',
+            route: 'Recommendation',
+            Icon: Award,
+            show: hasAssessment,
+        },
+        {
+            label: 'Emergency Contraception',
+            route: 'Emergency Contraception',
+            Icon: AlertTriangle,
+            show: true,
+        },
+    ];
+
+    const supportItems = [
+        {
+            label: 'FAQs',
+            route: 'Contraceptive FAQs',
+            Icon: HelpCircle,
+        },
+        {
+            label: 'About Us',
+            route: 'About Us',
+            Icon: Info,
+        },
+    ];
+
+    const handleFeedback = async () => {
+        const url = 'mailto:feedback@contraceptiq.com?subject=App Feedback';
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+            Linking.openURL(url);
+        } else {
+            Alert.alert('Error', 'Could not open email client.');
+        }
+    };
 
   const supportItems = [
     {
@@ -100,7 +131,25 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
   const renderItem = (item: any, index: number) => {
     if (!item.show && item.show !== undefined) return null;
 
-    const focused = isFocused(item.route);
+        return (
+            <TouchableOpacity
+                key={index}
+                style={[styles.menuItem, focused && styles.menuItemActive]}
+                onPress={() => navigation.navigate(item.route, item.params)}
+            >
+                <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+                    <item.Icon
+                        size={22}
+                        color={colors.primary}
+                        strokeWidth={2.5} // Heavier weight
+                    />
+                </View>
+                <Text style={[styles.menuLabel, focused && styles.menuLabelActive]}>
+                    {item.label}
+                </Text>
+            </TouchableOpacity>
+        );
+    };
 
     return (
       <TouchableOpacity
@@ -143,16 +192,30 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
           {menuItems.map((item, index) => renderItem(item, index))}
         </View>
 
-        <View style={styles.divider} />
+                    {/* Special Actions */}
+                    <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
+                        <View style={styles.iconContainer}>
+                            <Mail size={22} color={colors.primary} strokeWidth={2.5} />
+                        </View>
+                        <Text style={styles.menuLabel}>Send Feedback</Text>
+                    </TouchableOpacity>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SUPPORT</Text>
-          {supportItems.map((item, index) => renderItem(item, index + 10))}
+                    <TouchableOpacity style={styles.menuItem} onPress={handlePrivacy}>
+                        <View style={styles.iconContainer}>
+                            <ShieldCheck size={22} color={colors.primary} strokeWidth={2.5} />
+                        </View>
+                        <Text style={styles.menuLabel}>Privacy & Disclaimer</Text>
+                    </TouchableOpacity>
+                </View>
+            </DrawerContentScrollView>
 
-          {/* Special Actions */}
-          <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+            {/* Footer */}
+            <View style={styles.footer}>
+                <TouchableOpacity style={styles.exitButton} onPress={handleExit}>
+                    <LogOut size={22} color={colors.error} strokeWidth={2.5} />
+                    <Text style={styles.exitText}>Exit App</Text>
+                </TouchableOpacity>
+                <Text style={styles.versionText}>Version 1.0.1</Text>
             </View>
             <Text style={styles.menuLabel}>Send Feedback</Text>
           </TouchableOpacity>
@@ -172,103 +235,103 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
-  header: {
-    padding: spacing.lg,
-    paddingTop: spacing["3xl"], // More space for status bar
-    backgroundColor: colors.green.light, // Light hint of brand color
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
-  },
-  logoContainer: {
-    marginTop: spacing.sm,
-  },
-  logoText: {
-    fontSize: typography.sizes["2xl"],
-    fontWeight: typography.weights.bold,
-    color: colors.primary,
-  },
-  tagline: {
-    fontSize: typography.sizes.sm,
-    color: colors.text.secondary,
-    fontStyle: "italic",
-  },
-  scrollContent: {
-    paddingTop: spacing.md,
-  },
-  section: {
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: colors.text.disabled,
-    marginLeft: spacing.lg,
-    marginBottom: spacing.sm,
-    letterSpacing: 1,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    marginHorizontal: spacing.sm,
-    borderRadius: borderRadius.md,
-  },
-  menuItemActive: {
-    backgroundColor: colors.primaryLight + "20", // Low opacity primary
-  },
-  iconContainer: {
-    width: 42,
-    height: 42,
-    backgroundColor: colors.primary, // Solid vibrant pink for all icons
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: spacing.md,
-  },
-  iconContainerActive: {
-    // Same as base now
-  },
-  menuLabel: {
-    fontSize: typography.sizes.base,
-    color: colors.text.secondary,
-    fontWeight: "500",
-  },
-  menuLabelActive: {
-    color: colors.primary,
-    fontWeight: "700",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border.light,
-    marginVertical: spacing.sm,
-    marginHorizontal: spacing.lg,
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border.light,
-    padding: spacing.lg,
-  },
-  exitButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  exitText: {
-    marginLeft: spacing.md,
-    color: colors.error,
-    fontWeight: "600",
-    fontSize: typography.sizes.base,
-  },
-  versionText: {
-    fontSize: 10,
-    color: colors.text.disabled,
-    textAlign: "center",
-  },
+    container: {
+        flex: 1,
+        backgroundColor: colors.background.primary,
+    },
+    header: {
+        padding: spacing.lg,
+        paddingTop: spacing['3xl'], // More space for status bar
+        backgroundColor: colors.green.light, // Light hint of brand color
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border.light,
+    },
+    logoContainer: {
+        marginTop: spacing.sm,
+    },
+    logoText: {
+        fontSize: typography.sizes['2xl'],
+        fontWeight: typography.weights.bold,
+        color: colors.primary,
+    },
+    tagline: {
+        fontSize: typography.sizes.sm,
+        color: colors.text.secondary,
+        fontStyle: 'italic',
+    },
+    scrollContent: {
+        paddingTop: spacing.md,
+    },
+    section: {
+        marginBottom: spacing.md,
+    },
+    sectionTitle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: colors.text.disabled,
+        marginLeft: spacing.lg,
+        marginBottom: spacing.sm,
+        letterSpacing: 1,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: spacing.lg,
+        marginHorizontal: spacing.sm,
+        borderRadius: borderRadius.md,
+    },
+    menuItemActive: {
+        backgroundColor: colors.primaryLight + '20', // Low opacity primary
+    },
+    iconContainer: {
+        width: 44, // Slightly wider to match screenshot
+        height: 44,
+        backgroundColor: '#FFF5F9', // Light pink background like screenshot
+        borderRadius: 12, // Rounded square
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    iconContainerActive: {
+        backgroundColor: '#FFE4EF', // Slightly deeper pink when active
+    },
+    menuLabel: {
+        fontSize: typography.sizes.base,
+        color: colors.text.secondary,
+        fontWeight: '500',
+    },
+    menuLabelActive: {
+        color: colors.primary,
+        fontWeight: '700',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: colors.border.light,
+        marginVertical: spacing.sm,
+        marginHorizontal: spacing.lg,
+    },
+    footer: {
+        borderTopWidth: 1,
+        borderTopColor: colors.border.light,
+        padding: spacing.lg,
+    },
+    exitButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    exitText: {
+        marginLeft: spacing.md,
+        color: colors.error,
+        fontWeight: '600',
+        fontSize: typography.sizes.base,
+    },
+    versionText: {
+        fontSize: 10,
+        color: colors.text.disabled,
+        textAlign: 'center',
+    },
 });
 
 export default SideMenu;

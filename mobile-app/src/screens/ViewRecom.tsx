@@ -1,17 +1,42 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { RootStackScreenProps } from '../types/navigation';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getMECColor, getMECLabel, MECCategory, calculateMatchScore } from '../services/mecService';
+import { getMECColor, getMECLabel, MECCategory, calculateMatchScore, calculateMEC } from '../services/mecService';
+import { colors } from '../theme';
+import { useAssessment } from '../context/AssessmentContext';
 
-type Props = RootStackScreenProps<'ViewRecommendation'>;
+const prefLabels: Record<string, string> = {
+  effectiveness: "Effectiveness",
+  sti: "STI Prevention",
+  nonhormonal: "Non-hormonal",
+  regular: "Regular Bleeding",
+  privacy: "Privacy",
+  client: "Client controlled",
+  longterm: "Long-term protection",
+};
+
+type Props = DrawerScreenProps<'ViewRecommendation'>;
 
 const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const { ageLabel, ageValue, prefs, mecResults } = route.params || {};
+  const { assessmentResult, setAssessmentResult, selectedAgeIndex, selectedPrefs: contextPrefs } = useAssessment();
+  const { ageLabel, ageValue, prefs, mecResults, isDoctorAssessment } = route.params || {};
+
+  // For Guest mode, we might not have route.params if navigated from side menu
+  const finalPrefs = prefs || contextPrefs || [];
+  const finalAgeValue = ageValue ?? (selectedAgeIndex !== null ? selectedAgeIndex : 2); // Default to index 2 (20-39)
+
+  const ageNumericValues = [16, 18, 30, 42, 50];
+  const currentNumericAge = ageNumericValues[finalAgeValue] || 30;
+
+  const finalMecResults = useMemo(() => {
+    if (mecResults) return mecResults;
+    return calculateMEC({ age: currentNumericAge });
+  }, [mecResults, currentNumericAge]);
 
   // Define contraceptives with their MEC key mapping
   const baseContraceptives = [
@@ -94,6 +119,23 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
     if (currentIndex > 0) setSelected(contraceptives[currentIndex - 1]);
   };
 
+  const handleSave = () => {
+    // Save the selection to context
+    setAssessmentResult({
+      riskLevel: "LOW", // Default for guest recommendation
+      confidence: 1,
+      recommendation: `Recommended method: ${selected.name}`,
+      contraceptiveMethod: selected.name,
+      timestamp: new Date().toISOString(),
+    });
+
+    Alert.alert(
+      "Result Saved",
+      "Your recommendation has been saved to your preferences.",
+      [{ text: "OK", onPress: () => navigation.navigate("MainDrawer") }]
+    );
+  };
+
   return (
     <View style={styles.safeArea}>
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
@@ -107,8 +149,17 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-          <Text style={styles.headerText}>Recommendations</Text>
+          <Text style={styles.headerText}>Recommended for You</Text>
         </View>
+
+        <TouchableOpacity onPress={() => (navigation as any).navigate('ColorMapping')} style={styles.infoButton}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+            style={styles.gradient}
+          >
+            <Ionicons name="information-circle-outline" size={24} color="#FFF" />
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -143,6 +194,17 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.preferencesText}>
             <Text style={{ fontStyle: 'italic' }}>{selected.description}</Text>
           </Text>
+          {/* Selected Preferences Chips */}
+          {finalPrefs && finalPrefs.length > 0 && (
+            <View style={styles.prefsChipContainer}>
+              {finalPrefs.map((p) => (
+                <View key={p} style={styles.prefChip}>
+                  <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* MEC Category Badge */}
           <View style={[styles.mecBadge, { backgroundColor: selected.color }]}>
             <Text style={styles.mecBadgeText}>{getMECLabel(selected.mecCategory)}</Text>
@@ -158,19 +220,46 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* CONSULT WITH DOCTOR BUTTON */}
-        <TouchableOpacity
-          style={styles.consultButton}
-          onPress={() => {
-            const preFilledData = {
-              AGE: ageValue ? ageValue.toString() : '25',
-              prefs: prefs || []
-            };
-            navigation.navigate('GuestAssessment', { preFilledData });
-          }}
-        >
-          <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
-          <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
-        </TouchableOpacity>
+        {!isDoctorAssessment && (
+          <TouchableOpacity
+            style={styles.consultButton}
+            onPress={() => {
+              const preFilledData = {
+                AGE: currentNumericAge.toString(),
+                prefs: finalPrefs
+              };
+              navigation.navigate('GuestAssessment', { preFilledData });
+            }}
+          >
+            <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
+            <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        )}
+
+        {/* SAVE RESULT BUTTON / DOCTOR ACTION */}
+        {isDoctorAssessment ? (
+          <TouchableOpacity
+            style={[styles.consultButton, { backgroundColor: '#4A90E2' }]}
+            onPress={() => {
+              const preFilledData = {
+                AGE: ageValue ? ageValue.toString() : '25',
+                prefs: prefs || []
+              };
+              navigation.navigate('GuestAssessment', { preFilledData });
+            }}
+          >
+            <Text style={styles.consultButtonText}>Perform Clinical Assessment</Text>
+            <Ionicons name="medical-outline" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.consultButton, { backgroundColor: colors.success }]}
+            onPress={handleSave}
+          >
+            <Text style={styles.consultButtonText}>Save Result</Text>
+            <Ionicons name="save-outline" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.listContainer}>
           {contraceptives.map((item, index) => (
@@ -214,6 +303,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   titleContainer: {
+    flex: 1,
     marginLeft: 15,
   },
   headerAppTitle: {
@@ -372,5 +462,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  prefsChipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  prefChip: {
+    backgroundColor: '#FFDBEB',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#E45A92',
+  },
+  prefChipText: {
+    fontSize: 11,
+    color: '#E45A92',
+    fontWeight: '700',
+  },
+  infoButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: 44,
+    height: 44,
   },
 });

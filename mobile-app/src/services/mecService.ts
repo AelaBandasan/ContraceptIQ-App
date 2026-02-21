@@ -79,14 +79,15 @@ export function calculateMEC(input: MECInput): MECResult {
 
 /**
  * Get display color for MEC category
+ * 1: Green, 2: Yellow, 3: Orange, 4: Red
  */
 export function getMECColor(category: MECCategory): string {
     switch (category) {
-        case 1: return '#4CAF50'; // Green - Safe
-        case 2: return '#FFC107'; // Yellow - Generally safe
-        case 3: return '#FF9800'; // Orange - Caution
-        case 4: return '#F44336'; // Red - Contraindicated
-        default: return '#9E9E9E';
+        case 1: return '#22C55E'; // Green (Safe)
+        case 2: return '#EAB308'; // Yellow (Generally safe)
+        case 3: return '#F97316'; // Orange (Caution)
+        case 4: return '#EF4444'; // Red (Do not use)
+        default: return '#94A3B8';
     }
 }
 
@@ -95,10 +96,10 @@ export function getMECColor(category: MECCategory): string {
  */
 export function getMECLabel(category: MECCategory): string {
     switch (category) {
-        case 1: return 'Safe';
-        case 2: return 'Generally Safe';
-        case 3: return 'Use with Caution';
-        case 4: return 'Not Recommended';
+        case 1: return 'No restriction (Safe to use)';
+        case 2: return 'Advantages generally outweigh risks (Generally safe)';
+        case 3: return 'Risks usually outweigh advantages (Use with caution)';
+        case 4: return 'Unacceptable health risk (Do not use)';
         default: return 'Unknown';
     }
 }
