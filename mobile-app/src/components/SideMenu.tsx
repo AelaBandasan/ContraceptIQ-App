@@ -19,9 +19,10 @@ import { colors, typography, spacing, borderRadius } from '../theme';
 import { useAssessmentData } from '../context/AssessmentContext';
 
 const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
-    const { state, navigation } = props;
-    const assessmentData = useAssessmentData();
-    const hasAssessment = !!assessmentData && Object.keys(assessmentData).length > 0;
+  const { state, navigation } = props;
+  const assessmentData = useAssessmentData();
+  const hasAssessment =
+    !!assessmentData && Object.keys(assessmentData).length > 0;
 
     // Function to check if a route is focused
     const isFocused = (routeName: string) => {
@@ -84,26 +85,51 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
         }
     };
 
-    const handleExit = () => {
-        Alert.alert(
-            'Exit App',
-            'Are you sure you want to exit?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Exit', onPress: () => BackHandler.exitApp() },
-            ],
-            { cancelable: true }
-        );
-    };
+  const supportItems = [
+    {
+      label: "FAQs",
+      route: "Contraceptive FAQs",
+      icon: "help-circle-outline",
+      activeIcon: "help-circle",
+    },
+    {
+      label: "About Us",
+      route: "About Us",
+      icon: "information-circle-outline",
+      activeIcon: "information-circle",
+    },
+    {
+      label: "Privacy & Disclaimer",
+      route: "PrivacyDisclaimer",
+      icon: "shield-checkmark-outline",
+      activeIcon: "shield-checkmark",
+    },
+  ];
 
-    const handlePrivacy = () => {
-        Alert.alert('Privacy & Disclaimer', 'Privacy Policy and Disclaimer would go here.');
+  const handleFeedback = async () => {
+    const url = "mailto:feedback@contraceptiq.com?subject=App Feedback";
+    const canOpen = await Linking.canOpenURL(url);
+    if (canOpen) {
+      Linking.openURL(url);
+    } else {
+      Alert.alert("Error", "Could not open email client.");
     }
+  };
 
-    const renderItem = (item: any, index: number) => {
-        if (!item.show && item.show !== undefined) return null;
+  const handleExit = () => {
+    Alert.alert(
+      "Exit App",
+      "Are you sure you want to exit?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Exit", onPress: () => BackHandler.exitApp() },
+      ],
+      { cancelable: true },
+    );
+  };
 
-        const focused = isFocused(item.route);
+  const renderItem = (item: any, index: number) => {
+    if (!item.show && item.show !== undefined) return null;
 
         return (
             <TouchableOpacity
@@ -126,26 +152,45 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
     };
 
     return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.logoContainer}>
-                    <Text style={styles.logoText}>ContraceptIQ</Text>
-                    <Text style={styles.tagline}>Smart Support.</Text>
-                </View>
-            </View>
+      <TouchableOpacity
+        key={index}
+        style={[styles.menuItem, focused && styles.menuItemActive]}
+        onPress={() => navigation.navigate(item.route, item.params)}
+      >
+        <View
+          style={[styles.iconContainer, focused && styles.iconContainerActive]}
+        >
+          <Ionicons
+            name={focused ? item.activeIcon : item.icon}
+            size={20}
+            color="#FFFFFF"
+          />
+        </View>
+        <Text style={[styles.menuLabel, focused && styles.menuLabelActive]}>
+          {item.label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
-            <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>MENU</Text>
-                    {menuItems.map((item, index) => renderItem(item, index))}
-                </View>
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>ContraceptIQ</Text>
+          <Text style={styles.tagline}>Smart Support.</Text>
+        </View>
+      </View>
 
-                <View style={styles.divider} />
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>SUPPORT</Text>
-                    {supportItems.map((item, index) => renderItem(item, index + 10))}
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>MENU</Text>
+          {menuItems.map((item, index) => renderItem(item, index))}
+        </View>
 
                     {/* Special Actions */}
                     <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
@@ -172,8 +217,21 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
                 </TouchableOpacity>
                 <Text style={styles.versionText}>Version 1.0.1</Text>
             </View>
+            <Text style={styles.menuLabel}>Send Feedback</Text>
+          </TouchableOpacity>
         </View>
-    );
+      </DrawerContentScrollView>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.exitButton} onPress={handleExit}>
+          <Ionicons name="log-out-outline" size={22} color={colors.error} />
+          <Text style={styles.exitText}>Exit App</Text>
+        </TouchableOpacity>
+        <Text style={styles.versionText}>Version 1.0.1</Text>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({

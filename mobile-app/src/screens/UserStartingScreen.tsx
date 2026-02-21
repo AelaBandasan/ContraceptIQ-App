@@ -16,7 +16,7 @@ const UserStartingScreen = ({ navigation }: any) => {
             <View style={styles.container}>
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>ContraceptIQ</Text>
-                    <Text style={styles.text}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor </Text>
+                    <Text style={styles.text}>Where Data Meets Reproductive Health. </Text>
                 </View>
 
                 <Image source={Logo} style={styles.logo} />

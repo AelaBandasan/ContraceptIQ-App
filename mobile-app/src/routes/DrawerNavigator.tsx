@@ -25,7 +25,7 @@ const DrawerNavigator = () => {
       screenOptions={{
         headerShown: false,
         drawerStyle: {
-          width: '80%',
+          width: "80%",
         },
       }}
     >

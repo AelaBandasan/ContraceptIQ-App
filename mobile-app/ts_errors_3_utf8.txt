@@ -1,1 +1,0 @@
-﻿src/screens/Whatsrightforme.tsx(48,44): error TS2345: Argument of type '{ operation: string; component: string; }' is not assignable to parameter of type 'string'.

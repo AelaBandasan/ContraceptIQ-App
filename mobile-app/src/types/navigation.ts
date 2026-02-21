@@ -64,6 +64,7 @@ export type DrawerParamList = {
   'Emergency Contraception': undefined;
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
+  PrivacyDisclaimer: undefined;
 };
 
 // User Tab Navigator - main app navigation for authenticated users
