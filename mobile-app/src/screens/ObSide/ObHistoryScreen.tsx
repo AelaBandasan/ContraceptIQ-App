@@ -192,14 +192,14 @@ const ObHistoryScreen = () => {
                             {item.patientData?.STATUS !== 'completed' && (
                                 <TouchableOpacity
                                     style={[styles.miniActionBtn, { backgroundColor: '#F1F5F9' }]}
-                                    onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code })}
+                                    onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code, patientData: item.patientData, isDoctorAssessment: true })}
                                 >
                                     <PlayCircle size={16} color="#475569" />
                                 </TouchableOpacity>
                             )}
                             <TouchableOpacity
                                 style={[styles.miniActionBtn, { backgroundColor: riskColor + '15' }]}
-                                onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code })}
+                                onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code, patientData: item.patientData, isDoctorAssessment: true })}
                             >
                                 <Eye size={16} color={riskColor} />
                             </TouchableOpacity>
@@ -320,20 +320,15 @@ const ObHistoryScreen = () => {
                                     onPress={() => {
                                         setPreviewVisible(false);
                                         if (selectedPatient) {
-                                            const ageValue = parseInt(selectedPatient.patientData?.AGE || '25');
-                                            const smokingStatus = selectedPatient.patientData?.SMOKING === 'Yes' ? 'current_daily' : 'never';
-                                            const mecResults = calculateMEC({ age: ageValue, smokingStatus });
-
-                                            navigation.navigate('ViewRecommendation', {
-                                                ageLabel: selectedPatient.patientData?.AGE_GROUP,
-                                                ageValue: ageValue,
-                                                prefs: selectedPatient.patientData?.prefs || [],
-                                                mecResults
+                                            navigation.navigate('ObAssessment', {
+                                                consultationId: selectedPatient.code,
+                                                patientData: selectedPatient.patientData,
+                                                isDoctorAssessment: true
                                             });
                                         }
                                     }}
                                 >
-                                    <Text style={styles.fullResultsBtnText}>Open Full Results</Text>
+                                    <Text style={styles.fullResultsBtnText}>Open Patient Assessment</Text>
                                     <ArrowRight size={20} color="#FFF" />
                                 </TouchableOpacity>
                             </View>

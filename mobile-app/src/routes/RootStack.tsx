@@ -7,9 +7,15 @@ import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
 import GuestAssessment from '../screens/GuestAssessment';
 import MethodDetail from '../screens/MethodDetail';
 import SignupforOB from '../screens/ObSide/SignupforOB';
-import ObDrawerNavigator from './ObDrawerNavigator';
+import ObTabNavigator from './ObTabNavigator';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
+import MecGuideScreen from '../screens/ObSide/MecGuideScreen';
+import FeedbackScreen from '../screens/ObSide/FeedbackScreen';
+import SettingsScreen from '../screens/ObSide/SettingsScreen';
+import AboutUs from '../screens/AboutUs';
+import Contrafaqs from '../screens/Contrafaqs';
+import EmergencyContraception from '../screens/EmergencyContraception';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -28,8 +34,14 @@ const RootStack = () => {
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
 
       {/* Doctor Flow */}
-      <Stack.Screen name="ObDrawer" component={ObDrawerNavigator} />
+      <Stack.Screen name="ObMainTabs" component={ObTabNavigator} />
       <Stack.Screen name="ObAssessment" component={ObAssessment} />
+      <Stack.Screen name="ObMecGuide" component={MecGuideScreen} />
+      <Stack.Screen name="ObFeedback" component={FeedbackScreen} />
+      <Stack.Screen name="ObSettings" component={SettingsScreen} />
+      <Stack.Screen name="ObEducation" component={Contrafaqs} />
+      <Stack.Screen name="ObEmergency" component={EmergencyContraception} />
+      <Stack.Screen name="ObAbout" component={AboutUs} />
       <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />

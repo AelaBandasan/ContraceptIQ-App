@@ -10,7 +10,13 @@ export type RootStackParamList = {
   SignupforOB: undefined;
   MainDrawer: undefined;
 
-  ObDrawer: { doctorName?: string };
+  ObMainTabs: { doctorName?: string };
+  ObMecGuide: undefined;
+  ObFeedback: undefined;
+  ObSettings: undefined;
+  ObEducation: undefined;
+  ObEmergency: undefined;
+  ObAbout: undefined;
   AssessmentResultScreen: {
     riskResult: any;
     patientData: any;
@@ -75,20 +81,6 @@ export type UserTabParamList = {
   'Did You Know?': undefined;
 };
 
-// OB Drawer Navigator
-export type ObDrawerParamList = {
-  ObMainTabs: undefined; // The OB Bottom Tab Navigator
-  ObHistory: undefined;
-  ObMethods: undefined; // Direct link if needed, though it's in tabs too
-  ObMecGuide: undefined;
-  ObEducation: undefined;
-  ObEmergency: undefined;
-  ObAbout: undefined;
-  ObFeedback: undefined;
-  ObSettings: undefined;
-  ObAssessment: undefined; // Kept for backward compatibility if needed
-};
-
 // OB Tab Navigator
 export type ObTabParamList = {
   ObHome: undefined;
@@ -136,20 +128,8 @@ export type DrawerScreenProps<T extends keyof DrawerParamList> = {
   route: RouteProp<DrawerParamList, T>;
 };
 
-// Navigation prop types for screens in the OB Drawer
-export type ObDrawerScreenNavigationProp<T extends keyof ObDrawerParamList> =
-  CompositeNavigationProp<
-    DrawerNavigationProp<ObDrawerParamList, T>,
-    NativeStackNavigationProp<RootStackParamList>
-  >;
-
-export type ObDrawerScreenProps<T extends keyof ObDrawerParamList> = {
-  navigation: ObDrawerScreenNavigationProp<T>;
-  route: RouteProp<ObDrawerParamList, T>;
-};
-
 // Screen props for OB Tabs
 export type ObTabScreenProps<T extends keyof ObTabParamList> = CompositeScreenProps<
   BottomTabScreenProps<ObTabParamList, T>,
-  ObDrawerScreenProps<'ObMainTabs'>
+  RootStackScreenProps<'ObMainTabs'>
 >;

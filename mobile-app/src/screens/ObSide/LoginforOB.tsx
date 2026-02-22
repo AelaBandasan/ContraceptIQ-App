@@ -76,7 +76,7 @@ const LoginforOB = ({ navigation }: any) => {
           "Dr. " + (userData.email ? userData.email.split("@")[0] : "User");
 
         // Navigate only if verification passes
-        navigation.navigate("ObDrawer", { doctorName });
+        navigation.navigate("ObMainTabs", { doctorName });
       } else {
         // User is authenticated but not in our DB (e.g. deleted account or unauthorized)
         await signOut(auth);

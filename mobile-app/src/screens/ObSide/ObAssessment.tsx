@@ -15,9 +15,10 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 
 import { assessDiscontinuationRisk, UserAssessmentData, RiskAssessmentResponse } from '../../services/discontinuationRiskService';
 import RiskAssessmentCard from '../../components/RiskAssessmentCard';
-import { AlertTriangle, ChevronDown, CheckCircle2 } from 'lucide-react-native';
-import { doc, updateDoc } from 'firebase/firestore';
+import { AlertTriangle, ChevronDown, CheckCircle2, ClipboardList } from 'lucide-react-native';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
+import ObHeader from '../../components/ObHeader';
 
 interface PatientIntakeData {
     details?: any;
@@ -92,8 +93,8 @@ const FloatingIcon = ({ source, delay = 0, size = wp('15%'), top, left }: Floati
 };
 
 const ObAssessment = ({ navigation, route }: any) => {
-    // If we have patient data or it's a doctor assessment, start at 'review' mode
-    const initialScreen = (route.params?.patientData || route.params?.isDoctorAssessment) ? 'review' : 'welcome';
+    // If we have patient data, a consultation ID, or it's a doctor assessment, start at 'review' mode
+    const initialScreen = (route.params?.patientData || route.params?.isDoctorAssessment || route.params?.consultationId || route.params?.viewOnly) ? 'review' : 'welcome';
     const [screen, setScreen] = useState(initialScreen);
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<any>({});
@@ -101,36 +102,72 @@ const ObAssessment = ({ navigation, route }: any) => {
     const [assessmentResult, setAssessmentResult] = useState<RiskAssessmentResponse | null>(null);
     const [clinicalNotes, setClinicalNotes] = useState('');
     const [reviewStep, setReviewStep] = useState(0); // 0: Patient Info, 1: Clinical Input
+    const [methodEligibility, setMethodEligibility] = useState<Record<string, number>>({});
 
     const [modalVisible, setModalVisible] = useState(false);
     const [selectorVisible, setSelectorVisible] = useState(false);
     const [activeSelectorStep, setActiveSelectorStep] = useState<any>(null);
 
     const [mecRecommendations, setMecRecommendations] = useState<string[]>([]);
-    const isViewOnly = route?.params?.viewOnly;
+    const isDoctorEval = route?.params?.isDoctorAssessment || !!route?.params?.consultationId;
 
     // Load data if view only
     // Load data from params (View Only or Imported)
-    // Load data from params
+    // Load data from params or fetch from Firestore
     useEffect(() => {
-        if (route.params?.patientData) {
-            const data = route.params.patientData;
-            const initialForm = data.details || data;
-            setFormData(initialForm);
+        const loadConsultationData = async () => {
+            setIsLoading(true);
+            if (route.params?.patientData) {
+                const data = route.params.patientData;
+                const initialForm = data.details || data;
+                setFormData(initialForm);
 
-            if (data.mec_recommendations) {
-                setMecRecommendations(data.mec_recommendations);
+                if (data.mec_recommendations) {
+                    setMecRecommendations(data.mec_recommendations);
+                }
+                if (data.method_eligibility) {
+                    setMethodEligibility(data.method_eligibility);
+                }
+
+                if (screen !== 'review') setScreen('review');
+            } else if (route.params?.consultationId) {
+                try {
+                    const docRef = doc(db, 'consultations', route.params.consultationId);
+                    const snap = await getDoc(docRef);
+                    if (snap.exists()) {
+                        const data = snap.data() as any;
+                        const patientData = data.patientData || {};
+                        const initialForm = patientData.details || patientData;
+                        setFormData(initialForm);
+                        if (patientData.mec_recommendations) {
+                            setMecRecommendations(patientData.mec_recommendations);
+                        }
+                        if (patientData.method_eligibility) {
+                            setMethodEligibility(patientData.method_eligibility);
+                        }
+                    } else {
+                        Alert.alert("Error", "Consultation record not found.");
+                    }
+                } catch (error) {
+                    console.error("Fetch Error:", error);
+                    Alert.alert("Error", "Failed to load patient data.");
+                }
             }
 
-            // Ensure we are on review screen if data provided (redundant check but safe)
-            if (screen !== 'review') setScreen('review');
-        }
+            // Unconditionally force 'review' mode if we have data or doctor eval
+            if (isDoctorEval) {
+                setScreen('review');
+            }
+            setIsLoading(false);
+        };
+
+        loadConsultationData();
     }, [route.params]);
 
     // --- MEC SORTING LOGIC ---
     const getSortedMethods = (): MethodSection[] => {
         // Fallback mock eligibility if none provided (for manual testing)
-        const eligibility = route.params?.patientData?.method_eligibility || {
+        const eligibility = Object.keys(methodEligibility).length > 0 ? methodEligibility : {
             'Pills': 1, 'Implant': 1, 'Condom': 1, // Tier 1
             'Injectable': 2, 'Patch': 2,           // Tier 2
             'Copper IUD': 3, 'Intrauterine Device (IUD)': 3 // Tier 3
@@ -188,11 +225,10 @@ const ObAssessment = ({ navigation, route }: any) => {
         setSelectorVisible(false);
         updateVal(method, 'CONTRACEPTIVE_METHOD');
 
-        // Dynamic Risk Update: If we created an assessment already, update it immediately
-        // Or if we are in the clinical step (reviewStep === 1)
-        if (assessmentResult || reviewStep === 1) {
-            assessRisk({ 'CONTRACEPTIVE_METHOD': method });
-        }
+        // User can manually re-generate risk using the button
+        // if (assessmentResult || reviewStep === 1) {
+        //     assessRisk({ 'CONTRACEPTIVE_METHOD': method });
+        // }
 
         if (category === 3) {
             setTimeout(() => {
@@ -226,15 +262,15 @@ const ObAssessment = ({ navigation, route }: any) => {
                 // setAssessmentResult(null); 
                 return;
             } else {
-                if (isViewOnly) navigation.goBack();
-                else setScreen('welcome'); // Or back to last step of Guest? But Guest is read only here.
+                if (isDoctorEval) navigation.goBack();
+                else setScreen('welcome');
                 return;
             }
         }
 
         if (currentStep > 0) setCurrentStep(currentStep - 1);
         else {
-            if (isViewOnly) navigation.goBack();
+            if (isDoctorEval) navigation.goBack();
             else setScreen('welcome');
         }
     };
@@ -374,7 +410,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     };
 
     const updateVal = (val: string, fieldId?: string) => {
-        if (!isViewOnly) setFormData({ ...formData, [fieldId || step.id]: val });
+        setFormData({ ...formData, [fieldId || step.id]: val });
     };
 
     // Shared Header Component
@@ -388,6 +424,30 @@ const ObAssessment = ({ navigation, route }: any) => {
     );
 
     // --- RENDER HELPERS ---
+
+    // Empty State for Tab Navigation
+    if (isDoctorEval && !isLoading && !route.params?.patientData && !route.params?.consultationId && !formData?.NAME) {
+        return (
+            <View style={[styles.container, { backgroundColor: '#F8F9FB' }]}>
+                <StatusBar barStyle="light-content" />
+                <ObHeader title="Patient Assessment" subtitle="No Patient Selected" />
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                    <ClipboardList size={48} color="#CBD5E1" style={{ marginBottom: 16 }} />
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: 8 }}>No Patient Selected</Text>
+                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24, paddingHorizontal: 20 }}>
+                        Please select a patient from the Dashboard to begin their medical evaluation.
+                    </Text>
+                    <TouchableOpacity
+                        style={{ backgroundColor: '#E45A92', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }}
+                        onPress={() => navigation.navigate('ObHome')}
+                    >
+                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>To Dashboard</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
     if (screen === 'welcome') {
         return (
             <SafeAreaView style={styles.container}>
@@ -455,11 +515,18 @@ const ObAssessment = ({ navigation, route }: any) => {
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: '#FFF' }]}>
+        <View style={[styles.container, { backgroundColor: '#F8F9FB' }]}>
             <StatusBar barStyle="light-content" />
 
             {/* Header added to top of progress bar */}
-            <Header />
+            {isDoctorEval ? (
+                <ObHeader
+                    title="Patient Assessment"
+                    subtitle={formData?.NAME || "Guest Patient"}
+                />
+            ) : (
+                <Header />
+            )}
 
             {screen === 'onboarding' && (
                 <View style={styles.progressHeader}>
@@ -468,17 +535,6 @@ const ObAssessment = ({ navigation, route }: any) => {
             )}
 
             <View style={styles.stepContent}>
-                <Text style={styles.title}>
-                    {screen === 'review'
-                        ? (reviewStep === 0 ? "Patient Review" : "Clinical Assessment")
-                        : step.label}
-                </Text>
-                <Text style={styles.subTitle}>
-                    {screen === 'review'
-                        ? (reviewStep === 0 ? "Review patient history & MEC." : "Input clinical data & assess risk.")
-                        : (step as any).sub || "Tap to select an option."}
-                </Text>
-
                 {screen === 'onboarding' ? (
                     <View style={{ flex: 1 }}>
                         {step.type === 'text' ? (
@@ -687,54 +743,53 @@ const ObAssessment = ({ navigation, route }: any) => {
                     <View style={styles.reviewFooterContainer}>
                         {reviewStep === 0 ? (
                             /* Page 1 Footer: Just Continue */
-                            <View style={styles.pillBar}>
-                                {/* Reuse pill bar style for consistency or custom button */}
+                            <View style={{ width: '100%', marginTop: 10 }}>
                                 <TouchableOpacity
                                     onPress={handleNext} // Goes to step 1
-                                    style={styles.primaryActionBtn}
+                                    style={styles.dashboardStyleBtn}
                                 >
-                                    <Text style={styles.primaryActionBtnText}>Next: Clinical Input</Text>
-                                    <Text style={[styles.arrow, { color: '#FFF', marginLeft: 10 }]}>»</Text>
+                                    <Text style={styles.dashboardStyleBtnText}>Next: Clinical Input</Text>
+                                    <Text style={[styles.arrow, { color: '#FFF', marginLeft: 6, fontSize: 16 }]}>»</Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
                             /* Page 2 Footer: Assess or Finish */
-                            <>
-                                {!assessmentResult ? (
-                                    <TouchableOpacity
-                                        onPress={handleAssessSubmit}
-                                        style={styles.primaryActionBtn}
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading ? (
-                                            <ActivityIndicator color="#FFF" />
-                                        ) : (
-                                            <Text style={styles.primaryActionBtnText}>Assess Risk</Text>
-                                        )}
-                                    </TouchableOpacity>
-                                ) : (
+                            <View style={{ width: '100%', gap: 10 }}>
+                                <TouchableOpacity
+                                    onPress={handleAssessSubmit}
+                                    style={[styles.dashboardStyleBtn, { backgroundColor: '#E45A92' }]}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <ActivityIndicator color="#FFF" />
+                                    ) : (
+                                        <Text style={styles.dashboardStyleBtnText}>{assessmentResult ? 'Re-Generate Risk' : 'Generate Risk'}</Text>
+                                    )}
+                                </TouchableOpacity>
+
+                                {assessmentResult && (
                                     <TouchableOpacity
                                         onPress={handleSaveAndFinish}
-                                        style={[styles.primaryActionBtn, { backgroundColor: '#16A34A' }]} // Green for Finish
+                                        style={[styles.dashboardStyleBtn, { backgroundColor: '#10B981' }]} // Green for Finish
                                     >
-                                        <Text style={styles.primaryActionBtnText}>Save & Finish</Text>
-                                        <CheckCircle2 color="#FFF" size={20} style={{ marginLeft: 8 }} />
+                                        <Text style={styles.dashboardStyleBtnText}>Save & Finish</Text>
+                                        <CheckCircle2 color="#FFF" size={18} style={{ marginLeft: 6 }} />
                                     </TouchableOpacity>
                                 )}
 
                                 <TouchableOpacity
                                     onPress={handleBack} // Go back to Patient Info
-                                    style={styles.secondaryActionBtn}
+                                    style={styles.dashboardStyleBtnSecondary}
                                 >
-                                    <Text style={styles.secondaryActionBtnText}>Back to Patient Info</Text>
+                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to Patient Info</Text>
                                 </TouchableOpacity>
-                            </>
+                            </View>
                         )}
                     </View>
                 ) : (
                     <View style={styles.pillBar}>
                         <TouchableOpacity onPress={handleBack} style={styles.backBtn}><Text style={styles.backBtnText}>Back</Text></TouchableOpacity>
-                        {!isViewOnly && (
+                        {!isDoctorEval && (
                             <TouchableOpacity
                                 onPress={handleNext}
                                 style={[styles.nextBtn, { flex: 1, marginLeft: 15, justifyContent: 'center' }]}
@@ -910,7 +965,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                     </View>
                 </Modal>
             )}
-        </SafeAreaView >
+        </View>
     );
 };
 
@@ -1058,35 +1113,34 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 12,
     },
-    primaryActionBtn: {
+    dashboardStyleBtn: {
         backgroundColor: '#E45A92',
-        borderRadius: 30,
-        height: 56,
+        borderRadius: 12,
+        height: 48,
         width: '100%',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#E45A92',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    primaryActionBtnText: {
+    dashboardStyleBtnText: {
         color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 15,
+        fontWeight: '600',
     },
-    secondaryActionBtn: {
+    dashboardStyleBtnSecondary: {
         backgroundColor: 'transparent',
-        paddingVertical: 12,
+        paddingVertical: 10,
         width: '100%',
         alignItems: 'center',
-        marginBottom: 10,
     },
-    secondaryActionBtnText: {
-        color: '#E45A92',
-        fontSize: 15,
+    dashboardStyleBtnSecondaryText: {
+        color: '#64748B',
+        fontSize: 14,
         fontWeight: '600',
     },
     // Modal Styles

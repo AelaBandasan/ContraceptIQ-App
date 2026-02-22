@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme';
 
@@ -12,7 +11,6 @@ interface ObHeaderProps {
     appName?: string;
     appSubtitle?: string;
     date?: string;
-    showMenu?: boolean;
 }
 
 const ObHeader: React.FC<ObHeaderProps> = ({
@@ -20,15 +18,10 @@ const ObHeader: React.FC<ObHeaderProps> = ({
     subtitle,
     appName = "ContraceptIQ",
     appSubtitle = "Clinical Decision Support Tool",
-    date,
-    showMenu = true
+    date
 }) => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer());
-    };
 
     return (
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
@@ -38,19 +31,6 @@ const ObHeader: React.FC<ObHeaderProps> = ({
             </View>
 
             <View style={styles.contentContainer}>
-                {showMenu && (
-                    <TouchableOpacity
-                        style={styles.menuBtn}
-                        onPress={openDrawer}
-                    >
-                        <LinearGradient
-                            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-                            style={styles.gradient}
-                        >
-                            <Menu color="#FFF" size={24} />
-                        </LinearGradient>
-                    </TouchableOpacity>
-                )}
                 <View style={styles.doctorInfo}>
                     <Text style={styles.greeting}>{title}</Text>
                     <Text style={styles.subtitle}>{subtitle}</Text>

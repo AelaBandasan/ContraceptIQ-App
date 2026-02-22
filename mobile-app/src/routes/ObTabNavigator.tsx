@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { LayoutDashboard, ClipboardList, User, Award, Book, History } from 'lucide-react-native';
 import DoctorDashboardScreen from '../screens/ObSide/DoctorDashboardScreen';
 import ObHistoryScreen from '../screens/ObSide/ObHistoryScreen';
+import ObAssessment from '../screens/ObSide/ObAssessment';
 import Whatsrightforme from '../screens/Whatsrightforme'; // Reusing for New Assessment
 import Recommendation from '../screens/Recommendation';   // Reusing
 import Contraceptivemethods from '../screens/Contraceptivemethods'; // Reusing
@@ -50,7 +51,7 @@ const ObTabNavigator = () => {
             />
             <Tab.Screen
                 name="ObAssessment"
-                component={Whatsrightforme as any}
+                component={ObAssessment as any}
                 initialParams={{ isDoctorAssessment: true }}
                 options={{
                     tabBarLabel: 'Assess',
