@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "539037702889",
+    "project_id": "contraceptiq-app",
+    "storage_bucket": "contraceptiq-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:539037702889:android:36615bfb2f52fa677fae78",
+        "android_client_info": {
+          "package_name": "contraceptiq.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYI9yS2rTgml2F7sOXEheq7bNMhBDgUBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

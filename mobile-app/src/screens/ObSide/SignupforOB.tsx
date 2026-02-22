@@ -7,6 +7,14 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
 
+interface OBUserData {
+    uid: string;
+    fullName: string;
+    email: string;
+    role: 'OB';
+    createdAt: string;
+}
+
 const COLORS = {
     primary: '#E45A92',
     primaryDark: '#D3347A',
@@ -37,13 +45,15 @@ const SignupforOB = ({ navigation }: any) => {
             const user = userCredential.user;
 
             // Save user details to Firestore
-            await setDoc(doc(db, 'users', user.uid), {
+            const userData: OBUserData = {
                 uid: user.uid,
                 fullName,
                 email,
                 role: 'OB',
                 createdAt: new Date().toISOString(),
-            });
+            };
+
+            await setDoc(doc(db, 'users', user.uid), userData);
 
             Alert.alert('Success', 'Account created successfully!');
             // navigation.navigate('SuccessScreen'); // Placeholder for success
