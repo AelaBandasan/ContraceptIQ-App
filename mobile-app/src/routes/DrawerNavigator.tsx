@@ -4,7 +4,6 @@ import SideMenu from '../components/SideMenu';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
 import Contraceptivemethods from '../screens/Contraceptivemethods';
-import Diduknow from '../screens/Diduknow';
 import Contrafaqs from '../screens/Contrafaqs';
 import AboutUs from '../screens/AboutUs';
 import Recommendation from '../screens/Recommendation';
@@ -13,6 +12,7 @@ import ViewRecommendation from '../screens/ViewRecom';
 import ColorMapping from '../screens/ColorMapping';
 import UserTabNavigator from './UserTabNavigator';
 import EmergencyContraception from '../screens/EmergencyContraception';
+import PrivacyDisclaimer from '../screens/PrivacyDisclaimerScreen';
 import { DrawerParamList } from '../types/navigation';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -37,6 +37,7 @@ const DrawerNavigator = () => {
       <Drawer.Screen name="Emergency Contraception" component={EmergencyContraception} />
       <Drawer.Screen name="Contraceptive FAQs" component={Contrafaqs} />
       <Drawer.Screen name="About Us" component={AboutUs} />
+      <Drawer.Screen name="PrivacyDisclaimer" component={PrivacyDisclaimer} />
     </Drawer.Navigator>
   );
 };

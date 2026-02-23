@@ -43,7 +43,6 @@ export type DrawerParamList = {
   Home: undefined;
   'Find Method': undefined;
   'Contraceptive Methods': undefined;
-  'Did You Know?': undefined;
   Preferences: undefined;
   Recommendation: undefined;
   ColorMapping: undefined;
@@ -65,6 +64,7 @@ export type DrawerParamList = {
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
   PrivacyDisclaimer: undefined;
+  LearnHub: undefined;
 };
 
 // User Tab Navigator - main app navigation for authenticated users
@@ -72,7 +72,7 @@ export type UserTabParamList = {
   Home: undefined;
   'Find Method': undefined;
   'Contraceptive Methods': undefined;
-  'Did You Know?': undefined;
+  LearnHub: undefined;
 };
 
 // OB Drawer Navigator

@@ -5,7 +5,7 @@ import { Home as HomeIcon, List, BookOpen } from 'lucide-react-native';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
 import Contraceptivemethods from '../screens/Contraceptivemethods';
-import Diduknow from '../screens/Diduknow';
+import LearnHub from '../screens/LearnHub';
 import { colors, typography, shadows } from '../theme';
 import { UserTabParamList } from '../types/navigation';
 
@@ -60,8 +60,8 @@ const UserTabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Did You Know?"
-                component={Diduknow}
+                name="LearnHub"
+                component={LearnHub}
                 options={{
                     tabBarLabel: 'Learn',
                     tabBarIcon: ({ color, size }) => (

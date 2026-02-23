@@ -87,7 +87,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.secondaryCard}
-            onPress={() => (navigation as any).navigate('Did You Know?')}
+            onPress={() => (navigation as any).navigate('LearnHub')}
           >
             <Ionicons name="book-outline" size={22} color={colors.primary} />
             <Text style={styles.secondaryCardText}>Learn Hub</Text>
@@ -121,7 +121,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.infoSection}>
           <Text style={styles.headerTitle}>Did You Know?</Text>
 
-          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('Did You Know?')}>
+          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('LearnHub')}>
             <Ionicons name="help-circle-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.eduCardTitle}>What is contraception?</Text>
@@ -129,7 +129,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('Did You Know?')}>
+          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('LearnHub')}>
             <Ionicons name="book-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.eduCardTitle}>Guide to birth control</Text>
