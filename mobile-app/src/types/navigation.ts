@@ -35,6 +35,7 @@ export type RootStackParamList = {
   MethodDetail: {
     methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
   };
+  PregnancyPlanning: undefined;
 };
 
 // Drawer Navigator - main app navigation for authenticated users

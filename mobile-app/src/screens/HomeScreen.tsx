@@ -129,6 +129,14 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('PregnancyPlanning')}>
+            <Ionicons name="flower-outline" size={24} color="#EC4899" style={{ marginRight: 10 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.eduCardTitle}>Explore Pregnancy Planning</Text>
+              <Text style={styles.eduCardText}>Preparing your body for a healthy pregnancy journey.</Text>
+            </View>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('LearnHub')}>
             <Ionicons name="book-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>

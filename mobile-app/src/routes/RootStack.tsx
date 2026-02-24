@@ -10,6 +10,7 @@ import SignupforOB from '../screens/ObSide/SignupforOB';
 import ObDrawerNavigator from './ObDrawerNavigator';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
+import PregnancyPlanningScreen from '../screens/PregnancyPlanning';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -34,6 +35,7 @@ const RootStack = () => {
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
       <Stack.Screen name="MethodDetail" component={MethodDetail} />
+      <Stack.Screen name="PregnancyPlanning" component={PregnancyPlanningScreen} />
     </Stack.Navigator>
   );
 };
