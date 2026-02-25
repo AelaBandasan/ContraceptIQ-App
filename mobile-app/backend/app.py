@@ -142,6 +142,13 @@ def assess_discontinuation_risk():
         # Convert to pandas DataFrame (single row)
         X = pd.DataFrame([data])
         
+        # Debug: Print received input data
+        print("\n" + "=" * 70)
+        print("📥 RECEIVED INPUT DATA:")
+        for key, val in data.items():
+            print(f"  {key}: {val}")
+        print("=" * 70)
+        
         # Make prediction
         results = predict_discontinuation_risk(X, xgb_model, dt_model, config)
         

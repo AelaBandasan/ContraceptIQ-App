@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
     Plus, Clock, X, CheckCircle, BarChart2, AlertTriangle,
-    ChevronDown, ChevronUp, Palette, Info, ArrowRight,
+    ChevronDown, ChevronUp, Palette, Info, ArrowRight, Book,
     Search, Filter, Users, Baby, Cigarette, User as UserIcon,
     PlayCircle, Eye, Calendar, MapPin, Hash, CheckCircle2,
     Activity, ChevronRight, Clipboard, Trash2
@@ -268,7 +268,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                     <View style={styles.content}>
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Quick Actions</Text>
-                            <View style={styles.actionGrid}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionGrid}>
                                 <TouchableOpacity
                                     style={[styles.actionCard, { backgroundColor: '#DCFCE7' }]}
                                     onPress={() => setModalVisible(true)}
@@ -282,17 +282,17 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, { backgroundColor: '#FFDBEB' }]}
-                                    onPress={() => navigation.navigate('ObRecommendations')}
+                                    style={[styles.actionCard, { backgroundColor: '#E0E7FF' }]}
+                                    onPress={() => navigation.navigate('ObMethods', { isDoctorAssessment: true })}
                                 >
-                                    <View style={[styles.iconBox, { backgroundColor: '#FCE7F3' }]}>
-                                        <CheckCircle color="#E45A92" size={24} />
+                                    <View style={[styles.iconBox, { backgroundColor: '#DBEAFE' }]}>
+                                        <Book color="#4F46E5" size={24} />
                                     </View>
-                                    <Text style={styles.actionTitle}>Recommendations</Text>
-                                    <Text style={styles.actionSub}>Review latest results</Text>
-                                    <ArrowRight color="#E45A92" size={16} style={styles.arrowIcon} />
+                                    <Text style={styles.actionTitle}>Methods Guide</Text>
+                                    <Text style={styles.actionSub}>Browse contraceptives</Text>
+                                    <ArrowRight color="#4F46E5" size={16} style={styles.arrowIcon} />
                                 </TouchableOpacity>
-                            </View>
+                            </ScrollView>
                         </View>
 
                         <View style={styles.section}>
@@ -551,8 +551,8 @@ const styles = StyleSheet.create({
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     rowBetweenNoMargin: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     row: { flexDirection: 'row', alignItems: 'center' },
-    actionGrid: { flexDirection: 'row', gap: 12 },
-    actionCard: { flex: 1, borderRadius: 24, padding: 20, height: 160, justifyContent: 'space-between', position: 'relative', overflow: 'hidden' },
+    actionGrid: { flexDirection: 'row', gap: 12, paddingRight: 20 },
+    actionCard: { width: 150, borderRadius: 24, padding: 20, height: 160, justifyContent: 'space-between', position: 'relative', overflow: 'hidden', marginRight: 12 },
     iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
     actionTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginTop: 12 },
     actionSub: { fontSize: 12, color: '#64748B', marginTop: 4, fontWeight: '500' },

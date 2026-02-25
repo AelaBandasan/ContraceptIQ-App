@@ -4,7 +4,7 @@ import {
     Dimensions, ScrollView, FlatList, Image, StatusBar, Platform, TextInput, Modal, ActivityIndicator, Alert, SectionList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import Animated, {
     useSharedValue, useAnimatedStyle, withRepeat,
     withTiming, withSequence
@@ -14,7 +14,8 @@ import { Picker } from '@react-native-picker/picker';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 import { assessDiscontinuationRisk, UserAssessmentData, RiskAssessmentResponse } from '../../services/discontinuationRiskService';
-import RiskAssessmentCard from '../../components/RiskAssessmentCard';
+import { calculateMEC, MECResult, MECInput, MEC_CONDITIONS, getMECColor, getMECLabel, MECCategory } from '../../services/mecService';
+import RiskAssessmentCard, { generateKeyFactors } from '../../components/RiskAssessmentCard';
 import { AlertTriangle, ChevronDown, CheckCircle2, ClipboardList } from 'lucide-react-native';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
@@ -63,7 +64,8 @@ const DOCTOR_STEPS = [
     { id: 'LAST_SOURCE_TYPE', label: 'Last Source Type', type: 'select', options: ['Government health facility', 'Private Clinic/Hospital', 'Pharmacy', 'NGO', 'Online/Telehealth'] },
 ];
 
-const STEPS = [...GUEST_STEPS, ...DOCTOR_STEPS];
+const STEPS = [...GUEST_STEPS];
+const ALL_STEPS = [...GUEST_STEPS, ...DOCTOR_STEPS];
 
 interface FloatingIconProps {
     source: any;
@@ -93,15 +95,15 @@ const FloatingIcon = ({ source, delay = 0, size = wp('15%'), top, left }: Floati
 };
 
 const ObAssessment = ({ navigation, route }: any) => {
-    // If we have patient data, a consultation ID, or it's a doctor assessment, start at 'review' mode
-    const initialScreen = (route.params?.patientData || route.params?.isDoctorAssessment || route.params?.consultationId || route.params?.viewOnly) ? 'review' : 'welcome';
+    const hasPatientData = !!(route.params?.patientData || route.params?.consultationId || route.params?.viewOnly);
+    const initialScreen = hasPatientData ? 'review' : 'welcome';
     const [screen, setScreen] = useState(initialScreen);
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<any>({});
     const [isLoading, setIsLoading] = useState(false);
     const [assessmentResult, setAssessmentResult] = useState<RiskAssessmentResponse | null>(null);
     const [clinicalNotes, setClinicalNotes] = useState('');
-    const [reviewStep, setReviewStep] = useState(0); // 0: Patient Info, 1: Clinical Input
+    const [reviewStep, setReviewStep] = useState(0); // 0: Patient Overview, 1: MEC Check, 2: Risk Predictor
     const [methodEligibility, setMethodEligibility] = useState<Record<string, number>>({});
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -110,6 +112,10 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     const [mecRecommendations, setMecRecommendations] = useState<string[]>([]);
     const isDoctorEval = route?.params?.isDoctorAssessment || !!route?.params?.consultationId;
+
+    // MEC Screen 2 state
+    const [medicalConditions, setMedicalConditions] = useState<Record<string, boolean>>({});
+    const [mecResults, setMecResults] = useState<MECResult | null>(null);
 
     // Load data if view only
     // Load data from params (View Only or Imported)
@@ -154,8 +160,8 @@ const ObAssessment = ({ navigation, route }: any) => {
                 }
             }
 
-            // Unconditionally force 'review' mode if we have data or doctor eval
-            if (isDoctorEval) {
+            // Force 'review' mode if we have valid patient context
+            if (hasPatientData) {
                 setScreen('review');
             }
             setIsLoading(false);
@@ -244,8 +250,10 @@ const ObAssessment = ({ navigation, route }: any) => {
     const step = STEPS[currentStep] || STEPS[0];
 
     const handleNext = () => {
-        if (screen === 'review' && reviewStep === 0) {
-            setReviewStep(1);
+        if (screen === 'review') {
+            if (reviewStep < 2) {
+                setReviewStep(reviewStep + 1);
+            }
             return;
         }
 
@@ -255,11 +263,8 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     const handleBack = () => {
         if (screen === 'review') {
-            if (reviewStep === 1) {
-                setReviewStep(0);
-                // Clear result when going back to edit? Or keep it?
-                // Keeping it allows them to see result, go back check info, come forward again.
-                // setAssessmentResult(null); 
+            if (reviewStep > 0) {
+                setReviewStep(reviewStep - 1);
                 return;
             } else {
                 if (isDoctorEval) navigation.goBack();
@@ -290,30 +295,30 @@ const ObAssessment = ({ navigation, route }: any) => {
 
         return {
             AGE: getNumber('AGE', 25),
-            REGION: getIndex('REGION', STEPS.find(s => s.id === 'REGION')?.options),
-            EDUC_LEVEL: getIndex('EDUC_LEVEL', STEPS.find(s => s.id === 'EDUC_LEVEL')?.options),
-            RELIGION: getIndex('RELIGION', STEPS.find(s => s.id === 'RELIGION')?.options),
-            ETHNICITY: getIndex('ETHNICITY', STEPS.find(s => s.id === 'ETHNICITY')?.options),
-            MARITAL_STATUS: getIndex('MARITAL_STATUS', STEPS.find(s => s.id === 'MARITAL_STATUS')?.options),
+            REGION: getIndex('REGION', ALL_STEPS.find(s => s.id === 'REGION')?.options),
+            EDUC_LEVEL: getIndex('EDUC_LEVEL', ALL_STEPS.find(s => s.id === 'EDUC_LEVEL')?.options),
+            RELIGION: getIndex('RELIGION', ALL_STEPS.find(s => s.id === 'RELIGION')?.options),
+            ETHNICITY: getIndex('ETHNICITY', ALL_STEPS.find(s => s.id === 'ETHNICITY')?.options),
+            MARITAL_STATUS: getIndex('MARITAL_STATUS', ALL_STEPS.find(s => s.id === 'MARITAL_STATUS')?.options),
             RESIDING_WITH_PARTNER: data['RESIDING_WITH_PARTNER'] === 'Yes' ? 1 : 0,
-            HOUSEHOLD_HEAD_SEX: getIndex('HOUSEHOLD_HEAD_SEX', STEPS.find(s => s.id === 'HOUSEHOLD_HEAD_SEX')?.options),
-            OCCUPATION: getIndex('OCCUPATION', STEPS.find(s => s.id === 'OCCUPATION')?.options),
-            HUSBANDS_EDUC: getIndex('HUSBAND_EDUC_LEVEL', STEPS.find(s => s.id === 'HUSBAND_EDUC_LEVEL')?.options),
+            HOUSEHOLD_HEAD_SEX: getIndex('HOUSEHOLD_HEAD_SEX', ALL_STEPS.find(s => s.id === 'HOUSEHOLD_HEAD_SEX')?.options),
+            OCCUPATION: getIndex('OCCUPATION', ALL_STEPS.find(s => s.id === 'OCCUPATION')?.options),
+            HUSBANDS_EDUC: getIndex('HUSBAND_EDUC_LEVEL', ALL_STEPS.find(s => s.id === 'HUSBAND_EDUC_LEVEL')?.options),
             HUSBAND_AGE: getNumber('HUSBAND_AGE', 30),
-            PARTNER_EDUC: getIndex('HUSBAND_EDUC_LEVEL', STEPS.find(s => s.id === 'HUSBAND_EDUC_LEVEL')?.options), // Fallback if same field used
+            PARTNER_EDUC: getIndex('HUSBAND_EDUC_LEVEL', ALL_STEPS.find(s => s.id === 'HUSBAND_EDUC_LEVEL')?.options), // Fallback if same field used
             SMOKE_CIGAR: (data['SMOKE_CIGAR'] === 'Thinking about quitting' || data['SMOKE_CIGAR'] === 'Current daily') ? 1 : 0,
             PARITY: getNumber('PARITY', 0),
-            DESIRE_FOR_MORE_CHILDREN: getIndex('DESIRE_FOR_MORE_CHILDREN', STEPS.find(s => s.id === 'DESIRE_FOR_MORE_CHILDREN')?.options),
-            WANT_LAST_CHILD: getIndex('WANT_LAST_CHILD', STEPS.find(s => s.id === 'WANT_LAST_CHILD')?.options),
-            WANT_LAST_PREGNANCY: getIndex('WANT_LAST_PREGNANCY', STEPS.find(s => s.id === 'WANT_LAST_PREGNANCY')?.options),
-            CONTRACEPTIVE_METHOD: getIndex('CONTRACEPTIVE_METHOD', STEPS.find(s => s.id === 'CONTRACEPTIVE_METHOD')?.options),
+            DESIRE_FOR_MORE_CHILDREN: getIndex('DESIRE_FOR_MORE_CHILDREN', ALL_STEPS.find(s => s.id === 'DESIRE_FOR_MORE_CHILDREN')?.options),
+            WANT_LAST_CHILD: getIndex('WANT_LAST_CHILD', ALL_STEPS.find(s => s.id === 'WANT_LAST_CHILD')?.options),
+            WANT_LAST_PREGNANCY: getIndex('WANT_LAST_PREGNANCY', ALL_STEPS.find(s => s.id === 'WANT_LAST_PREGNANCY')?.options),
+            CONTRACEPTIVE_METHOD: getIndex('CONTRACEPTIVE_METHOD', ALL_STEPS.find(s => s.id === 'CONTRACEPTIVE_METHOD')?.options),
             MONTH_USE_CURRENT_METHOD: getNumber('MONTH_USE_CURRENT_METHOD', 1),
-            PATTERN_USE: getIndex('PATTERN_USE', STEPS.find(s => s.id === 'PATTERN_USE')?.options),
+            PATTERN_USE: getIndex('PATTERN_USE', ALL_STEPS.find(s => s.id === 'PATTERN_USE')?.options),
             TOLD_ABT_SIDE_EFFECTS: data['TOLD_ABT_SIDE_EFFECTS']?.includes('Yes') ? 1 : 0,
-            LAST_SOURCE_TYPE: getIndex('LAST_SOURCE_TYPE', STEPS.find(s => s.id === 'LAST_SOURCE_TYPE')?.options),
-            LAST_METHOD_DISCONTINUED: getIndex('LAST_METHOD_DISCONTINUED', STEPS.find(s => s.id === 'LAST_METHOD_DISCONTINUED')?.options),
-            REASON_DISCONTINUED: getIndex('REASON_DISCONTINUED', STEPS.find(s => s.id === 'REASON_DISCONTINUED')?.options),
-            HSBND_DESIRE_FOR_MORE_CHILDREN: getIndex('HSBND_DESIRE_FOR_MORE_CHILDREN', STEPS.find(s => s.id === 'HSBND_DESIRE_FOR_MORE_CHILDREN')?.options),
+            LAST_SOURCE_TYPE: getIndex('LAST_SOURCE_TYPE', ALL_STEPS.find(s => s.id === 'LAST_SOURCE_TYPE')?.options),
+            LAST_METHOD_DISCONTINUED: getIndex('LAST_METHOD_DISCONTINUED', ALL_STEPS.find(s => s.id === 'LAST_METHOD_DISCONTINUED')?.options),
+            REASON_DISCONTINUED: getIndex('REASON_DISCONTINUED', ALL_STEPS.find(s => s.id === 'REASON_DISCONTINUED')?.options),
+            HSBND_DESIRE_FOR_MORE_CHILDREN: getIndex('HSBND_DESIRE_FOR_MORE_CHILDREN', ALL_STEPS.find(s => s.id === 'HSBND_DESIRE_FOR_MORE_CHILDREN')?.options),
         };
     };
 
@@ -383,8 +388,8 @@ const ObAssessment = ({ navigation, route }: any) => {
                 Alert.alert("Success", "Consultation record updated.");
             }
 
-            navigation.navigate('ObDrawer', {
-                screen: 'Dashboard',
+            navigation.navigate('ObMainTabs', {
+                screen: 'ObHome',
                 // params: { newPatient } // Not needed as dashboard refreshes on focus
             });
         } catch (error: any) {
@@ -413,35 +418,122 @@ const ObAssessment = ({ navigation, route }: any) => {
         setFormData({ ...formData, [fieldId || step.id]: val });
     };
 
-    // Shared Header Component
-    const Header = () => (
-        <View style={styles.header}>
-            <TouchableOpacity onPress={() => (navigation as any).openDrawer()} style={{ marginRight: 10 }}>
-                <Menu size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-            <View style={{ width: 24 }} />
-        </View>
-    );
+    // Toggle a medical condition on/off for MEC Screen 2
+    const toggleCondition = (condId: string) => {
+        setMedicalConditions(prev => ({ ...prev, [condId]: !prev[condId] }));
+        // Clear previous results when conditions change
+        setMecResults(null);
+    };
+
+    // Run the WHO MEC eligibility check
+    const runMecCheck = () => {
+        const smokingRaw = formData['SMOKE_CIGAR'] || 'Never';
+        const smokingMap: Record<string, MECInput['smokingStatus']> = {
+            'Never': 'never',
+            'Former smoker': 'former',
+            'Occasional smoker': 'occasional',
+            'Current daily': 'current_daily',
+        };
+
+        const mecInput: MECInput = {
+            age: parseInt(formData['AGE']) || 25,
+            smokingStatus: smokingMap[smokingRaw] || 'never',
+            cigarettesPerDay: smokingRaw === 'Current daily' ? 15 : 0,
+            // Spread medical conditions from doctor toggles
+            ...medicalConditions,
+        };
+
+        const results = calculateMEC(mecInput);
+        setMecResults(results);
+
+        // Update methodEligibility for downstream use
+        const eligibility: Record<string, number> = {};
+        (Object.keys(results) as Array<keyof MECResult>).forEach(key => {
+            eligibility[key] = results[key];
+        });
+        setMethodEligibility(eligibility);
+
+        // Update mecRecommendations (Cat 1 and 2 methods)
+        const recommended = (Object.keys(results) as Array<keyof MECResult>)
+            .filter(key => results[key] <= 2)
+            .map(key => key);
+        setMecRecommendations(recommended);
+    };
 
     // --- RENDER HELPERS ---
 
-    // Empty State for Tab Navigation
+    // Empty State for Tab Navigation (doctor with no patient selected)
     if (isDoctorEval && !isLoading && !route.params?.patientData && !route.params?.consultationId && !formData?.NAME) {
         return (
             <View style={[styles.container, { backgroundColor: '#F8F9FB' }]}>
                 <StatusBar barStyle="light-content" />
-                <ObHeader title="Patient Assessment" subtitle="No Patient Selected" />
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-                    <ClipboardList size={48} color="#CBD5E1" style={{ marginBottom: 16 }} />
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: 8 }}>No Patient Selected</Text>
-                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24, paddingHorizontal: 20 }}>
-                        Please select a patient from the Dashboard to begin their medical evaluation.
+                <ObHeader title="Patient Assessment" subtitle="Assess" />
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                    {/* Illustration */}
+                    <View style={{
+                        width: 96, height: 96, borderRadius: 48,
+                        backgroundColor: '#FFF1F5', justifyContent: 'center', alignItems: 'center',
+                        marginBottom: 24, borderWidth: 2, borderColor: '#FCE7F3',
+                    }}>
+                        <ClipboardList size={44} color="#E45A92" />
+                    </View>
+
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1E293B', marginBottom: 8 }}>
+                        No Active Assessment
                     </Text>
+                    <Text style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 28, paddingHorizontal: 16, lineHeight: 20 }}>
+                        Enter a patient's 6-digit code to load their intake data and begin the clinical encounter.
+                    </Text>
+
+                    {/* Inline Code Entry */}
+                    <View style={{ width: '100%', maxWidth: 320 }}>
+                        <TextInput
+                            style={{
+                                backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#E2E8F0',
+                                borderRadius: 14, padding: 16, fontSize: 22, fontWeight: 'bold',
+                                textAlign: 'center', letterSpacing: 6, color: '#1E293B',
+                            }}
+                            placeholder="A 7 X 2 9 P"
+                            placeholderTextColor="#CBD5E1"
+                            value={clinicalNotes} // Reusing clinicalNotes temporarily as code input
+                            onChangeText={(text) => setClinicalNotes(text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+                            maxLength={6}
+                            autoCapitalize="characters"
+                            autoCorrect={false}
+                        />
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: '#E45A92', borderRadius: 14, padding: 16,
+                                alignItems: 'center', marginTop: 12,
+                                opacity: (clinicalNotes?.length ?? 0) < 6 ? 0.5 : 1,
+                            }}
+                            disabled={(clinicalNotes?.length ?? 0) < 6}
+                            onPress={async () => {
+                                // Navigate to dashboard which handles claiming
+                                navigation.navigate('ObHome', { autoClaimCode: clinicalNotes });
+                            }}
+                        >
+                            <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>Claim & Start Assessment</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Divider */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 24, width: '100%', maxWidth: 320 }}>
+                        <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
+                        <Text style={{ marginHorizontal: 12, fontSize: 12, color: '#94A3B8', fontWeight: '600' }}>OR</Text>
+                        <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
+                    </View>
+
+                    {/* Secondary: Go to Dashboard */}
                     <TouchableOpacity
-                        style={{ backgroundColor: '#E45A92', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }}
+                        style={{
+                            flexDirection: 'row', alignItems: 'center',
+                            borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 14,
+                            paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#FFF',
+                        }}
                         onPress={() => navigation.navigate('ObHome')}
                     >
-                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>To Dashboard</Text>
+                        <Text style={{ color: '#64748B', fontWeight: '600', fontSize: 14 }}>Select from Dashboard Queue</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -451,7 +543,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     if (screen === 'welcome') {
         return (
             <SafeAreaView style={styles.container}>
-                <Header />
+                <ObHeader title="New Patient Assessment" subtitle="Intake Form" />
 
                 <View style={styles.content}>
                     <StatusBar barStyle="light-content" />
@@ -519,14 +611,10 @@ const ObAssessment = ({ navigation, route }: any) => {
             <StatusBar barStyle="light-content" />
 
             {/* Header added to top of progress bar */}
-            {isDoctorEval ? (
-                <ObHeader
-                    title="Patient Assessment"
-                    subtitle={formData?.NAME || "Guest Patient"}
-                />
-            ) : (
-                <Header />
-            )}
+            <ObHeader
+                title="Patient Assessment"
+                subtitle={formData?.NAME || "New Patient"}
+            />
 
             {screen === 'onboarding' && (
                 <View style={styles.progressHeader}>
@@ -643,16 +731,16 @@ const ObAssessment = ({ navigation, route }: any) => {
 
 
                     <ScrollView showsVerticalScrollIndicator={false}>
-                        {/* Page 1: MEC + Patient Info */}
+                        {/* ===== SCREEN 1: Patient Overview (Read-Only) ===== */}
                         {reviewStep === 0 && (
                             <>
                                 {mecRecommendations.length > 0 && (
                                     <View style={{ marginBottom: 20 }}>
-                                        <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>MEC Recommendations</Text>
+                                        <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Pre-Computed MEC</Text>
                                         <View style={[styles.cardSection, { backgroundColor: '#FFF5F9', borderColor: '#FCE7F3' }]}>
                                             <View style={styles.reviewRow}>
                                                 <View>
-                                                    <Text style={styles.reviewL}>System Recommended</Text>
+                                                    <Text style={styles.reviewL}>Recommended Methods</Text>
                                                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
                                                         {mecRecommendations.map((rec, idx) => (
                                                             <View key={idx} style={{ backgroundColor: '#E45A92', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
@@ -668,7 +756,7 @@ const ObAssessment = ({ navigation, route }: any) => {
 
                                 <Text style={[styles.sectionTitle, { marginTop: 10 }]}>Patient Demographics & History</Text>
                                 <View style={styles.cardSection}>
-                                    {GUEST_STEPS.map((s, idx) => (
+                                    {GUEST_STEPS.map((s) => (
                                         <View key={s.id} style={styles.reviewRow}>
                                             <View><Text style={styles.reviewL}>{s.label}</Text><Text style={styles.reviewV}>{formData[s.id] || '---'}</Text></View>
                                         </View>
@@ -677,29 +765,133 @@ const ObAssessment = ({ navigation, route }: any) => {
                             </>
                         )}
 
-                        {/* Page 2: Clinical Data + Inline Result */}
+                        {/* ===== SCREEN 2: MEC Eligibility Check ===== */}
                         {reviewStep === 1 && (
                             <>
-                                <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Clinical Assessment Data</Text>
-                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 12 }]}>To be filled by the physician.</Text>
+                                <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Medical Eligibility Check</Text>
+                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 4 }]}>Patient: {formData['NAME'] || 'Unknown'} • Age: {formData['AGE'] || '?'} • Smoking: {formData['SMOKE_CIGAR'] || 'Unknown'}</Text>
+                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 16 }]}>Toggle any conditions the patient has, then tap "Run Eligibility Check."</Text>
+
+                                {/* Condition Toggles */}
+                                <View style={styles.cardSection}>
+                                    {MEC_CONDITIONS.map((cond) => (
+                                        <TouchableOpacity
+                                            key={cond.id}
+                                            style={[styles.reviewRow, { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }]}
+                                            onPress={() => toggleCondition(cond.id)}
+                                        >
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={[styles.reviewV, { fontSize: 15 }]}>{cond.label}</Text>
+                                                <Text style={[styles.reviewL, { fontSize: 12 }]}>{cond.description}</Text>
+                                            </View>
+                                            <View style={{
+                                                width: 28, height: 28, borderRadius: 14,
+                                                backgroundColor: medicalConditions[cond.id] ? '#EF4444' : '#E2E8F0',
+                                                justifyContent: 'center', alignItems: 'center',
+                                            }}>
+                                                {medicalConditions[cond.id] && <CheckCircle2 size={16} color="#FFF" />}
+                                            </View>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+
+                                {/* Run MEC Button */}
+                                <TouchableOpacity
+                                    onPress={runMecCheck}
+                                    style={[styles.dashboardStyleBtn, { marginTop: 16 }]}
+                                >
+                                    <Text style={styles.dashboardStyleBtnText}>{mecResults ? 'Re-Run Eligibility Check' : 'Run Eligibility Check'}</Text>
+                                </TouchableOpacity>
+
+                                {/* MEC Results Table */}
+                                {mecResults && (
+                                    <View style={{ marginTop: 20 }}>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>Eligibility Results</Text>
+                                        <View style={styles.cardSection}>
+                                            {(Object.keys(mecResults) as Array<keyof MECResult>).map((methodKey) => {
+                                                const cat = mecResults[methodKey];
+                                                return (
+                                                    <View key={methodKey} style={[styles.reviewRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                                                        <Text style={[styles.reviewV, { flex: 1, fontSize: 15 }]}>{methodKey}</Text>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                            <View style={{
+                                                                width: 28, height: 28, borderRadius: 14,
+                                                                backgroundColor: getMECColor(cat),
+                                                                justifyContent: 'center', alignItems: 'center',
+                                                            }}>
+                                                                <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>{cat}</Text>
+                                                            </View>
+                                                            <Text style={{ fontSize: 11, color: '#64748B', maxWidth: 140 }} numberOfLines={2}>{getMECLabel(cat)}</Text>
+                                                        </View>
+                                                    </View>
+                                                );
+                                            })}
+                                        </View>
+                                    </View>
+                                )}
+                            </>
+                        )}
+
+                        {/* ===== SCREEN 3: Risk Predictor ===== */}
+                        {reviewStep === 2 && (
+                            <>
+                                <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Discontinuation Risk Assessment</Text>
+                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 12 }]}>Select the target method and fill clinical variables.</Text>
 
                                 <View style={styles.cardSection}>
-                                    {DOCTOR_STEPS.map((step) => (
-                                        <View key={step.id} style={{ marginBottom: 20 }}>
-                                            <Text style={styles.inputLabel}>{step.label}</Text>
+                                    {DOCTOR_STEPS.map((dStep) => (
+                                        <View key={dStep.id} style={{ marginBottom: 20 }}>
+                                            <Text style={styles.inputLabel}>{dStep.label}</Text>
 
-                                            <TouchableOpacity
-                                                style={styles.dropdownButton}
-                                                onPress={() => {
-                                                    setActiveSelectorStep(step);
-                                                    setSelectorVisible(true);
-                                                }}
-                                            >
-                                                <Text style={formData[step.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
-                                                    {formData[step.id] || "Select Option"}
-                                                </Text>
-                                                <ChevronDown size={20} color="#64748B" />
-                                            </TouchableOpacity>
+                                            {dStep.id === 'CONTRACEPTIVE_METHOD' && mecResults ? (
+                                                // MEC-aware method dropdown
+                                                <TouchableOpacity
+                                                    style={styles.dropdownButton}
+                                                    onPress={() => {
+                                                        setActiveSelectorStep(dStep);
+                                                        setSelectorVisible(true);
+                                                    }}
+                                                >
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                                        <Text style={formData[dStep.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
+                                                            {formData[dStep.id] || "Select Method"}
+                                                        </Text>
+                                                        {formData[dStep.id] && mecResults && (() => {
+                                                            // Show MEC badge next to selected method
+                                                            const nameToKey: Record<string, keyof MECResult> = {
+                                                                'Pills': 'CHC', 'Condom': 'Cu-IUD',
+                                                                'Copper IUD': 'Cu-IUD', 'Intrauterine Device (IUD)': 'LNG-IUD',
+                                                                'Implant': 'Implant', 'Patch': 'CHC',
+                                                                'Injectable': 'DMPA', 'Withdrawal': 'POP',
+                                                            };
+                                                            const mecKey = nameToKey[formData[dStep.id]];
+                                                            if (mecKey && mecResults[mecKey]) {
+                                                                const cat = mecResults[mecKey];
+                                                                return (
+                                                                    <View style={{ marginLeft: 8, backgroundColor: getMECColor(cat), paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>MEC {cat}</Text>
+                                                                    </View>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                    </View>
+                                                    <ChevronDown size={20} color="#64748B" />
+                                                </TouchableOpacity>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    style={styles.dropdownButton}
+                                                    onPress={() => {
+                                                        setActiveSelectorStep(dStep);
+                                                        setSelectorVisible(true);
+                                                    }}
+                                                >
+                                                    <Text style={formData[dStep.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
+                                                        {formData[dStep.id] || "Select Option"}
+                                                    </Text>
+                                                    <ChevronDown size={20} color="#64748B" />
+                                                </TouchableOpacity>
+                                            )}
                                         </View>
                                     ))}
 
@@ -726,6 +918,8 @@ const ObAssessment = ({ navigation, route }: any) => {
                                             confidence={assessmentResult.confidence}
                                             recommendation={assessmentResult.recommendation}
                                             contraceptiveMethod={formData['CONTRACEPTIVE_METHOD']}
+                                            keyFactors={generateKeyFactors(formData, assessmentResult.risk_level)}
+                                            upgradedByDt={assessmentResult.upgraded_by_dt}
                                         />
                                     </View>
                                 )}
@@ -742,18 +936,37 @@ const ObAssessment = ({ navigation, route }: any) => {
                 {screen === 'review' ? (
                     <View style={styles.reviewFooterContainer}>
                         {reviewStep === 0 ? (
-                            /* Page 1 Footer: Just Continue */
+                            /* Screen 1 Footer: Next to MEC */
                             <View style={{ width: '100%', marginTop: 10 }}>
                                 <TouchableOpacity
-                                    onPress={handleNext} // Goes to step 1
+                                    onPress={handleNext}
                                     style={styles.dashboardStyleBtn}
                                 >
-                                    <Text style={styles.dashboardStyleBtnText}>Next: Clinical Input</Text>
+                                    <Text style={styles.dashboardStyleBtnText}>Next: Run Eligibility Check</Text>
                                     <Text style={[styles.arrow, { color: '#FFF', marginLeft: 6, fontSize: 16 }]}>»</Text>
                                 </TouchableOpacity>
                             </View>
+                        ) : reviewStep === 1 ? (
+                            /* Screen 2 Footer: Next to Risk (only if MEC is done) */
+                            <View style={{ width: '100%', gap: 10 }}>
+                                <TouchableOpacity
+                                    onPress={handleNext}
+                                    style={[styles.dashboardStyleBtn, !mecResults && { opacity: 0.5 }]}
+                                    disabled={!mecResults}
+                                >
+                                    <Text style={styles.dashboardStyleBtnText}>Next: Risk Assessment</Text>
+                                    <Text style={[styles.arrow, { color: '#FFF', marginLeft: 6, fontSize: 16 }]}>»</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={handleBack}
+                                    style={styles.dashboardStyleBtnSecondary}
+                                >
+                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to Patient Overview</Text>
+                                </TouchableOpacity>
+                            </View>
                         ) : (
-                            /* Page 2 Footer: Assess or Finish */
+                            /* Screen 3 Footer: Generate Risk / Save & Finish */
                             <View style={{ width: '100%', gap: 10 }}>
                                 <TouchableOpacity
                                     onPress={handleAssessSubmit}
@@ -763,14 +976,14 @@ const ObAssessment = ({ navigation, route }: any) => {
                                     {isLoading ? (
                                         <ActivityIndicator color="#FFF" />
                                     ) : (
-                                        <Text style={styles.dashboardStyleBtnText}>{assessmentResult ? 'Re-Generate Risk' : 'Generate Risk'}</Text>
+                                        <Text style={styles.dashboardStyleBtnText}>{assessmentResult ? 'Re-Generate Risk' : 'Calculate Discontinuation Risk'}</Text>
                                     )}
                                 </TouchableOpacity>
 
                                 {assessmentResult && (
                                     <TouchableOpacity
                                         onPress={handleSaveAndFinish}
-                                        style={[styles.dashboardStyleBtn, { backgroundColor: '#10B981' }]} // Green for Finish
+                                        style={[styles.dashboardStyleBtn, { backgroundColor: '#10B981' }]}
                                     >
                                         <Text style={styles.dashboardStyleBtnText}>Save & Finish</Text>
                                         <CheckCircle2 color="#FFF" size={18} style={{ marginLeft: 6 }} />
@@ -778,10 +991,10 @@ const ObAssessment = ({ navigation, route }: any) => {
                                 )}
 
                                 <TouchableOpacity
-                                    onPress={handleBack} // Go back to Patient Info
+                                    onPress={handleBack}
                                     style={styles.dashboardStyleBtnSecondary}
                                 >
-                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to Patient Info</Text>
+                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to MEC Check</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -789,15 +1002,13 @@ const ObAssessment = ({ navigation, route }: any) => {
                 ) : (
                     <View style={styles.pillBar}>
                         <TouchableOpacity onPress={handleBack} style={styles.backBtn}><Text style={styles.backBtnText}>Back</Text></TouchableOpacity>
-                        {!isDoctorEval && (
-                            <TouchableOpacity
-                                onPress={handleNext}
-                                style={[styles.nextBtn, { flex: 1, marginLeft: 15, justifyContent: 'center' }]}
-                            >
-                                <Text style={styles.nextBtnText}>Continue</Text>
-                                <Text style={styles.arrow}> »</Text>
-                            </TouchableOpacity>
-                        )}
+                        <TouchableOpacity
+                            onPress={handleNext}
+                            style={[styles.nextBtn, { flex: 1, marginLeft: 15, justifyContent: 'center' }]}
+                        >
+                            <Text style={styles.nextBtnText}>Continue</Text>
+                            <Text style={styles.arrow}> »</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
             </View>

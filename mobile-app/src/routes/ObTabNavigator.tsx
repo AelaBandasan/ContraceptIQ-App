@@ -6,8 +6,13 @@ import ObHistoryScreen from '../screens/ObSide/ObHistoryScreen';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import Whatsrightforme from '../screens/Whatsrightforme'; // Reusing for New Assessment
 import Recommendation from '../screens/Recommendation';   // Reusing
-import Contraceptivemethods from '../screens/Contraceptivemethods'; // Reusing
+import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import ProfileScreen from '../screens/ObSide/ProfileScreen';
+import MecGuideScreen from '../screens/ObSide/MecGuideScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
+import Contrafaqs from '../screens/Contrafaqs';
+import EmergencyContraception from '../screens/EmergencyContraception';
+import AboutUs from '../screens/AboutUs';
 import { ObTabParamList } from '../types/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, shadows } from '../theme';
@@ -86,10 +91,8 @@ const ObTabNavigator = () => {
                 component={Contraceptivemethods as any}
                 initialParams={{ isDoctorAssessment: true }}
                 options={{
-                    tabBarLabel: 'Methods',
-                    tabBarIcon: ({ color, size }) => (
-                        <Book color={color} size={size} />
-                    )
+                    tabBarButton: () => null,
+                    tabBarItemStyle: { display: 'none' },
                 }}
             />
             <Tab.Screen
@@ -101,6 +104,31 @@ const ObTabNavigator = () => {
                         <User color={color} size={size} />
                     )
                 }}
+            />
+            <Tab.Screen
+                name="ObMecGuide"
+                component={MecGuideScreen}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObFeedback"
+                component={FeedbackScreen}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObEducation"
+                component={Contrafaqs}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObEmergency"
+                component={EmergencyContraception}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObAbout"
+                component={AboutUs}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
             />
         </Tab.Navigator>
     );

@@ -3,7 +3,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import SideMenu from '../components/SideMenu';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
-import Contraceptivemethods from '../screens/Contraceptivemethods';
+import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import Diduknow from '../screens/Diduknow';
 import Contrafaqs from '../screens/Contrafaqs';
 import AboutUs from '../screens/AboutUs';

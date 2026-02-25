@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home as HomeIcon, List, BookOpen } from 'lucide-react-native';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
-import Contraceptivemethods from '../screens/Contraceptivemethods';
+import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import Diduknow from '../screens/Diduknow';
 import { colors, typography, shadows } from '../theme';
 import { UserTabParamList } from '../types/navigation';

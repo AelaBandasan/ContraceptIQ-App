@@ -9,14 +9,9 @@ export type RootStackParamList = {
   LoginforOB: undefined;
   SignupforOB: undefined;
   MainDrawer: undefined;
+  PendingVerification: { doctorName?: string };
 
   ObMainTabs: { doctorName?: string };
-  ObMecGuide: undefined;
-  ObFeedback: undefined;
-  ObSettings: undefined;
-  ObEducation: undefined;
-  ObEmergency: undefined;
-  ObAbout: undefined;
   AssessmentResultScreen: {
     riskResult: any;
     patientData: any;
@@ -89,6 +84,12 @@ export type ObTabParamList = {
   ObRecommendations: { isDoctorAssessment?: boolean };
   ObMethods: { isDoctorAssessment?: boolean };
   ObProfile: undefined;
+  ObMecGuide: undefined;
+  ObFeedback: undefined;
+  ObSettings: undefined;
+  ObEducation: undefined;
+  ObEmergency: undefined;
+  ObAbout: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack

@@ -1,9 +1,65 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Image, ActivityIndicator } from 'react-native'
 import Logo from '../../assets/tempLogo.png';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebaseConfig';
 
 const UserStartingScreen = ({ navigation }: any) => {
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const doctorName = userData.fullName || 'Dr. ' + (userData.email ? userData.email.split('@')[0] : 'User');
+
+                        // We only auto-login if they are an OB role (to avoid interfering with guest)
+                        if (userData.role === 'OB') {
+                            if (userData.verificationStatus === 'verified') {
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: 'ObMainTabs', params: { doctorName } }],
+                                });
+                            } else {
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: 'PendingVerification', params: { doctorName } }],
+                                });
+                            }
+                        } else {
+                            setIsCheckingAuth(false);
+                        }
+                    } else {
+                        setIsCheckingAuth(false);
+                    }
+                } catch (error) {
+                    console.error("Error checking verification status:", error);
+                    setIsCheckingAuth(false);
+                }
+            } else {
+                setIsCheckingAuth(false);
+            }
+        });
+
+        // Cleanup subscription
+        return () => unsubscribe();
+    }, [navigation]);
+
+    if (isCheckingAuth) {
+        return (
+            <View style={[styles.screen, { justifyContent: 'center' }]}>
+                <ActivityIndicator size="large" color="#E45A92" />
+                <Text style={{ marginTop: 20, color: '#6B7280' }}>Verifying account...</Text>
+            </View>
+        );
+    }
+
     const handleContinueAsGuest = () => {
         // Start at Recommendation/Home screen (Review First)
         navigation.navigate('MainDrawer');

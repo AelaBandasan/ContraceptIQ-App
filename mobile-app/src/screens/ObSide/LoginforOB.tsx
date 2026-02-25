@@ -75,8 +75,17 @@ const LoginforOB = ({ navigation }: any) => {
           userData.fullName ||
           "Dr. " + (userData.email ? userData.email.split("@")[0] : "User");
 
-        // Navigate only if verification passes
-        navigation.navigate("ObMainTabs", { doctorName });
+        if (userData.verificationStatus === 'verified') {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "ObMainTabs", params: { doctorName } }]
+          });
+        } else {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "PendingVerification", params: { doctorName } }]
+          });
+        }
       } else {
         // User is authenticated but not in our DB (e.g. deleted account or unauthorized)
         await signOut(auth);
