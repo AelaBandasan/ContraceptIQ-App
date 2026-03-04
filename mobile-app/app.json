@@ -30,6 +30,12 @@
     "plugins": [
       "./plugins/with-onnxruntime-react-native",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "159d8d18-ddad-4fe2-9119-21577966ec25"
+      }
+    },
+    "owner": "michaxcs"
   }
 }
