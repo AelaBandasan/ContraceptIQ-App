@@ -17,7 +17,22 @@ export interface ConsultationRecord {
     status: 'waiting' | 'completed' | 'critical' | 'cancelled';
     obId?: string;
     obName?: string;
-    riskResult?: any;
+    // Single summary result (legacy)
+    riskResult?: {
+        riskLevel: string;
+        probability: number;
+        recommendation?: string;
+        confidence?: string;
+    };
+    // Per-method risk results saved by ObAssessment
+    riskResults?: Record<string, {
+        riskLevel: string;
+        probability: number;
+        recommendation?: string;
+        confidence?: string;
+    }>;
+    // OB clinical notes saved at end of assessment
+    clinicalNotes?: string;
     createdAt: string;
     assessedAt?: string;
     expiresIn: number;

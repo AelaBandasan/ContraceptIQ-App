@@ -57,12 +57,21 @@ const GUEST_STEPS = [
 ];
 
 const DOCTOR_STEPS = [
-    { id: 'CONTRACEPTIVE_METHOD', label: "Contraceptive Method", type: 'select', options: ['None', 'Pills', 'Condom', 'Copper IUD', 'Intrauterine Device (IUD)', 'Implant', 'Patch', 'Injectable', 'Withdrawal'] },
     { id: 'MONTH_USE_CURRENT_METHOD', label: "Month of Use Current Method", type: 'select', options: Array.from({ length: 13 }, (_, i) => i.toString()) },
     { id: 'PATTERN_USE', label: "Pattern of Use", type: 'select', options: ['Regular', 'Irregular', 'Not Sure'] },
     { id: 'TOLD_ABT_SIDE_EFFECTS', label: "Told about Side effects?", type: 'select', options: ['Yes by Health Worker', 'Yes by research/friends', 'No'] },
     { id: 'LAST_SOURCE_TYPE', label: 'Last Source Type', type: 'select', options: ['Government health facility', 'Private Clinic/Hospital', 'Pharmacy', 'NGO', 'Online/Telehealth'] },
 ];
+
+// Method names mapped to their API index (1-based, matching the old CONTRACEPTIVE_METHOD options order)
+const METHOD_NAME_TO_INDEX: Record<string, number> = {
+    'Pills': 1,
+    'Copper IUD': 2,
+    'Intrauterine Device (IUD)': 3,
+    'Implant': 4,
+    'Patch': 5,
+    'Injectable': 6,
+};
 
 const STEPS = [...GUEST_STEPS];
 const ALL_STEPS = [...GUEST_STEPS, ...DOCTOR_STEPS];
@@ -102,8 +111,9 @@ const ObAssessment = ({ navigation, route }: any) => {
     const [formData, setFormData] = useState<any>({});
     const [isLoading, setIsLoading] = useState(false);
     const [assessmentResult, setAssessmentResult] = useState<RiskAssessmentResponse | null>(null);
+    const [allMethodResults, setAllMethodResults] = useState<Record<string, RiskAssessmentResponse | null>>({});
     const [clinicalNotes, setClinicalNotes] = useState('');
-    const [reviewStep, setReviewStep] = useState(0); // 0: Patient Overview, 1: MEC Check, 2: Risk Predictor
+    const [reviewStep, setReviewStep] = useState(0); // 0: Patient Overview, 1: MEC Check, 2: OB Input, 3: Risk Results
     const [methodEligibility, setMethodEligibility] = useState<Record<string, number>>({});
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -172,34 +182,40 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     // --- MEC SORTING LOGIC ---
     const getSortedMethods = (): MethodSection[] => {
-        // Fallback mock eligibility if none provided (for manual testing)
-        const eligibility = Object.keys(methodEligibility).length > 0 ? methodEligibility : {
-            'Pills': 1, 'Implant': 1, 'Condom': 1, // Tier 1
-            'Injectable': 2, 'Patch': 2,           // Tier 2
-            'Copper IUD': 3, 'Intrauterine Device (IUD)': 3 // Tier 3
-        };
-
-        const allMethods = STEPS.find(s => s.id === 'CONTRACEPTIVE_METHOD')?.options || [];
+        // Find which methods the doctor can select
+        const allMethods = ALL_STEPS.find(s => s.id === 'CONTRACEPTIVE_METHOD')?.options || [];
 
         const tier1: string[] = [];
         const tier2: string[] = [];
         const tier3: string[] = [];
 
+        // Map of UI Dropdown Names -> MEC Calculator Keys
+        const nameToKey: Record<string, keyof MECResult> = {
+            'Pills': 'CHC',
+            'Patch': 'CHC',
+            'Injectable': 'DMPA',
+            'Implant': 'Implant',
+            'Copper IUD': 'Cu-IUD',
+            'Intrauterine Device (IUD)': 'LNG-IUD',
+            'Condom': 'Cu-IUD', // Shouldn't hit this since we removed it, but kept for safety
+            'Withdrawal': 'POP' // Shouldn't hit this since we removed it, but kept for safety
+        };
+
         allMethods.forEach(method => {
-            if (method === 'None' || method === 'Withdrawal') {
-                // Always allow basic methods? Or categorize them? 
-                // Assuming they are standard/always allowed -> Tier 1 for now or skip checking
-                tier1.push(method);
-                return;
+            // Find the MEC key for this dropdown option
+            const mecKey = nameToKey[method];
+
+            // Get category. If we have mecResults from the calculator, use that.
+            // Otherwise, fallback to methodEligibility (from db/guest phase) or default to 1.
+            let cat = 1;
+            if (mecResults && mecKey) {
+                cat = mecResults[mecKey] || 1;
+            } else if (methodEligibility && Object.keys(methodEligibility).length > 0) {
+                // The old DB might store it by UI name, so we check both the UI name and the mapped key
+                cat = methodEligibility[method] || methodEligibility[mecKey as string] || 1;
             }
 
-            const cat = eligibility[method]; // Get category
-
-            if (!cat) {
-                // If method not in eligibility list, maybe default to Tier 2 or 1? 
-                // Or separate "Unknown"? defaulting to Tier 2 for safety.
-                tier2.push(method);
-            } else if (cat === 1) {
+            if (cat === 1) {
                 tier1.push(method);
             } else if (cat === 2) {
                 tier2.push(method);
@@ -251,7 +267,7 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     const handleNext = () => {
         if (screen === 'review') {
-            if (reviewStep < 2) {
+            if (reviewStep < 3) {
                 setReviewStep(reviewStep + 1);
             }
             return;
@@ -342,22 +358,82 @@ const ObAssessment = ({ navigation, route }: any) => {
         }
     };
 
+    // Assess risk for ALL MEC-eligible methods (cat 1-3)
+    const assessAllEligibleMethods = async () => {
+        setIsLoading(true);
+        try {
+            // Get eligible methods from MEC results (cat 1-3)
+            const eligibleMethods: string[] = [];
+            const nameToKey: Record<string, keyof MECResult> = {
+                'Pills': 'CHC',
+                'Patch': 'CHC',
+                'Injectable': 'DMPA',
+                'Implant': 'Implant',
+                'Copper IUD': 'Cu-IUD',
+                'Intrauterine Device (IUD)': 'LNG-IUD',
+            };
+
+            // Collect all methods with MEC cat 1-3
+            Object.keys(METHOD_NAME_TO_INDEX).forEach(methodName => {
+                const mecKey = nameToKey[methodName];
+                let cat = 1;
+                if (mecResults && mecKey) {
+                    cat = mecResults[mecKey] || 1;
+                } else if (methodEligibility && Object.keys(methodEligibility).length > 0) {
+                    cat = methodEligibility[methodName] || methodEligibility[mecKey as string] || 1;
+                }
+                if (cat <= 3) {
+                    eligibleMethods.push(methodName);
+                }
+            });
+
+            if (eligibleMethods.length === 0) {
+                Alert.alert("No Eligible Methods", "No methods are eligible based on MEC results.");
+                setIsLoading(false);
+                return;
+            }
+
+            // Run risk assessment for each eligible method
+            const results: Record<string, RiskAssessmentResponse | null> = {};
+            for (const methodName of eligibleMethods) {
+                try {
+                    const dataToAssess = { ...formData, CONTRACEPTIVE_METHOD: methodName };
+                    const apiData = mapFormDataToApi(dataToAssess);
+                    const result = await assessDiscontinuationRisk(apiData);
+                    results[methodName] = result;
+                } catch (error: any) {
+                    console.error(`Risk assessment failed for ${methodName}:`, error.message);
+                    results[methodName] = null;
+                }
+            }
+
+            setAllMethodResults(results);
+        } catch (error: any) {
+            Alert.alert("Assessment Failed", error.message || "Something went wrong.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleAssessSubmit = () => assessRisk();
 
     const savePatientData = async (status: string) => {
         setIsLoading(true);
         try {
             const consultationId = route.params?.consultationId;
-            const newPatient = {
-                id: consultationId || Date.now().toString(),
-                name: formData.NAME || 'New Patient',
-                lastVisit: 'Just now',
-                status: status,
-                age: formData.AGE || '-',
-                type: 'New Visit',
-                details: formData,
-                assessmentResult: assessmentResult // Save result if available
-            };
+
+            // Build a summary of risk results for all methods
+            const riskSummary: Record<string, any> = {};
+            Object.entries(allMethodResults).forEach(([method, result]) => {
+                if (result) {
+                    riskSummary[method] = {
+                        riskLevel: result.risk_level,
+                        probability: result.xgb_probability || 0,
+                        recommendation: result.recommendation,
+                        confidence: result.confidence,
+                    };
+                }
+            });
 
             // If we have a consultationId (from retrieval), update the Firestore document
             if (consultationId) {
@@ -367,13 +443,15 @@ const ObAssessment = ({ navigation, route }: any) => {
                 await updateDoc(doc(db, 'consultations', consultationId), {
                     // Update Patient & Clinical Data
                     patientData: {
-                        ...formData, // This includes both original patient data + new clinical data
+                        ...formData,
                         mec_recommendations: mecRecommendations
                     },
-                    // Add result
+                    // Save multi-method risk results
+                    riskResults: riskSummary,
+                    // Legacy single result (use first HIGH risk or first result)
                     riskResult: assessmentResult ? {
                         riskLevel: assessmentResult.risk_level,
-                        probability: assessmentResult.xgb_probability || 0, // Ensure we save probability if available
+                        probability: assessmentResult.xgb_probability || 0,
                         recommendation: assessmentResult.recommendation,
                         confidence: assessmentResult.confidence
                     } : null,
@@ -390,7 +468,6 @@ const ObAssessment = ({ navigation, route }: any) => {
 
             navigation.navigate('ObMainTabs', {
                 screen: 'ObHome',
-                // params: { newPatient } // Not needed as dashboard refreshes on focus
             });
         } catch (error: any) {
             console.error("Save Error:", error);
@@ -405,13 +482,15 @@ const ObAssessment = ({ navigation, route }: any) => {
     };
 
     const handleSaveAndFinish = () => {
-        // Final save with result
-        if (!assessmentResult) {
-            Alert.alert("No Assessment", "Please generate an assessment first.");
+        // Final save with multi-method results
+        const resultCount = Object.values(allMethodResults).filter(r => r !== null).length;
+        if (resultCount === 0) {
+            Alert.alert("No Assessment", "Please generate risk assessments first.");
             return;
         }
-        const isHighRisk = assessmentResult.risk_level === 'HIGH';
-        savePatientData(isHighRisk ? 'Critical' : 'Completed');
+        // Check if any method has HIGH risk
+        const hasHighRisk = Object.values(allMethodResults).some(r => r?.risk_level === 'HIGH');
+        savePatientData(hasHighRisk ? 'Critical' : 'Completed');
     };
 
     const updateVal = (val: string, fieldId?: string) => {
@@ -642,80 +721,6 @@ const ObAssessment = ({ navigation, route }: any) => {
                                     return <Picker.Item key={val} label={val.toString()} value={val.toString()} />;
                                 })}
                             </Picker>
-                        ) : step.id === 'CONTRACEPTIVE_METHOD' ? (
-                            <View style={{ width: '100%' }}>
-                                <TouchableOpacity
-                                    style={styles.dropdownButton}
-                                    onPress={() => {
-                                        setActiveSelectorStep(step);
-                                        setSelectorVisible(true);
-                                    }}
-                                >
-                                    <Text style={formData[step.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
-                                        {formData[step.id] || "Select Method"}
-                                    </Text>
-                                    <ChevronDown size={20} color="#64748B" />
-                                </TouchableOpacity>
-                                <Text style={styles.helperText}>Sorted by Medical Eligibility (MEC)</Text>
-                                <View style={{ height: 20 }} />
-
-                                <Modal
-                                    animationType="slide"
-                                    transparent={true}
-                                    visible={selectorVisible}
-                                    onRequestClose={() => setSelectorVisible(false)}
-                                >
-                                    <View style={styles.modalOverlay}>
-                                        <View style={styles.selectorContent}>
-                                            <View style={styles.selectorHeader}>
-                                                <Text style={styles.selectorTitle}>Select {activeSelectorStep?.label || 'Option'}</Text>
-                                                <TouchableOpacity onPress={() => setSelectorVisible(false)}>
-                                                    <X size={24} color="#1E293B" />
-                                                </TouchableOpacity>
-                                            </View>
-
-                                            <SectionList
-                                                sections={getSortedMethods()}
-                                                keyExtractor={(item, index) => item + index}
-                                                renderItem={({ item, section }) => (
-                                                    <TouchableOpacity
-                                                        style={styles.methodItem}
-                                                        onPress={() => handleMethodSelect(item)}
-                                                    >
-                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                            {section.category === 3 && (
-                                                                <AlertTriangle size={18} color="#D97706" style={{ marginRight: 10 }} />
-                                                            )}
-                                                            <Text style={[
-                                                                styles.methodText,
-                                                                section.category === 3 && { color: '#B45309' }
-                                                            ]}>{item}</Text>
-                                                        </View>
-                                                        {formData[step.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
-                                                    </TouchableOpacity>
-                                                )}
-                                                renderSectionHeader={({ section: { title, category } }) => (
-                                                    <View style={[
-                                                        styles.sectionHeader,
-                                                        category === 1 ? { backgroundColor: '#DCFCE7' } :
-                                                            category === 2 ? { backgroundColor: '#E0F2FE' } :
-                                                                { backgroundColor: '#FEF3C7' }
-                                                    ]}>
-                                                        <Text style={[
-                                                            styles.sectionHeaderText,
-                                                            category === 1 ? { color: '#166534' } :
-                                                                category === 2 ? { color: '#0369A1' } :
-                                                                    { color: '#92400E' }
-                                                        ]}>{title}</Text>
-                                                    </View>
-                                                )}
-                                                stickySectionHeadersEnabled={false}
-                                                contentContainerStyle={{ paddingBottom: 20 }}
-                                            />
-                                        </View>
-                                    </View>
-                                </Modal>
-                            </View>
                         ) : step.type === 'select' ? (
                             <FlatList data={step.options} renderItem={({ item }) => (
                                 <TouchableOpacity style={[styles.optionBtn, formData[step.id] === item && styles.selectedBtn]} onPress={() => updateVal(item)}>
@@ -832,66 +837,28 @@ const ObAssessment = ({ navigation, route }: any) => {
                             </>
                         )}
 
-                        {/* ===== SCREEN 3: Risk Predictor ===== */}
+                        {/* ===== SCREEN 3: OB Clinical Input ===== */}
                         {reviewStep === 2 && (
                             <>
-                                <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Discontinuation Risk Assessment</Text>
-                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 12 }]}>Select the target method and fill clinical variables.</Text>
+                                <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Clinical Input</Text>
+                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 12 }]}>Fill in the clinical variables for this patient.</Text>
 
                                 <View style={styles.cardSection}>
                                     {DOCTOR_STEPS.map((dStep) => (
                                         <View key={dStep.id} style={{ marginBottom: 20 }}>
                                             <Text style={styles.inputLabel}>{dStep.label}</Text>
-
-                                            {dStep.id === 'CONTRACEPTIVE_METHOD' && mecResults ? (
-                                                // MEC-aware method dropdown
-                                                <TouchableOpacity
-                                                    style={styles.dropdownButton}
-                                                    onPress={() => {
-                                                        setActiveSelectorStep(dStep);
-                                                        setSelectorVisible(true);
-                                                    }}
-                                                >
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                                        <Text style={formData[dStep.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
-                                                            {formData[dStep.id] || "Select Method"}
-                                                        </Text>
-                                                        {formData[dStep.id] && mecResults && (() => {
-                                                            // Show MEC badge next to selected method
-                                                            const nameToKey: Record<string, keyof MECResult> = {
-                                                                'Pills': 'CHC', 'Condom': 'Cu-IUD',
-                                                                'Copper IUD': 'Cu-IUD', 'Intrauterine Device (IUD)': 'LNG-IUD',
-                                                                'Implant': 'Implant', 'Patch': 'CHC',
-                                                                'Injectable': 'DMPA', 'Withdrawal': 'POP',
-                                                            };
-                                                            const mecKey = nameToKey[formData[dStep.id]];
-                                                            if (mecKey && mecResults[mecKey]) {
-                                                                const cat = mecResults[mecKey];
-                                                                return (
-                                                                    <View style={{ marginLeft: 8, backgroundColor: getMECColor(cat), paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                                                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>MEC {cat}</Text>
-                                                                    </View>
-                                                                );
-                                                            }
-                                                            return null;
-                                                        })()}
-                                                    </View>
-                                                    <ChevronDown size={20} color="#64748B" />
-                                                </TouchableOpacity>
-                                            ) : (
-                                                <TouchableOpacity
-                                                    style={styles.dropdownButton}
-                                                    onPress={() => {
-                                                        setActiveSelectorStep(dStep);
-                                                        setSelectorVisible(true);
-                                                    }}
-                                                >
-                                                    <Text style={formData[dStep.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
-                                                        {formData[dStep.id] || "Select Option"}
-                                                    </Text>
-                                                    <ChevronDown size={20} color="#64748B" />
-                                                </TouchableOpacity>
-                                            )}
+                                            <TouchableOpacity
+                                                style={styles.dropdownButton}
+                                                onPress={() => {
+                                                    setActiveSelectorStep(dStep);
+                                                    setSelectorVisible(true);
+                                                }}
+                                            >
+                                                <Text style={formData[dStep.id] ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder}>
+                                                    {formData[dStep.id] || "Select Option"}
+                                                </Text>
+                                                <ChevronDown size={20} color="#64748B" />
+                                            </TouchableOpacity>
                                         </View>
                                     ))}
 
@@ -908,19 +875,68 @@ const ObAssessment = ({ navigation, route }: any) => {
                                         />
                                     </View>
                                 </View>
+                            </>
+                        )}
 
-                                {/* Inline Result Display */}
-                                {assessmentResult && (
-                                    <View style={{ marginTop: 24, marginBottom: 10 }}>
-                                        <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>Prediction Result</Text>
-                                        <RiskAssessmentCard
-                                            riskLevel={assessmentResult.risk_level}
-                                            confidence={assessmentResult.confidence}
-                                            recommendation={assessmentResult.recommendation}
-                                            contraceptiveMethod={formData['CONTRACEPTIVE_METHOD']}
-                                            keyFactors={generateKeyFactors(formData, assessmentResult.risk_level)}
-                                            upgradedByDt={assessmentResult.upgraded_by_dt}
-                                        />
+                        {/* ===== SCREEN 4: Model-Generated Risk for All Methods ===== */}
+                        {reviewStep === 3 && (
+                            <>
+                                <Text style={[styles.sectionTitle, { color: '#E45A92' }]}>Discontinuation Risk Results</Text>
+                                <Text style={[styles.helperText, { textAlign: 'left', marginBottom: 16 }]}>Risk predictions for all eligible contraceptive methods based on MEC eligibility.</Text>
+
+                                {isLoading ? (
+                                    <View style={{ padding: 40, alignItems: 'center' }}>
+                                        <ActivityIndicator size="large" color="#E45A92" />
+                                        <Text style={{ marginTop: 12, color: '#64748B', fontSize: 14 }}>Assessing risk for all eligible methods...</Text>
+                                    </View>
+                                ) : Object.keys(allMethodResults).length > 0 ? (
+                                    <>
+                                        {Object.entries(allMethodResults).map(([methodName, result]) => {
+                                            if (!result) return (
+                                                <View key={methodName} style={[styles.cardSection, { marginBottom: 12, opacity: 0.5 }]}>
+                                                    <Text style={styles.reviewV}>{methodName}</Text>
+                                                    <Text style={[styles.reviewL, { color: '#EF4444' }]}>Assessment failed</Text>
+                                                </View>
+                                            );
+
+                                            // Get MEC category for badge
+                                            const nameToKey: Record<string, keyof MECResult> = {
+                                                'Pills': 'CHC', 'Patch': 'CHC', 'Injectable': 'DMPA',
+                                                'Implant': 'Implant', 'Copper IUD': 'Cu-IUD',
+                                                'Intrauterine Device (IUD)': 'LNG-IUD',
+                                            };
+                                            const mecKey = nameToKey[methodName];
+                                            const mecCat = mecResults && mecKey ? mecResults[mecKey] : null;
+
+                                            return (
+                                                <View key={methodName} style={{ marginBottom: 12 }}>
+                                                    {/* Method name + MEC badge header */}
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6, gap: 8 }}>
+                                                        <Text style={{ fontSize: 15, fontWeight: '700', color: '#1E293B' }}>{methodName}</Text>
+                                                        {mecCat && (
+                                                            <View style={{ backgroundColor: getMECColor(mecCat as MECCategory), paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                                                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>MEC {mecCat}</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                    <RiskAssessmentCard
+                                                        riskLevel={result.risk_level}
+                                                        confidence={result.confidence}
+                                                        recommendation={result.recommendation}
+                                                        contraceptiveMethod={methodName}
+                                                        keyFactors={generateKeyFactors(formData, result.risk_level)}
+                                                        upgradedByDt={result.upgraded_by_dt}
+                                                    />
+                                                </View>
+                                            );
+                                        })}
+                                    </>
+                                ) : (
+                                    <View style={[styles.cardSection, { alignItems: 'center', padding: 30 }]}>
+                                        <ClipboardList size={40} color="#CBD5E1" />
+                                        <Text style={{ marginTop: 12, color: '#64748B', fontSize: 14, textAlign: 'center' }}>
+                                            Tap "Generate Risk for All Methods" to run predictions.
+                                        </Text>
                                     </View>
                                 )}
                             </>
@@ -947,14 +963,14 @@ const ObAssessment = ({ navigation, route }: any) => {
                                 </TouchableOpacity>
                             </View>
                         ) : reviewStep === 1 ? (
-                            /* Screen 2 Footer: Next to Risk (only if MEC is done) */
+                            /* Screen 2 Footer: Next to OB Input (only if MEC is done) */
                             <View style={{ width: '100%', gap: 10 }}>
                                 <TouchableOpacity
                                     onPress={handleNext}
                                     style={[styles.dashboardStyleBtn, !mecResults && { opacity: 0.5 }]}
                                     disabled={!mecResults}
                                 >
-                                    <Text style={styles.dashboardStyleBtnText}>Next: Risk Assessment</Text>
+                                    <Text style={styles.dashboardStyleBtnText}>Next: Clinical Input</Text>
                                     <Text style={[styles.arrow, { color: '#FFF', marginLeft: 6, fontSize: 16 }]}>»</Text>
                                 </TouchableOpacity>
 
@@ -965,22 +981,42 @@ const ObAssessment = ({ navigation, route }: any) => {
                                     <Text style={styles.dashboardStyleBtnSecondaryText}>Back to Patient Overview</Text>
                                 </TouchableOpacity>
                             </View>
-                        ) : (
-                            /* Screen 3 Footer: Generate Risk / Save & Finish */
+                        ) : reviewStep === 2 ? (
+                            /* Screen 3 Footer: Next to Risk Results */
                             <View style={{ width: '100%', gap: 10 }}>
                                 <TouchableOpacity
-                                    onPress={handleAssessSubmit}
+                                    onPress={handleNext}
+                                    style={styles.dashboardStyleBtn}
+                                >
+                                    <Text style={styles.dashboardStyleBtnText}>Next: Generate Risk Results</Text>
+                                    <Text style={[styles.arrow, { color: '#FFF', marginLeft: 6, fontSize: 16 }]}>»</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={handleBack}
+                                    style={styles.dashboardStyleBtnSecondary}
+                                >
+                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to MEC Check</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            /* Screen 4 Footer: Generate All / Save & Finish */
+                            <View style={{ width: '100%', gap: 10 }}>
+                                <TouchableOpacity
+                                    onPress={assessAllEligibleMethods}
                                     style={[styles.dashboardStyleBtn, { backgroundColor: '#E45A92' }]}
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
                                         <ActivityIndicator color="#FFF" />
                                     ) : (
-                                        <Text style={styles.dashboardStyleBtnText}>{assessmentResult ? 'Re-Generate Risk' : 'Calculate Discontinuation Risk'}</Text>
+                                        <Text style={styles.dashboardStyleBtnText}>
+                                            {Object.keys(allMethodResults).length > 0 ? 'Re-Generate All Risks' : 'Generate Risk for All Methods'}
+                                        </Text>
                                     )}
                                 </TouchableOpacity>
 
-                                {assessmentResult && (
+                                {Object.keys(allMethodResults).length > 0 && (
                                     <TouchableOpacity
                                         onPress={handleSaveAndFinish}
                                         style={[styles.dashboardStyleBtn, { backgroundColor: '#10B981' }]}
@@ -994,7 +1030,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                                     onPress={handleBack}
                                     style={styles.dashboardStyleBtnSecondary}
                                 >
-                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to MEC Check</Text>
+                                    <Text style={styles.dashboardStyleBtnSecondaryText}>Back to Clinical Input</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -1013,7 +1049,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                 )}
             </View>
 
-            {/* Unified Modal Selector */}
+            {/* Unified Modal Selector for OB Input fields */}
             {screen === 'review' && (
                 <Modal
                     animationType="slide"
@@ -1030,148 +1066,25 @@ const ObAssessment = ({ navigation, route }: any) => {
                                 </TouchableOpacity>
                             </View>
 
-                            {activeSelectorStep?.id === 'CONTRACEPTIVE_METHOD' ? (
-                                <SectionList
-                                    sections={getSortedMethods()}
-                                    keyExtractor={(item, index) => item + index}
-                                    renderItem={({ item, section }) => (
-                                        <TouchableOpacity
-                                            style={styles.methodItem}
-                                            onPress={() => handleMethodSelect(item)}
-                                        >
-                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                {section.category === 3 && (
-                                                    <AlertTriangle size={18} color="#D97706" style={{ marginRight: 10 }} />
-                                                )}
-                                                <Text style={[
-                                                    styles.methodText,
-                                                    section.category === 3 && { color: '#B45309' }
-                                                ]}>{item}</Text>
-                                            </View>
-                                            {formData[activeSelectorStep.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
-                                        </TouchableOpacity>
-                                    )}
-                                    renderSectionHeader={({ section: { title, category } }) => (
-                                        <View style={[
-                                            styles.sectionHeader,
-                                            category === 1 ? { backgroundColor: '#DCFCE7' } :
-                                                category === 2 ? { backgroundColor: '#E0F2FE' } :
-                                                    { backgroundColor: '#FEF3C7' }
-                                        ]}>
-                                            <Text style={[
-                                                styles.sectionHeaderText,
-                                                category === 1 ? { color: '#166534' } :
-                                                    category === 2 ? { color: '#0369A1' } :
-                                                        { color: '#92400E' }
-                                            ]}>{title}</Text>
-                                        </View>
-                                    )}
-                                    stickySectionHeadersEnabled={false}
-                                    contentContainerStyle={{ paddingBottom: 20 }}
-                                />
-                            ) : (
-                                <FlatList
-                                    data={activeSelectorStep?.options || []}
-                                    keyExtractor={(item) => item}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity
-                                            style={styles.methodItem}
-                                            onPress={() => {
-                                                if (activeSelectorStep) {
-                                                    updateVal(item, activeSelectorStep.id);
-                                                    setSelectorVisible(false);
-                                                }
-                                            }}
-                                        >
-                                            <Text style={styles.methodText}>{item}</Text>
-                                            {activeSelectorStep && formData[activeSelectorStep.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
-                                        </TouchableOpacity>
-                                    )}
-                                    contentContainerStyle={{ paddingBottom: 20 }}
-                                />
-                            )}
-                        </View>
-                    </View>
-                </Modal>
-            )}
-
-            {/* Unified Modal Selector */}
-            {screen === 'review' && (
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={selectorVisible}
-                    onRequestClose={() => setSelectorVisible(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.selectorContent}>
-                            <View style={styles.selectorHeader}>
-                                <Text style={styles.selectorTitle}>Select {activeSelectorStep?.label || 'Option'}</Text>
-                                <TouchableOpacity onPress={() => setSelectorVisible(false)}>
-                                    <X size={24} color="#1E293B" />
-                                </TouchableOpacity>
-                            </View>
-
-                            {activeSelectorStep?.id === 'CONTRACEPTIVE_METHOD' ? (
-                                <SectionList
-                                    sections={getSortedMethods()}
-                                    keyExtractor={(item, index) => item + index}
-                                    renderItem={({ item, section }) => (
-                                        <TouchableOpacity
-                                            style={styles.methodItem}
-                                            onPress={() => handleMethodSelect(item)}
-                                        >
-                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                {section.category === 3 && (
-                                                    <AlertTriangle size={18} color="#D97706" style={{ marginRight: 10 }} />
-                                                )}
-                                                <Text style={[
-                                                    styles.methodText,
-                                                    section.category === 3 && { color: '#B45309' }
-                                                ]}>{item}</Text>
-                                            </View>
-                                            {formData[activeSelectorStep.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
-                                        </TouchableOpacity>
-                                    )}
-                                    renderSectionHeader={({ section: { title, category } }) => (
-                                        <View style={[
-                                            styles.sectionHeader,
-                                            category === 1 ? { backgroundColor: '#DCFCE7' } :
-                                                category === 2 ? { backgroundColor: '#E0F2FE' } :
-                                                    { backgroundColor: '#FEF3C7' }
-                                        ]}>
-                                            <Text style={[
-                                                styles.sectionHeaderText,
-                                                category === 1 ? { color: '#166534' } :
-                                                    category === 2 ? { color: '#0369A1' } :
-                                                        { color: '#92400E' }
-                                            ]}>{title}</Text>
-                                        </View>
-                                    )}
-                                    stickySectionHeadersEnabled={false}
-                                    contentContainerStyle={{ paddingBottom: 20 }}
-                                />
-                            ) : (
-                                <FlatList
-                                    data={activeSelectorStep?.options || []}
-                                    keyExtractor={(item) => item}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity
-                                            style={styles.methodItem}
-                                            onPress={() => {
-                                                if (activeSelectorStep) {
-                                                    updateVal(item, activeSelectorStep.id);
-                                                    setSelectorVisible(false);
-                                                }
-                                            }}
-                                        >
-                                            <Text style={styles.methodText}>{item}</Text>
-                                            {activeSelectorStep && formData[activeSelectorStep.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
-                                        </TouchableOpacity>
-                                    )}
-                                    contentContainerStyle={{ paddingBottom: 20 }}
-                                />
-                            )}
+                            <FlatList
+                                data={activeSelectorStep?.options || []}
+                                keyExtractor={(item) => item}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.methodItem}
+                                        onPress={() => {
+                                            if (activeSelectorStep) {
+                                                updateVal(item, activeSelectorStep.id);
+                                                setSelectorVisible(false);
+                                            }
+                                        }}
+                                    >
+                                        <Text style={styles.methodText}>{item}</Text>
+                                        {activeSelectorStep && formData[activeSelectorStep.id] === item && <CheckCircle2 size={18} color="#E45A92" />}
+                                    </TouchableOpacity>
+                                )}
+                                contentContainerStyle={{ paddingBottom: 20 }}
+                            />
                         </View>
                     </View>
                 </Modal>

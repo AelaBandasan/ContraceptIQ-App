@@ -13,6 +13,7 @@ import FeedbackScreen from '../screens/FeedbackScreen';
 import Contrafaqs from '../screens/Contrafaqs';
 import EmergencyContraception from '../screens/EmergencyContraception';
 import AboutUs from '../screens/AboutUs';
+import ObAccountSettings from '../screens/ObSide/ObAccountSettings';
 import { ObTabParamList } from '../types/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, shadows } from '../theme';
@@ -69,7 +70,7 @@ const ObTabNavigator = () => {
                 name="ObHistory"
                 component={ObHistoryScreen}
                 options={{
-                    tabBarLabel: 'Recent',
+                    tabBarLabel: 'History',
                     tabBarIcon: ({ color, size }) => (
                         <History color={color} size={size} />
                     )
@@ -128,6 +129,11 @@ const ObTabNavigator = () => {
             <Tab.Screen
                 name="ObAbout"
                 component={AboutUs}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObSettings"
+                component={ObAccountSettings}
                 options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
             />
         </Tab.Navigator>

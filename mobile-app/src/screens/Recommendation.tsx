@@ -184,7 +184,22 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <View style={styles.safeArea}>
-      {isDoctorAssessment && <ObHeader title="Recommendations" subtitle="Results" />}
+      {isDoctorAssessment && (
+        <ObHeader
+          title="Recommendations"
+          subtitle="Results"
+          rightAction={
+            <TouchableOpacity onPress={() => (navigation as any).navigate('ObMecGuide')}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+                style={[styles.gradient, { width: 44, height: 44, borderRadius: 12 }]}
+              >
+                <Ionicons name="color-palette-outline" size={24} color="#FFF" />
+              </LinearGradient>
+            </TouchableOpacity>
+          }
+        />
+      )}
 
       {!isDoctorAssessment && (
         <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
@@ -529,13 +544,7 @@ const styles = StyleSheet.create({
     width: "85%",
     ...shadows.md,
   },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 10,
-  },
+
   ageChip: {
     paddingVertical: 10,
     paddingHorizontal: 16,

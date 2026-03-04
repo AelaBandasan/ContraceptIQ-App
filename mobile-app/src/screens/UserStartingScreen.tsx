@@ -88,9 +88,12 @@ const UserStartingScreen = ({ navigation }: any) => {
             </View>
 
             <View style={styles.loginContainer}>
-                <Text style={styles.loginText}>
-                    Login as <TouchableOpacity onPress={handleOBlogin}><Text style={styles.profText}>OB Professional</Text></TouchableOpacity>
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={styles.loginText}>Login as </Text>
+                    <TouchableOpacity onPress={handleOBlogin}>
+                        <Text style={styles.profText}>OB Professional</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
 

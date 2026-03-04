@@ -42,36 +42,6 @@ const ProfileScreen = ({ navigation }: any) => {
                 {/* Settings List */}
                 <View style={{ marginTop: 20 }}>
                     <View style={styles.section}>
-                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObMecGuide')}>
-                            <View style={styles.rowIcon}>
-                                <Palette size={20} color="#64748B" />
-                            </View>
-                            <Text style={styles.rowText}>MEC Guide / Color Legend</Text>
-                            <ChevronRight size={20} color="#CBD5E1" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
-                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObEducation')}>
-                            <View style={styles.rowIcon}>
-                                <HelpCircle size={20} color="#64748B" />
-                            </View>
-                            <Text style={styles.rowText}>FAQs / Patient Education</Text>
-                            <ChevronRight size={20} color="#CBD5E1" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
-                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObEmergency')}>
-                            <View style={styles.rowIcon}>
-                                <AlertTriangle size={20} color="#64748B" />
-                            </View>
-                            <Text style={styles.rowText}>Emergency Contraception</Text>
-                            <ChevronRight size={20} color="#CBD5E1" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
                         <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObAbout')}>
                             <View style={styles.rowIcon}>
                                 <Info size={20} color="#64748B" />

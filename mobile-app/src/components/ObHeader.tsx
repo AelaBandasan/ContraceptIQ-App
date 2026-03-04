@@ -8,17 +8,17 @@ import { colors } from '../theme';
 interface ObHeaderProps {
     title: string;
     subtitle?: string;
-    appName?: string;
     appSubtitle?: string;
     date?: string;
+    rightAction?: React.ReactNode;
 }
 
 const ObHeader: React.FC<ObHeaderProps> = ({
     title,
     subtitle,
-    appName = "ContraceptIQ",
     appSubtitle = "Clinical Decision Support Tool",
-    date
+    date,
+    rightAction
 }) => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
@@ -35,6 +35,7 @@ const ObHeader: React.FC<ObHeaderProps> = ({
                     <Text style={styles.greeting}>{title}</Text>
                     <Text style={styles.subtitle}>{subtitle}</Text>
                 </View>
+                {rightAction && <View style={styles.rightActionContainer}>{rightAction}</View>}
             </View>
         </View>
     );
@@ -100,6 +101,9 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
     },
+    rightActionContainer: {
+        marginLeft: 16,
+    }
 });
 
 export default ObHeader;
