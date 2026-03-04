@@ -217,3 +217,66 @@ export function calculateMatchScore(methodId: string, userPrefs: string[]): numb
 
     return Math.round((matches / userPrefs.length) * 100);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WHO MEC Tool — Full condition-based calculation (OB side only)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { getBaseByAge, combineConditions, type MethodCategories } from '../data/whoMecData';
+
+export type { MethodCategories };
+
+export interface WhoMecToolInput {
+    age: number;
+    conditionIds: string[];   // up to 3 condition IDs from WHO_MEC_CONDITIONS
+    preferences: string[];    // any of the 7 preference keys
+}
+
+export interface WhoMecMethodResult {
+    id: string;
+    name: string;
+    mecCategory: MECCategory;
+    matchScore: number;
+}
+
+export interface WhoMecToolOutput {
+    mecCategories: MethodCategories;
+    methods: WhoMecMethodResult[];
+    recommended: WhoMecMethodResult[];
+    notRecommended: WhoMecMethodResult[];
+}
+
+/**
+ * Full WHO MEC Tool calculation for the OB side.
+ * Takes age, up to 3 conditions, and any number of preferences.
+ * Returns categorised methods sorted by safety then preference match.
+ */
+export function calculateWhoMecTool(input: WhoMecToolInput): WhoMecToolOutput {
+    const { age, conditionIds, preferences } = input;
+
+    // 1. Get base categories by age
+    const baseCategories = getBaseByAge(age);
+
+    // 2. Apply selected conditions (max rule)
+    const mecCategories = combineConditions(baseCategories, conditionIds);
+
+    // 3. Score each method against preferences
+    const methods: WhoMecMethodResult[] = METHOD_ATTRIBUTES.map(attr => ({
+        id: attr.id,
+        name: attr.name,
+        mecCategory: mecCategories[attr.id as keyof MethodCategories],
+        matchScore: calculateMatchScore(attr.id, preferences),
+    }));
+
+    // 4. Sort: lowest MEC category first (safest), then highest match score
+    methods.sort((a, b) => {
+        if (a.mecCategory !== b.mecCategory) return a.mecCategory - b.mecCategory;
+        return b.matchScore - a.matchScore;
+    });
+
+    // 5. Split into recommended (cat 1-2) and not recommended (cat 3-4)
+    const recommended = methods.filter(m => m.mecCategory <= 2);
+    const notRecommended = methods.filter(m => m.mecCategory > 2);
+
+    return { mecCategories, methods, recommended, notRecommended };
+}
