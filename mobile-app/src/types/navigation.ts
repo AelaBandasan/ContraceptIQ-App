@@ -90,6 +90,9 @@ export type ObTabParamList = {
   ObEducation: undefined;
   ObEmergency: undefined;
   ObAbout: undefined;
+  ObWhoMecConditions: undefined;
+  ObWhoMecPreferences: { age: number; conditionIds: string[] };
+  ObWhoMecResults: { age: number; conditionIds: string[]; preferences: string[] };
 };
 
 // Navigation prop types for screens in the Root Stack

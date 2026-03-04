@@ -9,6 +9,9 @@ import Recommendation from '../screens/Recommendation';   // Reusing
 import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import ProfileScreen from '../screens/ObSide/ProfileScreen';
 import MecGuideScreen from '../screens/ObSide/MecGuideScreen';
+import WhoMecConditionsScreen from '../screens/ObSide/WhoMecConditionsScreen';
+import WhoMecPreferencesScreen from '../screens/ObSide/WhoMecPreferencesScreen';
+import WhoMecResultsScreen from '../screens/ObSide/WhoMecResultsScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import Contrafaqs from '../screens/Contrafaqs';
 import EmergencyContraception from '../screens/EmergencyContraception';
@@ -128,6 +131,21 @@ const ObTabNavigator = () => {
             <Tab.Screen
                 name="ObAbout"
                 component={AboutUs}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObWhoMecConditions"
+                component={WhoMecConditionsScreen}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObWhoMecPreferences"
+                component={WhoMecPreferencesScreen as any}
+                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+            />
+            <Tab.Screen
+                name="ObWhoMecResults"
+                component={WhoMecResultsScreen as any}
                 options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
             />
         </Tab.Navigator>
