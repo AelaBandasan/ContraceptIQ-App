@@ -32,13 +32,38 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   // Check if we are in Doctor/OB mode
   const { isDoctorAssessment } = (route?.params as any) || {};
 
-  // Age ranges with actual numeric age for MEC calculation
+  // Age ranges for compact selection
   const ageRanges = [
-    { label: "< 18", value: 0, fullLabel: "Menarche to < 18 years", numericAge: 16 },
-    { label: "18-19", value: 1, fullLabel: "18 - 19 years", numericAge: 18 },
-    { label: "20-39", value: 2, fullLabel: "20 - 39 years", numericAge: 30 },
-    { label: "40-45", value: 3, fullLabel: "40 - 45 years", numericAge: 42 },
-    { label: "≥ 46", value: 4, fullLabel: "≥ 46 years", numericAge: 50 },
+    {
+      label: "< 18",
+      value: 0,
+      fullLabel: "Menarche to < 18 years",
+      numericAge: 16
+    },
+    {
+      label: "18-19",
+      value: 1,
+      fullLabel: "18 - 19 years",
+      numericAge: 18
+    },
+    {
+      label: "20-39",
+      value: 2,
+      fullLabel: "20 - 39 years",
+      numericAge: 30
+    },
+    {
+      label: "40-45",
+      value: 3,
+      fullLabel: "40 - 45 years",
+      numericAge: 42
+    },
+    {
+      label: "≥ 46",
+      value: 4,
+      fullLabel: "≥ 46 years",
+      numericAge: 50
+    },
   ];
 
   const preferences = [
@@ -197,9 +222,9 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
           entering={FadeInDown.duration(600)}
           style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}
         >
-          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
             <View style={styles.menuButtonSolid}>
-              <Ionicons name="menu" size={26} color="#FFF" />
+              <Ionicons name="chevron-back" size={26} color="#FFF" />
             </View>
           </TouchableOpacity>
           <View style={styles.titleContainer}>
@@ -222,9 +247,9 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.screenCont}>
           {/* Age Section */}
           <Animated.View entering={FadeInDown.delay(200).duration(800)}>
-            <Text style={styles.header2}>Tell us about you</Text>
+            <Text style={styles.header2}>Personalize Your Recommendations</Text>
             <Text style={styles.header3}>
-              Enter your age to personalize recommendations.
+              Select your age range to receive contraceptive methods suited to you.
             </Text>
           </Animated.View>
 
@@ -233,34 +258,36 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
             style={styles.sectionContainer}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: '#F0FDFA' }]}>
-                <Image
-                  source={require('../../assets/image/age.png')}
-                  style={styles.sectionIcon}
-                />
+              <View style={styles.meIconContainer}>
+                <View style={styles.meIconCircle}>
+                  <Text style={styles.meText}>Age</Text>
+                  <View style={styles.plusIconBadge}>
+                    <Ionicons name="add" size={12} color="#3B82F6" weight="bold" />
+                  </View>
+                </View>
               </View>
-              <Text style={styles.sectionLabel}>Age Range</Text>
+              <Text style={styles.sectionLabel}>Age</Text>
             </View>
 
-            <View style={styles.chipsContainer}>
+            <View style={styles.ageChipsWrapper}>
               {ageRanges.map((range, index) => {
                 const isSelected = selectedAgeIndex === index;
                 return (
                   <Animated.View
                     key={index}
-                    entering={ZoomIn.delay(600 + (index * 100)).duration(500)}
+                    entering={FadeInRight.delay(600 + (index * 100)).duration(500)}
                   >
                     <TouchableOpacity
                       activeOpacity={0.7}
                       style={[
-                        styles.chip,
-                        isSelected && styles.chipSelected
+                        styles.ageChip,
+                        isSelected && styles.ageChipSelected
                       ]}
                       onPress={() => setSelectedAgeIndex(index)}
                     >
                       <Text style={[
-                        styles.chipText,
-                        isSelected && styles.chipTextSelected
+                        styles.ageChipLabel,
+                        isSelected && styles.ageChipLabelSelected
                       ]}>
                         {range.label}
                       </Text>
@@ -284,14 +311,14 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
                     style={styles.sectionIcon}
                   />
                 </View>
-                <Text style={styles.sectionLabel}>Preferences</Text>
+                <Text style={styles.sectionLabel}>Your Preferences</Text>
               </View>
               <View style={styles.optionalBadgeContainer}>
                 <Text style={styles.optionalBadge}>Optional</Text>
               </View>
             </View>
 
-            <Text style={styles.subText}>Select up to 3 characteristics that matter to you most.</Text>
+            <Text style={styles.subText}>Select up to 3 factors that matter most when choosing a contraceptive method.</Text>
 
             <View style={styles.prefsList}>
               {preferences.map((pref, index) => {
@@ -416,21 +443,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header2: {
-    fontSize: 26,
+    fontSize: 23,
     fontWeight: '800',
-    color: '#1E293B',
+    color: colors.text.primary,
     marginBottom: 6,
     letterSpacing: -0.5,
+    paddingTop: 20,
   },
   header3: {
-    fontSize: 15,
-    color: '#64748B',
+    fontSize: 16,
+    color: colors.text.secondary,
     lineHeight: 22,
     marginBottom: 20,
   },
   sectionContainer: {
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 20,
     ...shadows.md,
     borderWidth: 1,
@@ -447,8 +475,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircle: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -459,43 +487,50 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   sectionLabel: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
-    color: '#334155',
+    color: '#1B211A',
     marginLeft: 12,
   },
   optionalBadgeContainer: {
     backgroundColor: '#F1F5F9',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 8,
   },
   optionalBadge: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#64748B',
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   subText: {
-    fontSize: 14,
-    color: '#64748B',
+    fontSize: 15,
+    color: colors.text.secondary,
     marginBottom: 20,
     lineHeight: 20,
   },
-  chipsContainer: {
+  ageChipsWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    justifyContent: 'center',
+    paddingTop: 10,
   },
-  chip: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 16,
+  ageChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    width: '30%', // Grid-like for 3 items
+    minWidth: 100,
+    borderRadius: 20,
     backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
-  chipSelected: {
+  ageChipSelected: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
     elevation: 4,
@@ -504,14 +539,45 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
   },
-  chipText: {
-    fontSize: 15,
-    color: '#475569',
-    fontWeight: '600',
+  ageChipIcon: {
+    marginRight: 6,
   },
-  chipTextSelected: {
-    color: '#fff',
+  ageChipLabel: {
+    fontSize: 15,
     fontWeight: '700',
+    color: '#1E293B',
+  },
+  ageChipLabelSelected: {
+    color: '#FFF',
+  },
+  meIconContainer: {
+    marginRight: 12,
+  },
+  meIconCircle: {
+    width: 45,
+    height: 40,
+    borderRadius: 19,
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+    backgroundColor: '#F0F9FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  meText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#F59E0B',
+    lineHeight: 18,
+    textTransform: 'uppercase',
+  },
+  plusIconBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 8,
+    padding: 2,
   },
   prefsList: {
     gap: 14,
@@ -526,6 +592,7 @@ const styles = StyleSheet.create({
   prefItemSelected: {
     borderColor: colors.green.main,
     backgroundColor: '#FFFFFF',
+    borderWidth: 2,
   },
   prefItemContent: {
     flexDirection: 'row',
@@ -543,22 +610,22 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9',
   },
   prefItemIcon: {
-    width: 24,
-    height: 24,
+    width: 26,
+    height: 26,
     resizeMode: 'contain',
   },
   prefTextContainer: {
     flex: 1,
   },
   prefItemLabel: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#1B211A',
     marginBottom: 2,
   },
   prefItemDesc: {
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 14,
+    color: '#6B7280',
     lineHeight: 16,
   },
   checkWrapper: {

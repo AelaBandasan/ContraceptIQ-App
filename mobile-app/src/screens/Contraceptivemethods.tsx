@@ -120,7 +120,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.screenTitle}>Methods</Text>
+            <Text style={styles.screenTitle}>Contraceptive Methods</Text>
           </View>
         </View>
       )}

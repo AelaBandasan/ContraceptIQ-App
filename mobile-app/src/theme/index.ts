@@ -3,35 +3,35 @@ export const colors = {
   primary: '#D81B60',
   primaryDark: '#C2185B',
   primaryLight: '#C74A7F',
-  
-  success: '#4CAF50',
-  warning: '#FFEB3B',
-  warningDark: '#FF9800',
-  error: '#F44336',
-  
+
+  success: '#2E7D32',
+  warning: '#F9A825',
+  warningDark: '#EF6C00',
+  error: '#D32F2F',
+
   green: {
     light: '#E6F5E9',
     main: '#2E8B57',
     dark: '#1E5F3D',
   },
-  
+
   background: {
     primary: '#FFFFFF',
     secondary: '#FBFBFB',
     card: '#F5F5F5',
   },
-  
+
   text: {
     primary: '#000000',
     secondary: '#444444',
     disabled: '#999999',
   },
-  
+
   border: {
     light: '#E0E0E0',
     main: '#CCCCCC',
   },
-  
+
   shadow: '#000000',
 };
 
@@ -49,14 +49,14 @@ export const typography = {
     '4xl': 24,
     '5xl': 30,
   },
-  
+
   weights: {
     regular: '400' as const,
     medium: '500' as const,
     semibold: '600' as const,
     bold: '700' as const,
   },
-  
+
   lineHeights: {
     tight: 20,
     normal: 24,
@@ -129,11 +129,11 @@ export const commonStyles = {
     flex: 1,
     backgroundColor: colors.background.primary,
   },
-  
+
   screenPadding: {
     paddingHorizontal: spacing.lg,
   },
-  
+
   centerContent: {
     justifyContent: 'center' as const,
     alignItems: 'center' as const,

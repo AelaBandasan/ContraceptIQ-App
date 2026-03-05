@@ -86,13 +86,13 @@ const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
         {!isDoctorAssessment && (
           <View style={[styles.guestHeader, { paddingTop: insets.top + 10 }]}>
             <TouchableOpacity
-              onPress={() => (navigation as any).toggleDrawer()}
+              onPress={() => navigation.goBack()}
               style={styles.menuButton}
             >
               <View
                 style={styles.menuButtonSolid}
               >
-                <Ionicons name="menu" size={24} color="#FFF" />
+                <Ionicons name="chevron-back" size={24} color="#FFF" />
               </View>
             </TouchableOpacity>
 
@@ -394,15 +394,5 @@ const styles = StyleSheet.create({
     color: colors.background.primary,
     fontWeight: typography.weights.semibold,
     fontSize: typography.sizes.md,
-  },
-  titleContainer: {
-    flex: 1,
-    marginLeft: 15,
-    justifyContent: 'center',
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
   },
 });

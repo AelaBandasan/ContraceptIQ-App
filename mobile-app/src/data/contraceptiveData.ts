@@ -1,40 +1,65 @@
 export interface ContraceptiveDetail {
     id: string;
     name: string;
+    type?: string;
     description: string;
     frequency: string;
+    frequencyIcon?: 'time-outline' | 'calendar-outline' | 'medical-outline';
     effectiveness: string;
+    perfectEffectiveness?: string;
+    typicalEffectiveness?: string;
     priceRange: string;
-    howToUse: string[];
+    howToUse: string[] | string;
     benefits: string[];
     disadvantages: string[];
+    reversible?: boolean;
+    pregnancyPlanning?: string;
     illustration: any;
 }
 
 export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
     chc: {
         id: 'chc',
-        name: 'The Pill (Combined)',
-        description: 'Daily hormonal tablet containing estrogen and progestin.',
+        name: 'Combined Hormonal Contraceptives (CHC)',
+        type: 'Hormonal',
+        description: 'Combined hormonal contraceptives are birth control methods that contain two hormones—estrogen and progestin—similar to the natural hormones in a woman’s body. They work mainly by preventing the ovaries from releasing an egg (ovulation).',
         frequency: 'Daily',
-        effectiveness: '99%',
-        priceRange: '$15 - $50 / month',
-        howToUse: [
-            'Take one pill at the same time every day.',
-            'Follow the arrows on the pack to stay on track.',
-            'If you miss a pill, refer to the pack instructions immediately.'
+        frequencyIcon: 'time-outline',
+        effectiveness: '>99% effective (perfect use)',
+        perfectEffectiveness: '>99%',
+        typicalEffectiveness: '7 in 100',
+        priceRange: '₱50 - ₱950 / month',
+        howToUse: 'Take one pill at the same time every day. If using the patch, apply weekly. If using the vaginal ring, insert monthly according to instructions.',
+        benefits: [
+            'User-controlled',
+            'Do not interfere with sex',
+            'easy to use and obtain',
+            'Regulates periods',
+            'Help protect against ovarian and endometrial cancer',
+            'Reduces cramps',
+            'May improve acne'
         ],
-        benefits: ['Clearer Skin', 'Regular Periods', 'Relieves Cramps'],
-        disadvantages: ['Mood Swings', 'Tender Breasts', 'Headaches'],
-        illustration: require('../../assets/image/patchh.png'),
+        disadvantages: [
+            'Bleeding changes',
+            'Headaches',
+            'Nausea',
+            'Breast tenderness',
+            'Must remember regularly',
+            'Rare blood clot risk',
+            'No STI protection'
+        ],
+        reversible: true,
+        pregnancyPlanning: 'Fertility returns quickly after stopping.',
+        illustration: require('../../assets/image/sq_chcpills.png'),
     },
+    
     pop: {
         id: 'pop',
         name: 'Progestin-Only Pill',
-        description: 'Estrogen-free daily hormonal tablet, also known as the mini-pill.',
+        description: 'Progestin-only pills are oral contraceptives that contain only a progestin hormone  without estrogen. They primarily work by thickening cervical mucus and may also suppress ovulation',
         frequency: 'Daily',
         effectiveness: '99%',
-        priceRange: '$15 - $50 / month',
+        priceRange: '₱150 - ₱1,500 / month',
         howToUse: [
             'Take one pill at the same time every day.',
             'Must be taken within the same 3-hour window daily.',
@@ -48,6 +73,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         id: 'implant',
         name: 'Implant (Nexplanon)',
         description: 'A small, flexible rod placed under the skin of your upper arm.',
+        type: 'Estrogen-free',
         frequency: 'Every 3 Years',
         effectiveness: '>99%',
         priceRange: '$0 - $1,300 (one-time)',

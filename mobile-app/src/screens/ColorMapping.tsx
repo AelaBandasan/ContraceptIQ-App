@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
@@ -12,91 +13,98 @@ type Props = DrawerScreenProps<'ColorMapping'>;
 const ColorMapping: React.FC<Props> = ({ navigation }) => {
     const insets = useSafeAreaInsets();
 
-    const categories = [
-        {
-            title: 'Green — Safe to Use',
-            subtitle: 'Category 1: No restriction',
-            description: 'You can safely use this method. There are no known medical reasons to avoid it.',
-            footer: 'Recommended option',
-            color: '#0D9488', // Teal/Green
-            lightColor: '#F0FDFA',
-            icon: CheckCircle2,
-        },
-        {
-            title: 'Yellow — Generally Safe',
-            subtitle: 'Category 2: Benefits outweigh risks',
-            description: 'This method is generally safe for you. In most cases, the benefits are greater than any possible risks.',
-            footer: 'Monitor if needed',
-            color: '#CA8A04', // Dark Yellow
-            lightColor: '#FEFCE8',
-            icon: AlertCircle,
-        },
-        {
-            title: 'Orange — Use with Caution',
-            subtitle: 'Category 3: Risks usually outweigh benefits',
-            description: 'This method may not be the best choice for you. You should talk with a healthcare provider before using it.',
-            footer: 'Medical advice recommended',
-            color: '#EA580C', // Orange
-            lightColor: '#FFF7ED',
-            icon: AlertTriangle,
-        },
-        {
-            title: 'Red — Not Recommended',
-            subtitle: 'Category 4: Unacceptable health risk',
-            description: 'You should not use this method because it may be unsafe for your condition.',
-            footer: 'Avoid this method',
-            color: '#DC2626', // Red
-            lightColor: '#FEF2F2',
-            icon: XCircle,
-        },
-    ];
+    const categories: {
+        title: string;
+        subtitle?: string;
+        description: string;
+        footer: string;
+        color: string;
+        lightColor: string;
+        icon: any;
+    }[] = [
+            {
+                title: 'Green — Safe to Use',
+                subtitle: 'No medical restriction for this method.',
+                description: 'This method is safe to use for your condition. No special precautions are needed beyond routine guidance.',
+                footer: 'You can start this method if you choose.',
+                color: colors.success, // Category 1
+                lightColor: '#F0FDF4',
+                icon: CheckCircle2,
+            },
+            {
+                title: 'Yellow — Generally Safe',
+                subtitle: 'Benefits are greater than possible risks.',
+                description: 'This method can be used in most cases. A provider may recommend routine follow-up depending on your situation.',
+                footer: 'Safe for most people—ask a provider if you have concerns.',
+                color: colors.warning, // Category 2
+                lightColor: '#FFFBEB',
+                icon: AlertCircle,
+            },
+            {
+                title: 'Orange — Use With Caution',
+                subtitle: 'Not usually recommended unless other methods don’t work for you.',
+                description: 'This method may carry higher risk for your condition. It should be used only when other options are not suitable and with medical guidance.',
+                footer: 'Talk to a healthcare provider before choosing this.',
+                color: colors.warningDark, // Category 3
+                lightColor: '#FFF7ED',
+                icon: AlertTriangle,
+            },
+            {
+                title: 'Red — Not Recommended',
+                subtitle: 'This method should not be used for your condition.',
+                description: 'Using this method could cause serious health risk. Choose a safer alternative.',
+                footer: 'We’ll show safer options for you.',
+                color: colors.error, // Category 4
+                lightColor: '#FEF2F2',
+                icon: XCircle,
+            },
+        ];
 
     return (
         <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
             {/* Header */}
             <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
+                <TouchableOpacity onPress={() => navigation.navigate('Recommendation' as any)} style={styles.menuButton}>
                     <View
                         style={styles.menuButtonSolid}
                     >
-                        <Ionicons name="arrow-back" size={24} color="#FFF" />
+                        <Ionicons name="chevron-back" size={26} color="#FFF" />
                     </View>
                 </TouchableOpacity>
                 <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-                    <Text style={styles.headerTagline}>What the Colors Mean</Text>
+                    <Text style={styles.headerTitleOnly}>MEC Color Guide</Text>
                 </View>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.introSection}>
-                    <Text style={styles.introSubtitle}>
-                        These colors show how safe each contraceptive method is for you based on World Health Organization (WHO) medical eligibility criteria.
-                    </Text>
-                </View>
 
                 {categories.map((category, index) => {
                     const IconComponent = category.icon;
                     return (
-                        <View key={index} style={[styles.card, { borderLeftColor: category.color }]}>
+                        <Animated.View
+                            key={index}
+                            entering={FadeInDown.delay(200 + index * 100).duration(600)}
+                            style={[styles.card, { borderLeftColor: category.color }]}
+                        >
                             <View style={styles.cardHeader}>
                                 <View style={[styles.iconContainer, { backgroundColor: category.lightColor }]}>
                                     <IconComponent size={24} color={category.color} />
                                 </View>
                                 <View style={styles.titleArea}>
                                     <Text style={[styles.categoryTitle, { color: category.color }]}>{category.title}</Text>
-                                    <Text style={styles.categorySubtitle}>{category.subtitle}</Text>
+                                    {category.subtitle && <Text style={styles.categorySubtitle}>{category.subtitle}</Text>}
                                 </View>
                             </View>
                             <View style={styles.cardBody}>
                                 <Text style={styles.description}>{category.description}</Text>
-                                <View style={[styles.footerBadge, { backgroundColor: category.lightColor }]}>
+                                <View style={[styles.footerBadge, { backgroundColor: category.lightColor, flexDirection: 'row', alignItems: 'center' }]}>
+                                    <IconComponent size={14} color={category.color} style={{ marginRight: 6 }} />
                                     <Text style={[styles.categoryFooter, { color: category.color }]}>
-                                        {category.footer === 'Recommended option' ? '✅ ' : '⚠️ '}{category.footer}
+                                        {category.footer}
                                     </Text>
                                 </View>
                             </View>
-                        </View>
+                        </Animated.View>
                     );
                 })}
 
@@ -147,16 +155,10 @@ const styles = StyleSheet.create({
     headerTitleContainer: {
         marginLeft: 15,
     },
-    headerAppTitle: {
-        fontSize: 20,
+    headerTitleOnly: {
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#FFF',
-    },
-    headerTagline: {
-        fontSize: 14,
-        color: '#FFDBEB',
-        fontStyle: 'italic',
-        marginTop: 4,
     },
     scrollContent: {
         padding: spacing.lg,

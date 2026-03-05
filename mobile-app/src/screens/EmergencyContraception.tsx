@@ -46,17 +46,17 @@ const EmergencyContraception = () => {
             {/* Header - Branded with Menu Toggle */}
             <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity
-                    onPress={() => (navigation as any).toggleDrawer()}
+                    onPress={() => navigation.goBack()}
                     style={styles.menuButton}
                 >
                     <View
                         style={styles.menuButtonSolid}
                     >
-                        <Ionicons name="menu" size={24} color="#FFF" />
+                        <Ionicons name="chevron-back" size={26} color="#FFF" />
                     </View>
                 </TouchableOpacity>
-                <View style={styles.titleContainer}>
-                    <Text style={styles.headerText}>Emergency Contraception</Text>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerMainTitle}>Emergency Contraception</Text>
                 </View>
             </View>
 
