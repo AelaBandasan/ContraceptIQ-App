@@ -1,12 +1,12 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native'
 import React from 'react'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import ObHeader from '../components/ObHeader';
-import { colors, spacing, typography, shadows, borderRadius } from '../theme';
+import { colors, shadows } from '../theme';
 
 type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'> | DrawerScreenProps<'Contraceptive Methods'>;
 

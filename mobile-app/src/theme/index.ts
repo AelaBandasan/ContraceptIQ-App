@@ -1,8 +1,8 @@
 // Color palette
 export const colors = {
-  primary: '#E45A92',
-  primaryDark: '#C74A7F',
-  primaryLight: '#F08AB6',
+  primary: '#D81B60',
+  primaryDark: '#C2185B',
+  primaryLight: '#C74A7F',
   
   success: '#4CAF50',
   warning: '#FFEB3B',

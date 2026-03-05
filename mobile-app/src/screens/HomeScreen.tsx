@@ -6,160 +6,258 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  FadeIn,
+  ZoomIn,
+} from 'react-native-reanimated';
 import type { UserTabScreenProps, DrawerScreenProps } from '../types/navigation';
-import { colors, spacing, typography } from '../theme';
+import { colors, spacing, shadows, borderRadius as themeRadius } from '../theme';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 type Props = UserTabScreenProps<'Home'> | DrawerScreenProps<'Home'>;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+
   const contraceptiveMethods = [
-    { id: '1', name: 'Pills', image: require('../../assets/image/pillss.png') },
-    { id: '2', name: 'Patch', image: require('../../assets/image/patchh.png') },
-    { id: '3', name: 'IUD', image: require('../../assets/image/copperiud.png') },
-    { id: '4', name: 'Implants', image: require('../../assets/image/implantt.png') },
-    { id: '5', name: 'Injections', image: require('../../assets/image/injectables.png') },
+    { id: '1', name: 'Pills', image: require('../../assets/image/sq_poppills.png') },
+    { id: '2', name: 'Patch', image: require('../../assets/image/sq_chcpatch1.png') },
+    { id: '3', name: 'IUD', image: require('../../assets/image/sq_cuiud.png') },
+    { id: '4', name: 'Implants', image: require('../../assets/image/sq_lngetg.png') },
+    { id: '5', name: 'Injections', image: require('../../assets/image/sq_dmpainj.png') },
   ];
 
   return (
     <View style={styles.safeArea}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-            style={styles.gradient}
-          >
-            <Ionicons name="menu" size={24} color="#FFF" />
-          </LinearGradient>
-        </TouchableOpacity>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-          <Text style={styles.headerTagline}>Smart Support, Informed Choices.</Text>
-        </View>
-
-      </View>
 
       <ScrollView
-        style={styles.containerOne}
+        style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: hp('11%') }}
+        contentContainerStyle={{ paddingBottom: hp('12%') }}
       >
-        {/* Infographic */}
-        <View style={styles.containerThree}>
+        {/* Premium Header */}
+        <Animated.View
+          entering={FadeInDown.duration(800)}
+          style={[styles.header, { paddingTop: insets.top + 10 }]}
+        >
+          <TouchableOpacity
+            onPress={() => (navigation as any).toggleDrawer()}
+            style={styles.menuButton}
+            activeOpacity={0.7}
+          >
+            <LinearGradient
+              colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
+              style={styles.gradient}
+            >
+              <Ionicons name="menu" size={26} color="#FFF" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
+            <Text style={styles.headerTagline}>Smart Support, Informed Choices.</Text>
+          </View>
+        </Animated.View>
+
+        {/* 1 Hero Section - Infographic in a Premium Card */}
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(1000)}
+          style={styles.infographicCard}
+        >
           <Image
-            source={require('../../assets/image/infographic.jpg')}
+            source={require('../../assets/image/infographic1.png')}
             style={styles.infographic}
           />
-        </View>
+        </Animated.View>
 
-        {/* ... Infographic above ... */}
-
-        {/* 3️⃣ Primary Call-to-Action */}
-        <View style={styles.ctaContainer}>
+        {/* 2 Primary Call-to-Action */}
+        <Animated.View
+          entering={FadeInUp.delay(400).duration(1000)}
+          style={styles.ctaContainer}
+        >
           <TouchableOpacity
-            style={styles.primaryButton}
+            activeOpacity={0.9}
+            style={styles.primaryButtonShadow}
             onPress={() => (navigation as any).navigate("Recommendation")}
           >
-            <View style={styles.primaryButtonContent}>
-              <Ionicons name="sparkles" size={20} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.primaryButtonText}>Find What Works for Me</Text>
-            </View>
+            <LinearGradient
+              colors={[colors.primary, '#9D1445']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.primaryButton}
+            >
+              <View style={styles.primaryButtonContent}>
+                <Ionicons name="sparkles" size={20} color="#FFF" style={{ marginRight: 10 }} />
+                <Text style={styles.primaryButtonText}>Find What Works for Me</Text>
+                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" style={{ marginLeft: 8 }} />
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
-          <Text style={styles.primaryButtonSubtext}>Takes about 2–3 minutes</Text>
-        </View>
+          <Text style={styles.primaryButtonSubtext}>Takes about 2–3 minutes • Personalized for you</Text>
+        </Animated.View>
 
-        {/* 4️⃣ Secondary Action Cards */}
-        <View style={styles.secondaryActionsContainer}>
+        {/* 3 Secondary Action Grid */}
+        <Animated.View
+          entering={FadeInUp.delay(600).duration(1000)}
+          style={styles.secondaryActionsRow}
+        >
           <TouchableOpacity
-            style={styles.secondaryCard}
+            style={styles.actionCard}
             onPress={() => (navigation as any).navigate('Contraceptive Methods')}
           >
-            <Ionicons name="list-outline" size={22} color={colors.primary} />
-            <Text style={styles.secondaryCardText}>Browse Methods</Text>
+            <View style={[styles.iconCircle, { backgroundColor: '#FDF2F8' }]}>
+              <Ionicons name="grid" size={22} color={colors.primary} />
+            </View>
+            <Text style={styles.actionCardText}>Browse Methods</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.secondaryCard}
+            style={styles.actionCard}
             onPress={() => (navigation as any).navigate('LearnHub')}
           >
-            <Ionicons name="book-outline" size={22} color={colors.primary} />
-            <Text style={styles.secondaryCardText}>Learn Hub</Text>
+            <View style={[styles.iconCircle, { backgroundColor: '#F0FDFA' }]}>
+              <Ionicons name="book" size={22} color="#0D9488" />
+            </View>
+            <Text style={styles.actionCardText}>Learn Hub</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* 4 Contraceptive Methods Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Contraceptive Methods</Text>
+          <TouchableOpacity onPress={() => (navigation as any).navigate('Contraceptive Methods')}>
+            <Text style={styles.seeAllText}>See all →</Text>
           </TouchableOpacity>
         </View>
 
-        {/* 5️⃣ Contraceptive methods carousel (Existing + See All) */}
-        <View style={styles.containerFour}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={styles.headerTitle}>Contraceptive Methods</Text>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('Contraceptive Methods')}>
-              <Text style={{ color: colors.primary, fontSize: hp('1.5%') }}>See all →</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.methodsScrollView}
-            contentContainerStyle={styles.methodsContainer}
-          >
-            {contraceptiveMethods.map((method) => (
-              <TouchableOpacity key={method.id} style={styles.methodItem} onPress={() => (navigation as any).navigate('Contraceptive Methods')}>
-                <Image source={method.image} style={styles.methodPics} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.methodsScrollView}
+          contentContainerStyle={styles.methodsContentContainer}
+        >
+          {contraceptiveMethods.map((method, index) => (
+            <Animated.View
+              key={method.id}
+              entering={ZoomIn.delay(800 + index * 100).duration(800)}
+            >
+              <TouchableOpacity
+                style={styles.methodCard}
+                onPress={() => (navigation as any).navigate('Contraceptive Methods')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.methodImageWrapper}>
+                  <Image source={method.image} style={styles.methodImage} />
+                </View>
                 <Text style={styles.methodName}>{method.name}</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </Animated.View>
+          ))}
+        </ScrollView>
+
+        {/* 5 Educational Preview */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Did You Know?</Text>
         </View>
 
-        {/* 6️⃣ Educational Preview (Converted to Cards) */}
-        <View style={styles.infoSection}>
-          <Text style={styles.headerTitle}>Did You Know?</Text>
-
-          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('LearnHub')}>
-            <Ionicons name="help-circle-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.eduCardTitle}>What is contraception?</Text>
-              <Text style={styles.eduCardText}>Contraception is the use of medicines, devices, or surgery to prevent pregnancy.</Text>
-            </View>
+        <View style={styles.eduSection}>
+          <TouchableOpacity
+            style={styles.eduCard}
+            onPress={() => (navigation as any).navigate('LearnHub')}
+            activeOpacity={0.7}
+          >
+            <LinearGradient
+              colors={['#FFF5F8', '#FFFFFF']}
+              style={styles.eduCardInner}
+            >
+              <View style={[styles.eduIconContainer, { backgroundColor: '#FCE7F3' }]}>
+                <Ionicons name="help-circle" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.eduCardContent}>
+                <Text style={styles.eduCardTitle}>What is contraception?</Text>
+                <Text style={styles.eduCardText}>Contraception is the use of medicines, devices, or surgery to prevent pregnancy.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
+            </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('PregnancyPlanning')}>
-            <Ionicons name="flower-outline" size={24} color="#EC4899" style={{ marginRight: 10 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.eduCardTitle}>Explore Pregnancy Planning</Text>
-              <Text style={styles.eduCardText}>Preparing your body for a healthy pregnancy journey.</Text>
-            </View>
+          <TouchableOpacity
+            style={styles.eduCard}
+            onPress={() => (navigation as any).navigate('PregnancyPlanning')}
+            activeOpacity={0.7}
+          >
+            <LinearGradient
+              colors={['#F0FDFA', '#FFFFFF']}
+              style={styles.eduCardInner}
+            >
+              <View style={[styles.eduIconContainer, { backgroundColor: '#CCFBF1' }]}>
+                <Ionicons name="flower" size={24} color="#0D9488" />
+              </View>
+              <View style={styles.eduCardContent}>
+                <Text style={styles.eduCardTitle}>Pregnancy Planning</Text>
+                <Text style={styles.eduCardText}>Preparing your body for a healthy pregnancy journey and future choices.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
+            </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.eduCard} onPress={() => (navigation as any).navigate('LearnHub')}>
-            <Ionicons name="book-outline" size={24} color={colors.primary} style={{ marginRight: 10 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.eduCardTitle}>Guide to birth control</Text>
-              <Text style={styles.eduCardText}>Learn about different types of birth control and their effectiveness.</Text>
-            </View>
+          <TouchableOpacity
+            style={styles.eduCard}
+            onPress={() => (navigation as any).navigate('LearnHub')}
+            activeOpacity={0.7}
+          >
+            <LinearGradient
+              colors={['#F8FAFC', '#FFFFFF']}
+              style={styles.eduCardInner}
+            >
+              <View style={[styles.eduIconContainer, { backgroundColor: '#E2E8F0' }]}>
+                <Ionicons name="book" size={24} color="#475569" />
+              </View>
+              <View style={styles.eduCardContent}>
+                <Text style={styles.eduCardTitle}>Guide to birth control</Text>
+                <Text style={styles.eduCardText}>Detailed insights into effectiveness, side effects, and correct usage.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
-        {/* 7️⃣ Emergency Contraception */}
-        <TouchableOpacity
-          style={styles.emergencyCard}
-          onPress={() => (navigation as any).navigate('Emergency Contraception')}
-        >
-          <Ionicons name="warning-outline" size={24} color="#D97706" />
-          <Text style={styles.emergencyText}>Need emergency contraception?</Text>
-          <Ionicons name="chevron-forward" size={20} color="#D97706" />
-        </TouchableOpacity>
+        {/* 6 Emergency Section */}
+        <Animated.View entering={FadeInUp.delay(1000).duration(1000)}>
+          <TouchableOpacity
+            style={styles.emergencyCard}
+            onPress={() => (navigation as any).navigate('Emergency Contraception')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.emergencyIconWrapper}>
+              <Ionicons name="warning" size={24} color="#D97706" />
+            </View>
+            <View style={styles.emergencyContent}>
+              <Text style={styles.emergencyTitle}>Need emergency contraception?</Text>
+              <Text style={styles.emergencySubtext}>Quick action is important within 72 hours.</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={20} color="#B45309" />
+          </TouchableOpacity>
+        </Animated.View>
 
-        {/* 8️⃣ Footer */}
+        {/* 7 Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>About ContraceptIQ</Text>
-          <Text style={styles.footerText}>Privacy & Disclaimer</Text>
+          <View style={styles.footerLinks}>
+            <Text style={styles.footerLink}>About ContraceptIQ</Text>
+            <Text style={styles.footerDot}>•</Text>
+            <Text style={styles.footerLink}>Privacy Policy</Text>
+          </View>
+          <Text style={styles.footerCopyright}>© 2026 ContraceptIQ. All rights reserved.</Text>
         </View>
       </ScrollView>
     </View>
@@ -171,46 +269,26 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FAFC',
   },
-  containerOne: {
+  container: {
     flex: 1,
-    paddingHorizontal: wp('5%'),
-    backgroundColor: '#fff',
   },
   header: {
     backgroundColor: colors.primary,
     paddingHorizontal: wp('5%'),
-    paddingBottom: hp('2.5%'),
+    paddingBottom: hp('3%'),
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginBottom: hp('2%'),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  headerTitleContainer: {
-    marginLeft: 15,
-  },
-  headerAppTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  headerTagline: {
-    fontSize: 14,
-    color: '#FFDBEB',
-    fontStyle: 'italic',
-    marginTop: 4,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    ...shadows.md,
+    shadowColor: colors.primary,
   },
   menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   gradient: {
@@ -218,100 +296,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: hp('3%'), // Resized
-    fontWeight: '600',
-    textAlign: 'left',
-    marginTop: hp('1.2%'),
+  headerTitleContainer: {
+    marginLeft: 16,
+    flex: 1,
   },
-  tagline: {
-    fontSize: hp('2%'), // Resized
-    fontStyle: 'italic',
-    textAlign: 'left',
-    marginTop: hp('0.5%'),
-    paddingBottom: hp('1.5%'),
+  headerAppTitle: {
+    fontSize: hp('2.8%'),
+    fontWeight: '900',
+    color: '#FFF',
+    letterSpacing: -0.5,
   },
-  infographicContainer: {
-    paddingBottom: spacing.md,
+  headerTagline: {
+    fontSize: hp('1.6%'),
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  infographicCard: {
+    backgroundColor: '#FFF',
+    marginHorizontal: wp('5%'),
+    marginTop: hp('2.5%'),
+    borderRadius: 24,
+    padding: 12,
+    ...shadows.md,
   },
   infographic: {
     width: '100%',
-    height: undefined,
-    aspectRatio: 1,
-    resizeMode: 'contain',
-    borderRadius: 10,
-    alignSelf: 'center',
+    height: hp('30%'),
+    borderRadius: 16,
+    resizeMode: 'cover',
   },
-  containerTwo: {
-    alignItems: 'center',
-    marginTop: hp('0.5%'), // Reduced from 2.5%
-    marginBottom: hp('1%'), // Reduced from 4%
-  },
-  containerThree: {
-    paddingBottom: hp('1.5%'),
-  },
-  containerFour: {
-    marginTop: hp('2%'),
-  },
-  headerTitle: {
-    fontSize: hp('2.5%'), // Resized
-    fontWeight: '500',
-    paddingBottom: hp('0.5%'),
-    marginTop: hp('1.2%'),
-  },
-  info: {
-    fontSize: hp('1.8%'), // Resized
-    paddingTop: hp('0.5%'),
-    paddingBottom: hp('0.5%'),
-    textAlign: 'justify',
-  },
-  methodsScrollView: {
-    marginTop: hp('1%'),
-  },
-  methodsContainer: {
-    paddingHorizontal: wp('2%'),
-  },
-  methodItem: {
-    alignItems: 'center',
-    marginRight: wp('5%'),
-  },
-  methodPics: {
-    width: wp('20%'),
-    height: wp('20%'),
-    borderRadius: wp('10%'),
-    marginBottom: hp('1%'),
-    backgroundColor: '#eee',
-  },
-  methodName: {
-    fontSize: hp('2%'),
-    lineHeight: hp('2.5%'),
-    marginTop: hp('1%'),
-    marginBottom: hp('1.2%'),
-  },
-  infoSection: {
-    marginTop: hp('2%'),
-    paddingHorizontal: wp('1%'),
-    marginBottom: hp('2%'),
-  },
-
-  // New Styles
   ctaContainer: {
+    paddingHorizontal: wp('5%'),
+    marginTop: hp('3%'),
     alignItems: 'center',
-    marginTop: hp('2%'),
-    marginBottom: hp('3%'),
+  },
+  primaryButtonShadow: {
+    width: '100%',
+    ...shadows.lg,
+    shadowColor: colors.primary,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: hp('1.5%'),
-    paddingHorizontal: wp('8%'),
-    borderRadius: 999, // Round
-    width: '100%',
+    height: hp('7.5%'),
+    borderRadius: 22,
+    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   primaryButtonContent: {
     flexDirection: 'row',
@@ -320,88 +349,196 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFF',
     fontSize: hp('2.2%'),
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   primaryButtonSubtext: {
-    marginTop: hp('1%'),
-    color: colors.text.secondary,
-    fontSize: hp('1.5%'),
+    marginTop: hp('1.2%'),
+    color: '#64748B',
+    fontSize: hp('1.6%'),
+    fontWeight: '500',
   },
-  secondaryActionsContainer: {
+  secondaryActionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: hp('1.5%'), // Reduced from 3%
+    paddingHorizontal: wp('5%'),
+    marginTop: hp('2.5%'),
   },
-  secondaryCard: {
+  actionCard: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: hp('1.5%'),
+    borderRadius: 20,
     width: '48%',
+    padding: hp('2%'),
     alignItems: 'center',
+    ...shadows.sm,
     borderWidth: 1,
-    borderColor: colors.border.light,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderColor: '#F1F5F9',
   },
-  secondaryCardText: {
-    marginTop: hp('0.5%'),
-    color: colors.text.primary,
-    fontWeight: '600',
-    fontSize: hp('1.6%'),
+  iconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  infoButton: {
-    borderRadius: 12,
+  actionCardText: {
+    fontSize: hp('1.8%'),
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: wp('5%'),
+    marginTop: hp('4%'),
+    marginBottom: hp('1.5%'),
+  },
+  sectionTitle: {
+    fontSize: hp('2.4%'),
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  seeAllText: {
+    fontSize: hp('1.7%'),
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  methodsScrollView: {
+    paddingLeft: wp('5%'),
+  },
+  methodsContentContainer: {
+    paddingRight: wp('10%'),
+    paddingVertical: 8,
+  },
+  methodCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 12,
+    marginRight: 16,
+    alignItems: 'center',
+    width: wp('28%'),
+    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: '#F8FAFC',
+  },
+  methodImageWrapper: {
+    width: wp('18%'),
+    height: wp('18%'),
+    borderRadius: 15,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
     overflow: 'hidden',
-    width: 44,
-    height: 44,
+  },
+  methodImage: {
+    width: '80%',
+    height: '80%',
+    resizeMode: 'contain',
+  },
+  methodName: {
+    fontSize: hp('1.7%'),
+    fontWeight: '700',
+    color: '#475569',
+  },
+  eduSection: {
+    paddingBottom: 10,
   },
   eduCard: {
+    marginHorizontal: wp('5%'),
+    marginBottom: 12,
+    borderRadius: 20,
+    backgroundColor: '#FFF',
+    ...shadows.sm,
+    overflow: 'hidden',
+  },
+  eduCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: hp('1.5%'),
-    borderRadius: 12,
-    marginBottom: hp('1.5%'),
-    borderWidth: 1,
-    borderColor: colors.border.light,
+    padding: 16,
+    minHeight: 80,
+  },
+  eduIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  eduCardContent: {
+    flex: 1,
   },
   eduCardTitle: {
-    fontSize: hp('1.8%'),
-    fontWeight: '600',
-    color: colors.text.primary,
+    fontSize: hp('1.9%'),
+    fontWeight: '800',
+    color: '#1E293B',
   },
   eduCardText: {
-    fontSize: hp('1.5%'),
-    color: colors.text.secondary,
+    fontSize: hp('1.6%'),
+    color: '#64748B',
     marginTop: 2,
+    lineHeight: 20,
   },
   emergencyCard: {
+    backgroundColor: '#FFF7ED',
+    marginHorizontal: wp('5%'),
+    marginTop: hp('3%'),
+    borderRadius: 24,
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    padding: hp('1.5%'),
-    borderRadius: 12,
-    marginBottom: hp('3%'),
     borderWidth: 1,
-    borderColor: '#FCD34D',
+    borderColor: '#FFEDD5',
+    ...shadows.sm,
   },
-  emergencyText: {
+  emergencyIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#FFEDD5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  emergencyContent: {
     flex: 1,
-    color: '#92400E',
-    fontWeight: '600',
-    marginLeft: wp('2%'),
-    fontSize: hp('1.8%'),
+  },
+  emergencyTitle: {
+    fontSize: hp('1.9%'),
+    fontWeight: '800',
+    color: '#9A3412',
+  },
+  emergencySubtext: {
+    fontSize: hp('1.5%'),
+    color: '#C2410C',
+    marginTop: 2,
   },
   footer: {
+    marginTop: hp('6%'),
+    paddingHorizontal: wp('5%'),
+    paddingBottom: hp('4%'),
     alignItems: 'center',
-    paddingBottom: hp('2%'),
   },
-  footerText: {
-    color: colors.text.disabled,
-    fontSize: hp('1.2%'),
-    marginBottom: 4,
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  footerLink: {
+    fontSize: hp('1.6%'),
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  footerDot: {
+    marginHorizontal: 12,
+    color: '#CBD5E1',
+  },
+  footerCopyright: {
+    fontSize: hp('1.4%'),
+    color: '#CBD5E1',
+    fontWeight: '500',
   },
 });
