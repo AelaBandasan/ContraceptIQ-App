@@ -24,15 +24,15 @@ import sys
 # ============================================================================
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_ML_ROOT = os.path.abspath(os.path.join(_HERE, "..", "..", ".."))
+_ML_ROOT = os.path.abspath(os.path.join(_HERE, "..", ".."))
 
 DATA_PKL = os.path.join(
     _ML_ROOT, "data", "processed", "discontinuation_design1_data_v2.pkl"
 )
 MODEL_JOBLIB = os.path.join(
-    _HERE, "models_high_risk_v3", "xgb_high_recall.joblib"
+    _ML_ROOT, "src", "models", "models_high_risk_v3", "xgb_high_recall.joblib"
 )
-ARTIFACTS_DIR = os.path.join(_HERE, "models_high_risk_v3")
+ARTIFACTS_DIR = os.path.join(_ML_ROOT, "src", "models", "models_high_risk_v3")
 
 # ============================================================================
 # CLI
@@ -109,20 +109,34 @@ def load_assets():
         )
         sys.exit(1)
 
-    data = joblib.load(DATA_PKL)
+    raw = joblib.load(DATA_PKL)
     pipeline = joblib.load(MODEL_JOBLIB)
 
-    required_keys = {"X_train", "X_test", "y_train", "y_test"}
-    missing = required_keys - set(data.keys())
-    if missing:
+    # Pickle may be a dict or a (X_train, X_test, y_train, y_test) tuple
+    if isinstance(raw, dict):
+        required_keys = {"X_train", "X_test", "y_train", "y_test"}
+        missing = required_keys - set(raw.keys())
+        if missing:
+            print(
+                f"[ERROR] Data pickle is missing keys: {missing}. "
+                "Expected: X_train, X_test, y_train, y_test.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        X_train, X_test, y_train, y_test = (
+            raw["X_train"], raw["X_test"], raw["y_train"], raw["y_test"]
+        )
+    elif isinstance(raw, tuple) and len(raw) == 4:
+        X_train, X_test, y_train, y_test = raw
+    else:
         print(
-            f"[ERROR] Data pickle is missing keys: {missing}. "
-            "Expected: X_train, X_test, y_train, y_test.",
+            f"[ERROR] Unexpected data pickle format: {type(raw)}. "
+            "Expected a dict with X_train/X_test/y_train/y_test or a 4-tuple.",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    return data["X_train"], data["X_test"], data["y_train"], data["y_test"], pipeline
+    return X_train, X_test, y_train, y_test, pipeline
 
 
 def select_eval_set(X_test, y_test, full_eval, sample_cap, seed):
@@ -274,7 +288,7 @@ def run_grouped_importance(pipeline, perm_df, X_eval, known_columns):
     import numpy as np
     import pandas as pd
 
-    preprocessor = pipeline.named_steps["preprocessor"]
+    preprocessor = pipeline.named_steps["preprocess"]
     ohe_names = list(preprocessor.get_feature_names_out())
 
     # Build mapping: ohe_name -> base column
@@ -359,7 +373,7 @@ def run_shap(pipeline, X_eval, sample_cap, seed):
     import shap
     import matplotlib.pyplot as plt
 
-    preprocessor = pipeline.named_steps["preprocessor"]
+    preprocessor = pipeline.named_steps["preprocess"]
     xgb_model = pipeline.named_steps["model"]
 
     # Sample size: clamp between 500 and 1000
@@ -376,11 +390,12 @@ def run_shap(pipeline, X_eval, sample_cap, seed):
 
     print(f"\n[INFO] Running SHAP TreeExplainer on {shap_n} samples ...")
 
-    # Transform to numeric OHE space — preprocessor returns dense array
-    # (sparse_output=False is set in preprocessor.py)
+    # Transform to numeric OHE space. The pipeline's ColumnTransformer may
+    # return a sparse matrix — call .toarray() to ensure a dense ndarray.
     X_transformed = preprocessor.transform(X_shap)
+    if hasattr(X_transformed, "toarray"):
+        X_transformed = X_transformed.toarray()
 
-    # DO NOT call .toarray() — it is already a dense numpy ndarray
     feature_names = list(preprocessor.get_feature_names_out())
     X_transformed_df = pd.DataFrame(X_transformed, columns=feature_names)
 
