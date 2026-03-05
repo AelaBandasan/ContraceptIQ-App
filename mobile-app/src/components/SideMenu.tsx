@@ -49,18 +49,6 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
       show: true,
     },
     {
-      label: 'My Preferences',
-      route: 'Preferences',
-      Icon: Sliders,
-      show: hasAssessment,
-    },
-    {
-      label: 'Recommended for You',
-      route: 'Recommendation',
-      Icon: Award,
-      show: hasAssessment,
-    },
-    {
       label: 'Emergency Contraception',
       route: 'Emergency Contraception',
       Icon: AlertTriangle,

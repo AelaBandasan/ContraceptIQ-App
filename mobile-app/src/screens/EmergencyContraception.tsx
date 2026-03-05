@@ -49,16 +49,14 @@ const EmergencyContraception = () => {
                     onPress={() => (navigation as any).toggleDrawer()}
                     style={styles.menuButton}
                 >
-                    <LinearGradient
-                        colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-                        style={styles.gradient}
+                    <View
+                        style={styles.menuButtonSolid}
                     >
                         <Ionicons name="menu" size={24} color="#FFF" />
-                    </LinearGradient>
+                    </View>
                 </TouchableOpacity>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-                    <Text style={styles.headerMainTitle}>🚨 Emergency Contraception</Text>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.headerText}>Emergency Contraception</Text>
                 </View>
             </View>
 
@@ -212,12 +210,16 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: colors.primary,
         paddingHorizontal: 20,
-        paddingBottom: 25,
+        paddingBottom: 20,
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         flexDirection: 'row',
         alignItems: 'center',
-        ...shadows.md,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
     },
     headerTitleContainer: {
         flex: 1,
@@ -242,8 +244,9 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         overflow: 'hidden',
     },
-    gradient: {
+    menuButtonSolid: {
         flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
     },

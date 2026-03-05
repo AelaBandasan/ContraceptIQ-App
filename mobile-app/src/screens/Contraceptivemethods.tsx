@@ -108,17 +108,19 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
     <View style={styles.safeArea}>
       {!isDoctorAssessment && (
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-              style={styles.gradient}
+          <TouchableOpacity
+            onPress={() => (navigation as any).toggleDrawer()}
+            style={styles.menuButton}
+          >
+            <View
+              style={styles.menuButtonSolid}
             >
               <Ionicons name="menu" size={24} color="#FFF" />
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
+
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-            <Text style={styles.headerTagline}>Methods</Text>
+            <Text style={styles.screenTitle}>Methods</Text>
           </View>
         </View>
       )}
@@ -183,14 +185,14 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
   },
@@ -200,24 +202,30 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-  gradient: {
+  menuButtonSolid: {
     flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitleContainer: {
     marginLeft: 15,
   },
-  headerAppTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
+  // headerAppTitle: { // Removed as per instruction
+  //   fontSize: 20,
+  //   fontWeight: 'bold',
+  //   color: '#FFF',
+  // },
   headerTagline: {
     fontSize: 14,
     color: '#FFDBEB',
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  screenTitle: { // Added as per instruction
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
 
 

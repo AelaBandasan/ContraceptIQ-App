@@ -140,25 +140,22 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
     <View style={styles.safeArea}>
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-            style={styles.gradient}
+          <View
+            style={styles.menuButtonSolid}
           >
             <Ionicons name="menu" size={24} color="#FFF" />
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
           <Text style={styles.headerText}>Recommended for You</Text>
         </View>
 
         <TouchableOpacity onPress={() => (navigation as any).navigate('ColorMapping')} style={styles.infoButton}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-            style={styles.gradient}
+          <View
+            style={styles.menuButtonSolid}
           >
             <Ionicons name="information-circle-outline" size={24} color="#FFF" />
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -293,13 +290,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    backgroundColor: '#E45A92', // colors.primary
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
     marginBottom: 20,
   },
   titleContainer: {
@@ -319,8 +321,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-  gradient: {
+  menuButtonSolid: {
     flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -418,7 +421,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   consultButton: {
-    backgroundColor: '#E45A92',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

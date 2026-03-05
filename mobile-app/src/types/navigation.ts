@@ -73,7 +73,7 @@ export type UserTabParamList = {
   Home: undefined;
   'Find Method': undefined;
   'Contraceptive Methods': undefined;
-  LearnHub: undefined;
+  Preferences: undefined;
 };
 
 // OB Drawer Navigator

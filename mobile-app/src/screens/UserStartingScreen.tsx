@@ -149,15 +149,12 @@ const UserStartingScreen = ({ navigation }: any) => {
                             style={styles.primaryButtonContainer}
                             onPress={handleContinueAsGuest}
                         >
-                            <LinearGradient
-                                colors={['#D81B60', '#C2185B']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.primaryButton}
+                            <View
+                                style={[styles.primaryButton, { backgroundColor: colors.primary }]}
                             >
                                 <Text style={styles.buttonLabel}>Continue as Guest</Text>
                                 <ArrowRight size={20} color="#FFF" style={{ marginLeft: 12 }} />
-                            </LinearGradient>
+                            </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity

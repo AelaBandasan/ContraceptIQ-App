@@ -7,10 +7,11 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography, spacing, borderRadius, shadows } from "../theme";
@@ -32,6 +33,16 @@ const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
 
   // Check if we are in Doctor/OB mode
   const { isDoctorAssessment } = (route?.params as any) || {};
+  const { reset } = useAssessment();
+
+  useFocusEffect(
+    useCallback(() => {
+      reset();
+      // Reset scroll position to first page
+      (scrollRef.current as any)?.scrollTo({ x: 0, animated: false });
+      setCurrentIndex(0);
+    }, [reset])
+  );
 
   // Get assessment context for persisting state
   const { assessmentData, updateAssessmentData, error, setError } =
@@ -78,17 +89,15 @@ const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
               onPress={() => (navigation as any).toggleDrawer()}
               style={styles.menuButton}
             >
-              <LinearGradient
-                colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-                style={styles.gradient}
+              <View
+                style={styles.menuButtonSolid}
               >
                 <Ionicons name="menu" size={24} color="#FFF" />
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
 
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-              <Text style={styles.headerTagline}>Smart Support.</Text>
+            <View style={styles.titleContainer}>
+              <Text style={styles.headerText}>Eligibility Check</Text>
             </View>
           </View>
         )}
@@ -225,14 +234,19 @@ const styles = StyleSheet.create({
   guestHeader: {
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     zIndex: 10,
-    marginBottom: 5, // Small gap for visual separation
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+    marginBottom: 5,
   },
   headerTitleContainer: {
     marginLeft: 15,
@@ -247,18 +261,26 @@ const styles = StyleSheet.create({
     color: '#FFDBEB',
     fontStyle: 'italic',
   },
+  titleContainer: {
+    marginLeft: 15,
+  },
+  headerText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
   menuButton: {
-    padding: 5,
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  gradient: {
+  menuButtonSolid: {
     width: '100%',
     height: '100%',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -299,7 +321,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   button: {
-    backgroundColor: "#E45A92",
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 15, // Reduced padding
     paddingHorizontal: 60,
@@ -372,5 +394,15 @@ const styles = StyleSheet.create({
     color: colors.background.primary,
     fontWeight: typography.weights.semibold,
     fontSize: typography.sizes.md,
+  },
+  titleContainer: {
+    flex: 1,
+    marginLeft: 15,
+    justifyContent: 'center',
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
 });

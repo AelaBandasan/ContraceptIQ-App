@@ -30,16 +30,14 @@ const AboutUs = ({ navigation }: any) => {
       {/* Header (Same styling as ContraFAQs and HomeScreen) */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-            style={styles.gradient}
+          <View
+            style={styles.menuButtonSolid}
           >
             <Ionicons name="menu" size={24} color="#FFF" />
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-          <Text style={styles.headerTagline}>About Our App</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerText}>About ContraceptIQ</Text>
         </View>
       </View>
 
@@ -115,25 +113,26 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
   },
   menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     overflow: 'hidden',
   },
-  gradient: {
+  menuButtonSolid: {
     flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -141,7 +140,7 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   headerAppTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFF',
   },
@@ -149,7 +148,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFDBEB',
     fontStyle: 'italic',
-    marginTop: 4,
+  },
+  titleContainer: {
+    marginLeft: 15,
+  },
+  headerText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   scrollContent: {
     padding: 24,

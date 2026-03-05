@@ -17,6 +17,11 @@ import Animated, {
   FadeInUp,
   FadeIn,
   ZoomIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSequence,
 } from 'react-native-reanimated';
 import type { UserTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, spacing, shadows, borderRadius as themeRadius } from '../theme';
@@ -30,10 +35,42 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const contraceptiveMethods = [
     { id: '1', name: 'Pills', image: require('../../assets/image/sq_poppills.png') },
     { id: '2', name: 'Patch', image: require('../../assets/image/sq_chcpatch1.png') },
-    { id: '3', name: 'IUD', image: require('../../assets/image/sq_cuiud.png') },
-    { id: '4', name: 'Implants', image: require('../../assets/image/sq_lngetg.png') },
-    { id: '5', name: 'Injections', image: require('../../assets/image/sq_dmpainj.png') },
+    { id: '3', name: 'Cu-IUD', image: require('../../assets/image/sq_cuiud.png') },
+    { id: '4', name: 'Lng-IUD', image: require('../../assets/image/sq_lngiud.png') },
+    { id: '5', name: 'Implants', image: require('../../assets/image/sq_lngetg.png') },
+    { id: '6', name: 'Injections', image: require('../../assets/image/sq_dmpainj.png') },
   ];
+
+  // Animation values
+  const floatValue = useSharedValue(0);
+  const pulseValue = useSharedValue(1);
+
+  useEffect(() => {
+    // Floating animation for infographic
+    floatValue.value = withRepeat(
+      withTiming(1, { duration: 2000 }),
+      -1,
+      true
+    );
+
+    // Pulse animation for CTA button
+    pulseValue.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedHeroStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatValue.value * 10 - 5 }],
+  }));
+
+  const animatedPulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseValue.value }],
+  }));
 
   return (
     <View style={styles.safeArea}>
@@ -55,12 +92,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.menuButton}
             activeOpacity={0.7}
           >
-            <LinearGradient
-              colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
-              style={styles.gradient}
+            <View
+              style={[styles.menuButton, styles.menuButtonSolid]}
             >
               <Ionicons name="menu" size={26} color="#FFF" />
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
@@ -72,7 +108,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* 1 Hero Section - Infographic in a Premium Card */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(1000)}
-          style={styles.infographicCard}
+          style={[styles.infographicCard, animatedHeroStyle]}
         >
           <Image
             source={require('../../assets/image/infographic1.png')}
@@ -83,25 +119,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* 2 Primary Call-to-Action */}
         <Animated.View
           entering={FadeInUp.delay(400).duration(1000)}
-          style={styles.ctaContainer}
+          style={[styles.ctaContainer, animatedPulseStyle]}
         >
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.primaryButtonShadow}
             onPress={() => (navigation as any).navigate("Recommendation")}
           >
-            <LinearGradient
-              colors={[colors.primary, '#9D1445']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.primaryButton}
+            <View
+              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
             >
               <View style={styles.primaryButtonContent}>
                 <Ionicons name="sparkles" size={20} color="#FFF" style={{ marginRight: 10 }} />
                 <Text style={styles.primaryButtonText}>Find What Works for Me</Text>
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" style={{ marginLeft: 8 }} />
               </View>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
           <Text style={styles.primaryButtonSubtext}>Takes about 2–3 minutes • Personalized for you</Text>
         </Animated.View>
@@ -193,7 +226,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.eduCard}
-            onPress={() => (navigation as any).navigate('PregnancyPlanning')}
+            onPress={() => (navigation as any).navigate('LearnHub')}
             activeOpacity={0.7}
           >
             <LinearGradient
@@ -201,27 +234,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.eduCardInner}
             >
               <View style={[styles.eduIconContainer, { backgroundColor: '#CCFBF1' }]}>
-                <Ionicons name="flower" size={24} color="#0D9488" />
-              </View>
-              <View style={styles.eduCardContent}>
-                <Text style={styles.eduCardTitle}>Pregnancy Planning</Text>
-                <Text style={styles.eduCardText}>Preparing your body for a healthy pregnancy journey and future choices.</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.eduCard}
-            onPress={() => (navigation as any).navigate('LearnHub')}
-            activeOpacity={0.7}
-          >
-            <LinearGradient
-              colors={['#F8FAFC', '#FFFFFF']}
-              style={styles.eduCardInner}
-            >
-              <View style={[styles.eduIconContainer, { backgroundColor: '#E2E8F0' }]}>
-                <Ionicons name="book" size={24} color="#475569" />
+                <Ionicons name="book" size={24} color="#0D9488" />
               </View>
               <View style={styles.eduCardContent}>
                 <Text style={styles.eduCardTitle}>Guide to birth control</Text>
@@ -276,14 +289,17 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.primary,
-    paddingHorizontal: wp('5%'),
-    paddingBottom: hp('3%'),
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
-    ...shadows.md,
     shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   menuButton: {
     width: 48,
@@ -291,8 +307,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
-  gradient: {
-    flex: 1,
+  menuButtonSolid: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -314,9 +330,9 @@ const styles = StyleSheet.create({
   },
   infographicCard: {
     backgroundColor: '#FFF',
-    marginHorizontal: wp('5%'),
+    marginHorizontal: wp('4%'),
     marginTop: hp('2.5%'),
-    borderRadius: 24,
+    borderRadius: 15,
     padding: 12,
     ...shadows.md,
   },
@@ -361,12 +377,12 @@ const styles = StyleSheet.create({
   secondaryActionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: wp('5%'),
-    marginTop: hp('2.5%'),
+    paddingHorizontal: wp('4%'),
+    marginTop: hp('2%'),
   },
   actionCard: {
     backgroundColor: '#FFF',
-    borderRadius: 20,
+    borderRadius: 15,
     width: '48%',
     padding: hp('2%'),
     alignItems: 'center',
@@ -391,9 +407,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    paddingHorizontal: wp('5%'),
-    marginTop: hp('4%'),
-    marginBottom: hp('1.5%'),
+    paddingHorizontal: wp('4%'),
+    marginTop: hp('2.5%'),
+    marginBottom: hp('1%'),
   },
   sectionTitle: {
     fontSize: hp('2.4%'),
@@ -414,7 +430,7 @@ const styles = StyleSheet.create({
   },
   methodCard: {
     backgroundColor: '#FFF',
-    borderRadius: 20,
+    borderRadius: 15,
     padding: 12,
     marginRight: 16,
     alignItems: 'center',
@@ -434,8 +450,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   methodImage: {
-    width: '80%',
-    height: '80%',
+    width: '110%',
+    height: '110%',
     resizeMode: 'contain',
   },
   methodName: {
@@ -444,10 +460,10 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   eduSection: {
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
   eduCard: {
-    marginHorizontal: wp('5%'),
+    marginHorizontal: wp('4%'),
     marginBottom: 12,
     borderRadius: 20,
     backgroundColor: '#FFF',
@@ -472,7 +488,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eduCardTitle: {
-    fontSize: hp('1.9%'),
+    fontSize: hp('2%'),
     fontWeight: '800',
     color: '#1E293B',
   },
@@ -484,8 +500,8 @@ const styles = StyleSheet.create({
   },
   emergencyCard: {
     backgroundColor: '#FFF7ED',
-    marginHorizontal: wp('5%'),
-    marginTop: hp('3%'),
+    marginHorizontal: wp('4%'),
+    marginTop: hp('1%'),
     borderRadius: 24,
     padding: 20,
     flexDirection: 'row',
@@ -507,7 +523,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emergencyTitle: {
-    fontSize: hp('1.9%'),
+    fontSize: hp('2%'),
     fontWeight: '800',
     color: '#9A3412',
   },
@@ -517,9 +533,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   footer: {
-    marginTop: hp('6%'),
-    paddingHorizontal: wp('5%'),
-    paddingBottom: hp('4%'),
+    marginTop: hp('2%'),
+    paddingHorizontal: wp('4%'),
+    paddingBottom: hp('1%'),
     alignItems: 'center',
   },
   footerLinks: {

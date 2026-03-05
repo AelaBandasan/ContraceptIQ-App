@@ -7,9 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
-import { typography, spacing, colors } from '../theme';
+import { typography, spacing, colors, borderRadius, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
 import { calculateMEC, calculateMatchScore, MECCategory, getMECColor, getMECLabel } from '../services/mecService';
+import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
@@ -72,17 +73,13 @@ const Preferences = ({ navigation }: Props) => {
   return (
     <View style={styles.safeArea}>
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-            style={styles.gradient}
-          >
-            <Ionicons name="menu" size={24} color="#FFF" />
-          </LinearGradient>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
+          <View style={styles.menuButtonSolid}>
+            <Ionicons name="arrow-back" size={24} color="#FFF" />
+          </View>
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-          <Text style={styles.headerText}>What's Right for Me?</Text>
+          <Text style={styles.headerText}>My Preferences</Text>
         </View>
       </View>
 
@@ -91,7 +88,6 @@ const Preferences = ({ navigation }: Props) => {
         showsVerticalScrollIndicator
         contentContainerStyle={{ paddingTop: 20, paddingBottom: 100 }}
       >
-
         <View style={styles.screenCont}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.header2}>My Choices</Text>
@@ -101,63 +97,89 @@ const Preferences = ({ navigation }: Props) => {
           </View>
 
           {/* Preferences Summary */}
-          <View style={styles.summaryCard}>
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(800)}
+            style={styles.summaryCard}
+          >
+            <View style={styles.cardHeaderLine} />
             <Text style={styles.summaryTitle}>Selected Preferences</Text>
             <View style={styles.prefsChipContainer}>
-              {chosenPrefs.length > 0 ? chosenPrefs.map((p) => (
-                <View key={p} style={styles.prefChip}>
+              {chosenPrefs.length > 0 ? chosenPrefs.map((p, idx) => (
+                <Animated.View
+                  key={p}
+                  entering={ZoomIn.delay(400 + (idx * 100))}
+                  style={styles.prefChip}
+                >
                   <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
-                </View>
+                </Animated.View>
               )) : <Text style={styles.emptyText}>No preferences selected.</Text>}
             </View>
 
             <View style={styles.ageRow}>
+              <Ionicons name="calendar-outline" size={18} color="#666" style={{ marginRight: 8 }} />
               <Text style={styles.ageLabel}>Age Range:</Text>
               <Text style={styles.ageValue}>{selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].label : 'Not set'}</Text>
             </View>
-          </View>
+          </Animated.View>
 
           {/* Personalized Recommendations */}
-          <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
-          <Text style={styles.header3}>Based on your preferences and age</Text>
+          <Animated.View entering={FadeInDown.delay(400).duration(800)}>
+            <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
+            <Text style={styles.header3}>Based on your preferences and age</Text>
+          </Animated.View>
 
           {topRecommendations.map((item, index) => (
-            <TouchableOpacity
+            <Animated.View
               key={index}
-              style={styles.recomCard}
-              onPress={() => navigation.navigate('ViewRecommendation', {
-                ageLabel: selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '',
-                prefs: chosenPrefs,
-              })}
+              entering={FadeInRight.delay(600 + (index * 150)).duration(600)}
             >
-              <View style={[styles.rankBadge, { backgroundColor: item.color }]} />
-              <Image source={item.image} style={styles.recomIcon} />
-              <View style={styles.recomInfo}>
-                <Text style={styles.recomName}>{item.name}</Text>
-                <Text style={styles.matchText}>{item.matchScore}% Match based on preferences</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#CCC" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.recomCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('ViewRecommendation', {
+                  ageLabel: selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '',
+                  prefs: chosenPrefs,
+                })}
+              >
+                <View style={[styles.rankIndicator, { backgroundColor: item.color }]} />
+                <View style={styles.recomIconContainer}>
+                  <Image source={item.image} style={styles.recomIcon} />
+                </View>
+                <View style={styles.recomInfo}>
+                  <Text style={styles.recomName}>{item.name}</Text>
+                  <View style={styles.matchBadge}>
+                    <Ionicons name="sparkles" size={12} color={colors.primary} />
+                    <Text style={styles.matchText}>{item.matchScore}% Match</Text>
+                  </View>
+                </View>
+                <View style={styles.chevronContainer}>
+                  <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
           ))}
 
           {/* CONSULT WITH DOCTOR BUTTON */}
-          <TouchableOpacity
-            style={styles.consultButton}
-            onPress={() => {
-              const currentNumericAge = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].numericAge : 25;
-              const preFilledData = {
-                AGE: currentNumericAge.toString(),
-                prefs: chosenPrefs
-              };
-              navigation.navigate('GuestAssessment', { preFilledData });
-            }}
-          >
-            <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
-            <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
-          </TouchableOpacity>
+          <Animated.View entering={FadeInDown.delay(1000).duration(800)}>
+            <TouchableOpacity
+              style={styles.consultButton}
+              activeOpacity={0.9}
+              onPress={() => {
+                const currentNumericAge = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].numericAge : 25;
+                const preFilledData = {
+                  AGE: currentNumericAge.toString(),
+                  prefs: chosenPrefs
+                };
+                navigation.navigate('GuestAssessment', { preFilledData });
+              }}
+            >
+              <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
+              <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </ScrollView>
-    </View >
+    </View>
   );
 };
 
@@ -173,240 +195,222 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    backgroundColor: '#E45A92', // colors.primary
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  titleContainer: {
-    marginLeft: 15,
-  },
-  headerAppTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FFDBEB',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    justifyContent: 'space-between',
+    elevation: 8,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    overflow: 'hidden',
+    zIndex: 10,
   },
-  gradient: {
-    flex: 1,
+  menuButtonSolid: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  titleContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
   headerText: {
-    fontSize: 21,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#FFF',
   },
   screenCont: {
     paddingHorizontal: 20,
   },
-  header2: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.medium,
-  },
-  header3: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
-    marginTop: 5,
-    marginBottom: 15,
-  },
-  prefCont: {
-    elevation: 10,
-    backgroundColor: '#FBFBFB',
-    width: '100%',
-    borderRadius: 10,
-    marginTop: 15,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 1, height: 1 },
-    alignSelf: 'center',
-  },
-  prefHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  prefIcon: {
-    resizeMode: "contain",
-    height: 35,
-    width: 35,
-  },
-  prefLabel: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.semibold,
-    paddingLeft: spacing.sm,
-    flex: 1,
-  },
-  prefDescription: {
-    marginTop: 8,
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
-  },
-  prefButton: {
-    marginTop: 30,
-    width: '100%',
-    alignItems: 'center',
-    paddingVertical: 15,
-  },
-  prefRecomButton: {
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#E45A92',
-  },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 12,
+  },
+  header2: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+  },
+  header3: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    marginBottom: 16,
   },
   editText: {
-    color: '#E45A92',
-    fontWeight: '600',
-    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 16,
   },
   summaryCard: {
     backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 15,
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#F0F0F0',
-    elevation: 2,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cardHeaderLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: colors.primary,
   },
   summaryTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#666',
-    marginBottom: 10,
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#999',
+    marginBottom: 12,
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   prefsChipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 15,
+    gap: 10,
+    marginBottom: 20,
   },
   prefChip: {
-    backgroundColor: '#FFDBEB',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 15,
+    backgroundColor: '#FFF0F6',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E45A92',
+    borderColor: '#FFD9E8',
   },
   prefChipText: {
-    fontSize: 11,
-    color: '#E45A92',
-    fontWeight: '700',
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
   },
   ageRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 10,
+    borderTopColor: '#F5F5F5',
+    paddingTop: 16,
   },
   ageLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 8,
+    fontSize: 15,
+    color: '#555',
+    fontWeight: '500',
   },
   ageValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: '#333',
+    marginLeft: 4,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     fontStyle: 'italic',
     color: '#999',
+    marginBottom: 10,
   },
   recomCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#F0F0F0',
     elevation: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
   },
-  rankBadge: {
-    width: 32,
-    height: 32,
+  rankIndicator: {
+    width: 6,
+    height: '100%',
+    borderRadius: 3,
+    marginRight: 16,
+  },
+  recomIconContainer: {
+    width: 56,
+    height: 56,
     borderRadius: 16,
+    backgroundColor: '#F9F9F9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  rankText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
+    marginRight: 16,
   },
   recomIcon: {
-    width: 45,
-    height: 45,
+    width: 42,
+    height: 42,
     resizeMode: 'contain',
-    marginRight: 12,
   },
   recomInfo: {
     flex: 1,
   },
   recomName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  mecLabelText: {
-    fontSize: 11,
+    fontSize: 18,
     fontWeight: '700',
-    marginTop: 2,
+    color: '#333',
+    marginBottom: 4,
+  },
+  matchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF0F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
   matchText: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 1,
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  chevronContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFF0F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   consultButton: {
-    backgroundColor: '#E45A92',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
-    paddingVertical: 15,
-    borderRadius: 30,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
+    marginTop: 24,
+    paddingVertical: 18,
+    borderRadius: 20,
+    elevation: 6,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   consultButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
   },
 });

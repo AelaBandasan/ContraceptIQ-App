@@ -46,18 +46,17 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
     return (
         <View style={styles.safeArea}>
             {/* Premium Header */}
-            <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
-                style={[styles.header, { paddingTop: insets.top + 10 }]}
-            >
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
                     <Ionicons name="arrow-back" size={24} color="#FFF" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Contraceptiq</Text>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.screenTitle}>Method Details</Text>
+                </View>
                 <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
                     <Ionicons name="share-outline" size={24} color="#FFF" />
                 </TouchableOpacity>
-            </LinearGradient>
+            </View>
 
             <ScrollView
                 style={styles.container}
@@ -76,6 +75,9 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 </View>
 
                 {/* Stats Row */}
+                <View style={styles.titleContainer}>
+                    <Text style={styles.headerText}>Method Details</Text>
+                </View>
                 <View style={styles.statsRow}>
                     <View style={styles.statItem}>
                         <Text style={styles.statLabel}>Effectiveness</Text>
@@ -159,19 +161,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#F7F8FA',
     },
     header: {
+        backgroundColor: colors.primary,
         paddingHorizontal: 15,
         paddingBottom: 20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomLeftRadius: 25,
-        borderBottomRightRadius: 25,
-        ...shadows.md,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
     },
     headerButton: {
-        padding: 5,
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.2)',
     },
-    headerTitle: {
+    headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    screenTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#FFF',
@@ -366,6 +383,7 @@ const styles = StyleSheet.create({
     },
     backButton: {
         padding: 10,
+        elevation: 3,
     },
     backLink: {
         color: colors.primary,

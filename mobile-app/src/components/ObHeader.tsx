@@ -18,7 +18,7 @@ interface ObHeaderProps {
 const ObHeader: React.FC<ObHeaderProps> = ({
     title,
     subtitle,
-    appName = "ContraceptIQ",
+    appName = "",
     appSubtitle = "Clinical Decision Support Tool",
     date,
     showMenu = true
@@ -43,12 +43,11 @@ const ObHeader: React.FC<ObHeaderProps> = ({
                         style={styles.menuBtn}
                         onPress={openDrawer}
                     >
-                        <LinearGradient
-                            colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-                            style={styles.gradient}
+                        <View
+                            style={styles.menuBtnSolid}
                         >
                             <Menu color="#FFF" size={24} />
-                        </LinearGradient>
+                        </View>
                     </TouchableOpacity>
                 )}
                 <View style={styles.doctorInfo}>
@@ -62,11 +61,16 @@ const ObHeader: React.FC<ObHeaderProps> = ({
 
 const styles = StyleSheet.create({
     header: {
-        backgroundColor: '#E45A92', // colors.primary
+        backgroundColor: colors.primary,
         paddingHorizontal: 20,
-        paddingBottom: 30,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
+        paddingBottom: 20,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
     },
     topInfo: {
         flexDirection: 'row',
@@ -102,8 +106,9 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginRight: 16,
     },
-    gradient: {
+    menuBtnSolid: {
         flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
     },

@@ -8,8 +8,8 @@ import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
 
 const COLORS = {
-    primary: '#E45A92',
-    primaryDark: '#D3347A',
+    primary: '#D81B60',
+    primaryDark: '#AD1457',
     textPrimary: '#0F172A',
     border: '#E2E8F0',
     white: '#FFFFFF',
@@ -140,11 +140,8 @@ const SignupforOB = ({ navigation }: any) => {
                         onPress={handleSignup}
                         disabled={isLoading}
                     >
-                        <LinearGradient
-                            colors={['#d3347a', '#e83c91']}
-                            style={styles.buttonGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
+                        <View
+                            style={[styles.buttonGradient, { backgroundColor: COLORS.primary }]}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color="#FFFFFF" />
@@ -154,7 +151,7 @@ const SignupforOB = ({ navigation }: any) => {
                                     <ArrowRight size={20} color="#FFFFFF" />
                                 </>
                             )}
-                        </LinearGradient>
+                        </View>
                     </Pressable>
 
                     <View style={styles.registerSection}>
@@ -273,7 +270,7 @@ const styles = StyleSheet.create({
     },
     registerLink: {
         fontSize: 14,
-        color: '#E45A92',
+        color: COLORS.primary,
         fontWeight: '700',
     },
 });
