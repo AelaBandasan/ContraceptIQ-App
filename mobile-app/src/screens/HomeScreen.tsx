@@ -186,20 +186,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    marginBottom: hp('2%'), // Added gap between header and content
+    marginBottom: hp('2%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   headerTitleContainer: {
     marginLeft: 15,
   },
   headerAppTitle: {
-    fontSize: hp('3%'),
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFF',
   },
   headerTagline: {
-    fontSize: hp('1.8%'),
+    fontSize: 14,
     color: '#FFDBEB',
     fontStyle: 'italic',
+    marginTop: 4,
   },
   menuButton: {
     width: 42,
