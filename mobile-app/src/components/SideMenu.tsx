@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, BackHandler, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, ScrollView } from 'react-native';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -89,11 +89,11 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
 
   const handleExit = () => {
     Alert.alert(
-      "Exit App",
-      "Are you sure you want to exit?",
+      "Exit to Start",
+      "Are you sure you want to return to the start screen?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Exit", onPress: () => BackHandler.exitApp() },
+        { text: "Exit", onPress: () => navigation.navigate('UserStartingScreen' as never) },
       ],
       { cancelable: true },
     );

@@ -66,6 +66,16 @@ export type DrawerParamList = {
   'About Us': undefined;
   PrivacyDisclaimer: undefined;
   LearnHub: undefined;
+  LearnHubDetail: {
+    item: {
+      id: string;
+      title: string;
+      subtitle: string;
+      icon: any;
+      color: string;
+    };
+  };
+  WhatIsContraception: undefined;
 };
 
 // User Tab Navigator - main app navigation for authenticated users

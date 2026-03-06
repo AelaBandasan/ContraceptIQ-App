@@ -206,7 +206,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.eduSection}>
           <TouchableOpacity
             style={styles.eduCard}
-            onPress={() => (navigation as any).navigate('LearnHub')}
+            onPress={() => (navigation as any).navigate('WhatIsContraception')}
             activeOpacity={0.7}
           >
             <LinearGradient

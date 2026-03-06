@@ -55,83 +55,161 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
     
     pop: {
         id: 'pop',
-        name: 'Progestin-Only Pill',
-        description: 'Progestin-only pills are oral contraceptives that contain only a progestin hormone  without estrogen. They primarily work by thickening cervical mucus and may also suppress ovulation',
+        name: 'Progestin-Only Pill (POP)',
+        type: 'Estrogen-free',
+        description: 'Progestin-only pills are oral contraceptives that contain only a progestin hormone without estrogen. They primarily work by thickening cervical mucus and may also suppress ovulation.',
         frequency: 'Daily',
-        effectiveness: '99%',
-        priceRange: '₱150 - ₱1,500 / month',
+        frequencyIcon: 'time-outline',
+        effectiveness: '>99% effective (perfect use)',
+        perfectEffectiveness: '>99%',
+        typicalEffectiveness: '7 in 100',
+        priceRange: '₱150 - ₱500 / month',
         howToUse: [
-            'Take one pill at the same time every day.',
+            'Take one pill every day at the same time.',
+            'No hormone-free break between packs.',
             'Must be taken within the same 3-hour window daily.',
             'Useful if you cannot take estrogen or are breastfeeding.'
         ],
-        benefits: ['Estrogen-free', 'Safe for Breastfeeding', 'Fewer Side Effects'],
-        disadvantages: ['Spotting', 'Strict Timing Required', 'Irregular Bleeding'],
+        benefits: [
+            'Safe for breastfeeding',
+            'Suitable for those who cannot take estrogen',
+            'Quickly reversible after discontinuation'
+        ],
+        disadvantages: [
+            'Must be taken consistently on time',
+            'Irregular bleeding common',
+            'No STI protection'
+        ],
+        reversible: true,
+        pregnancyPlanning: 'Fertility returns quickly after stopping.',
         illustration: require('../../assets/image/pillss.png'),
     },
     implant: {
         id: 'implant',
-        name: 'Implant (Nexplanon)',
-        description: 'A small, flexible rod placed under the skin of your upper arm.',
+        name: 'Implant (LNG/ETG)',
         type: 'Estrogen-free',
-        frequency: 'Every 3 Years',
-        effectiveness: '>99%',
-        priceRange: '$0 - $1,300 (one-time)',
+        description: 'The contraceptive implant is a small, flexible rod placed under the skin of the upper arm that slowly releases progestin to prevent pregnancy.',
+        frequency: '3-5 Years',
+        frequencyIcon: 'time-outline',
+        effectiveness: '>99% effective',
+        perfectEffectiveness: '>99%',
+        typicalEffectiveness: '<1 in 1000',
+        priceRange: '₱3,000 - ₱8,000',
         howToUse: [
-            'A healthcare professional inserts it under the skin.',
-            'Lasts for up to 3 years without daily action.',
-            'Can be removed at any time if you wish to conceive.'
+            'Inserted by a trained healthcare provider.',
+            'Placed under the skin of the upper arm.',
+            'Requires no daily action.',
+            'Lasts for 3-5 years.'
         ],
-        benefits: ['Low Maintenance', 'Extremely Effective', 'Lasts 3 Years'],
-        disadvantages: ['Irregular Periods', 'Procedure Required', 'Bruising initially'],
+        benefits: [
+            'Very effective',
+            'Long-term protection',
+            'Low maintenance',
+            'Rapid return to fertility'
+        ],
+        disadvantages: [
+            'Irregular bleeding',
+            'Requires minor procedure',
+            'No STI protection'
+        ],
+        reversible: true,
+        pregnancyPlanning: 'Fertility returns quickly after removal.',
         illustration: require('../../assets/image/implantt.png'),
     },
     'cu-iud': {
         id: 'cu-iud',
         name: 'Copper IUD (Cu-IUD)',
-        description: 'Non-hormonal T-shaped device placed in the uterus.',
-        frequency: 'Every 10 Years',
-        effectiveness: '>99%',
-        priceRange: '$0 - $1,300 (one-time)',
+        type: 'Hormone-free',
+        description: 'The copper-bearing IUD is a small device placed in the uterus that releases copper, which interferes with sperm and prevents fertilization.',
+        frequency: '10-12 Years',
+        frequencyIcon: 'time-outline',
+        effectiveness: '>99% effective',
+        perfectEffectiveness: '>99%',
+        typicalEffectiveness: '<1 in 100',
+        priceRange: '₱2,000 - ₱6,000',
         howToUse: [
-            'A clinician inserts the device into the uterus.',
-            'Provides protection for up to 10 years.',
-            'Works by preventing sperm from reaching the egg.'
+            'Inserted by a trained healthcare provider.',
+            'Placed inside the uterus.',
+            'Users should check strings periodically.',
+            'Provides protection for up to 10-12 years.'
         ],
-        benefits: ['Non-hormonal', 'Most Cost-effective', 'Emergency Choice'],
-        disadvantages: ['Heavier Periods', 'Increased Cramping', 'Procedure Required'],
+        benefits: [
+            'Hormone-free',
+            'Long-term protection',
+            'Can be used as emergency contraception',
+            'Immediate return to fertility'
+        ],
+        disadvantages: [
+            'May cause heavier bleeding and cramps',
+            'More cramps',
+            'No STI protection'
+        ],
+        reversible: true,
+        pregnancyPlanning: 'Fertility returns quickly after removal.',
         illustration: require('../../assets/image/copperiud.png'),
     },
     'lng-ius': {
         id: 'lng-ius',
-        name: 'Hormonal IUD (LNG-IUS)',
-        description: 'Small T-shaped device that releases progestin into the uterus.',
-        frequency: 'Every 3-8 Years',
-        effectiveness: '>99%',
-        priceRange: '$0 - $1,300 (one-time)',
+        name: 'Hormonal IUD (LNG-IUD)',
+        type: 'Hormonal',
+        description: 'The hormonal IUD is a small T-shaped device placed in the uterus that releases levonorgestrel, a type of progestin, to prevent pregnancy.',
+        frequency: '3-8 Years',
+        frequencyIcon: 'time-outline',
+        effectiveness: '>99% effective',
+        perfectEffectiveness: '>99%',
+        typicalEffectiveness: '<1 in 100',
+        priceRange: '₱8,000 - ₱15,000',
         howToUse: [
-            'A clinician inserts the device into the uterus.',
-            'Releases hormones locally to thin the uterine lining.',
-            'Lasts 3 to 8 years depending on the brand.'
+            'Inserted by a trained healthcare provider.',
+            'Placed inside the uterus.',
+            'Requires minimal ongoing action.',
+            'Lasts for 3-8 years.'
         ],
-        benefits: ['Lighter Periods', 'Reduced Cramps', 'High Satisfaction'],
-        disadvantages: ['Spotting initially', 'Procedure Required', 'Hormonal changes'],
+        benefits: [
+            'Very effective',
+            'Lighter periods',
+            'Reduced cramps',
+            'Provide long-term contraception'
+        ],
+        disadvantages: [
+            'Irregular spotting may occur initially',
+            'Higher upfront cost',
+            'No STI protection'
+        ],
+        reversible: true,
+        pregnancyPlanning: 'Fertility returns quickly after removal.',
         illustration: require('../../assets/image/leviud.png'),
     },
     dmpa: {
         id: 'dmpa',
-        name: 'Injectable (The Shot)',
-        description: 'A hormone injection given in the arm or buttocks.',
-        frequency: 'Every 3 Months',
-        effectiveness: '94%',
-        priceRange: '$20 - $150 / shot',
+        name: 'Injectable Contraceptives (DMPA)',
+        type: 'Hormonal',
+        description: 'Injectable contraceptives are progestin shots given by a healthcare provider that prevent ovulation and thicken cervical mucus to prevent pregnancy.',
+        frequency: 'Every 3 months',
+        frequencyIcon: 'time-outline',
+        effectiveness: '>99% effective (perfect use)',
+        perfectEffectiveness: '>99%',
+        typicalEffectiveness: '6 in 100',
+        priceRange: '₱150 - ₱500 / injection',
         howToUse: [
-            'Get an injection every 12 to 13 weeks.',
-            'Requires a visit to a healthcare provider or pharmacist.',
+            'Injection received on schedule from a trained provider.',
+            'Typically given every three months.',
+            'Requires a visit to a healthcare provider.',
             'If you are late for a shot, use backup protection.'
         ],
-        benefits: ['Private & Discreet', 'No Daily Pill', 'Highly Effective'],
-        disadvantages: ['Delayed Fertility', 'Bone Density Risk', 'Weight Gain'],
+        benefits: [
+            'Private',
+            'No daily action',
+            'Safe during breastfeeding'
+        ],
+        disadvantages: [
+            'Delayed return to fertility',
+            'Irregular bleeding',
+            'Possible weight gain',
+            'No STI protection'
+        ],
+        reversible: true,
+        pregnancyPlanning: 'Fertility may take several months to return.',
         illustration: require('../../assets/image/injectables.png'),
     }
 };

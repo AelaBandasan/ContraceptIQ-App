@@ -73,9 +73,9 @@ const Preferences = ({ navigation }: Props) => {
   return (
     <View style={styles.safeArea}>
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
+        <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
           <View style={styles.menuButtonSolid}>
-            <Ionicons name="arrow-back" size={24} color="#FFF" />
+            <Ionicons name="menu" size={24} color="#FFF" />
           </View>
         </TouchableOpacity>
         <View style={styles.titleContainer}>

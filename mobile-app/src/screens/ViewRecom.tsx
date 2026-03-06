@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions, Alert } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
-import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getMECColor, getMECLabel, MECCategory, calculateMatchScore, calculateMEC } from '../services/mecService';
-import { colors } from '../theme';
+import { colors, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
+import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
@@ -41,39 +41,39 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
   // Define contraceptives with their MEC key mapping
   const baseContraceptives = [
     {
-      name: 'Implant',
+      name: 'LNG - ETG ( Implant)',
       mecKey: 'Implant' as const,
-      image: require('../../assets/image/implantt.png'),
+      image: require('../../assets/image/sq_lngetg.png'),
       description: 'Long-acting, highly effective',
     },
     {
       name: 'DMPA (Injectable)',
       mecKey: 'DMPA' as const,
-      image: require('../../assets/image/injectables.png'),
+      image: require('../../assets/image/sq_dmpainj.png'),
       description: 'Injection every 3 months',
     },
     {
       name: 'CHC (Patch/Pills/Ring)',
       mecKey: 'CHC' as const,
-      image: require('../../assets/image/patchh.png'),
+      image: require('../../assets/image/sq_chcpills.png'),
       description: 'Combined hormonal methods',
     },
     {
-      name: 'Cu-IUD (Copper)',
+      name: 'Cu-IUD (Copper-IUD)',
       mecKey: 'Cu-IUD' as const,
-      image: require('../../assets/image/copperiud.png'),
+      image: require('../../assets/image/sq_cuiud.png'),
       description: 'Non-hormonal, long-acting',
     },
     {
       name: 'POP (Progestin-Only Pills)',
       mecKey: 'POP' as const,
-      image: require('../../assets/image/pillss.png'),
+      image: require('../../assets/image/sq_poppills.png'),
       description: 'Daily progestin pill',
     },
     {
-      name: 'LNG-IUD (Hormonal)',
+      name: 'LNG-IUD (Hormonal - IUD)',
       mecKey: 'LNG-IUD' as const,
-      image: require('../../assets/image/leviud.png'),
+      image: require('../../assets/image/sq_lngiud.png'),
       description: 'Hormonal IUD, long-acting',
     },
   ];
@@ -109,13 +109,20 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
 
   const [selected, setSelected] = useState(contraceptives[0]);
 
+  useEffect(() => {
+    const stillExists = contraceptives.some((c) => c.name === selected?.name);
+    if (!stillExists && contraceptives.length > 0) {
+      setSelected(contraceptives[0]);
+    }
+  }, [contraceptives, selected]);
+
+  const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
+
   const nextMethod = () => {
-    const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
     if (currentIndex < contraceptives.length - 1) setSelected(contraceptives[currentIndex + 1]);
   };
 
   const prevMethod = () => {
-    const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
     if (currentIndex > 0) setSelected(contraceptives[currentIndex - 1]);
   };
 
@@ -132,18 +139,18 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
     Alert.alert(
       "Result Saved",
       "Your recommendation has been saved to your preferences.",
-      [{ text: "OK", onPress: () => navigation.navigate("MainDrawer") }]
+      [{ text: "OK", onPress: () => navigation.navigate("Preferences") }]
     );
   };
 
   return (
     <View style={styles.safeArea}>
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
           <View
             style={styles.menuButtonSolid}
           >
-            <Ionicons name="menu" size={24} color="#FFF" />
+            <Ionicons name="chevron-back" size={24} color="#FFF" />
           </View>
         </TouchableOpacity>
         <View style={styles.titleContainer}>
@@ -164,74 +171,76 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 20, paddingBottom: 90 }}
       >
-
-        {/* Display Selected Age */}
-        <View style={{ alignItems: 'center', marginBottom: 10 }}>
-          <Text style={{ fontSize: 16, color: '#E45A92', fontWeight: 'bold' }}>
-            Selected Age: {ageLabel || 'N/A'}
-          </Text>
-        </View>
-
-        <View style={styles.mainCircleWrapper}>
-          <TouchableOpacity onPress={prevMethod} style={styles.sideButton}>
-            <Ionicons name="chevron-back" size={28} color="#555" />
-          </TouchableOpacity>
-
-          <View style={[styles.mainCircle, { borderColor: selected.color }]}>
-            <Image source={selected.image} style={styles.mainImage} />
+        <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.heroCard}>
+          <LinearGradient
+            colors={['#FFFFFF', '#FFF7FB']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.recommendationShell}
+          >
+          <View style={styles.recommendationHeader}>
+            <Text style={styles.recommendationLabel}>Recommended Card</Text>
+            <View style={[styles.recommendationPill, { borderColor: selected.color }]}> 
+              <Text style={[styles.recommendationPillText, { color: selected.color }]}>MEC Based</Text>
+            </View>
           </View>
 
-          <TouchableOpacity onPress={nextMethod} style={styles.sideButton}>
-            <Ionicons name="chevron-forward" size={28} color="#555" />
-          </TouchableOpacity>
-        </View>
+          <View style={styles.mainCircleWrapper}>
+            <TouchableOpacity
+              onPress={prevMethod}
+              style={[styles.sideButton, currentIndex === 0 && styles.sideButtonDisabled]}
+              disabled={currentIndex === 0}
+            >
+              <Ionicons name="chevron-back" size={24} color={currentIndex === 0 ? '#94A3B8' : '#475569'} />
+            </TouchableOpacity>
 
-        <View style={styles.deviceInfo}>
-          <Text style={styles.deviceName}>{selected.name}</Text>
-          <Text style={styles.preferencesText}>
-            <Text style={{ fontStyle: 'italic' }}>{selected.description}</Text>
-          </Text>
-          {/* Selected Preferences Chips */}
+            <View style={[styles.mainCircleHalo, { backgroundColor: `${selected.color}22` }]}>
+            <View style={[styles.mainCircle, { borderColor: selected.color, shadowColor: selected.color }]}> 
+              <Image source={selected.image} style={styles.mainImage} />
+            </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={nextMethod}
+              style={[styles.sideButton, currentIndex === contraceptives.length - 1 && styles.sideButtonDisabled]}
+              disabled={currentIndex === contraceptives.length - 1}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={currentIndex === contraceptives.length - 1 ? '#94A3B8' : '#475569'}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.deviceInfo}>
+            <Text style={styles.deviceName}>{selected.name}</Text>
+          </View>
+
           {finalPrefs && finalPrefs.length > 0 && (
             <View style={styles.prefsChipContainer}>
               {finalPrefs.map((p) => (
                 <View key={p} style={styles.prefChip}>
+                  <Ionicons name="checkmark-circle" size={12} color={colors.primary} style={{ marginRight: 5 }} />
                   <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
                 </View>
               ))}
             </View>
           )}
 
-          {/* MEC Category Badge */}
-          <View style={[styles.mecBadge, { backgroundColor: selected.color }]}>
-            <Text style={styles.mecBadgeText}>{getMECLabel(selected.mecCategory)}</Text>
-          </View>
-
-          {/* Match Score Badge (Secondary) */}
-          {(selected as any).matchScore > 0 && (
-            <View style={styles.matchBadge}>
-              <Ionicons name="thumbs-up" size={12} color="#fff" style={{ marginRight: 4 }} />
-              <Text style={styles.matchBadgeText}>{(selected as any).matchScore}% Match</Text>
+          <View style={styles.badgesRow}>
+            <View style={[styles.mecBadge, { backgroundColor: selected.color }]}> 
+              <Text style={styles.mecBadgeText}>{getMECLabel(selected.mecCategory)}</Text>
             </View>
-          )}
-        </View>
-
-        {/* CONSULT WITH DOCTOR BUTTON */}
-        {!isDoctorAssessment && (
-          <TouchableOpacity
-            style={styles.consultButton}
-            onPress={() => {
-              const preFilledData = {
-                AGE: currentNumericAge.toString(),
-                prefs: finalPrefs
-              };
-              navigation.navigate('GuestAssessment', { preFilledData });
-            }}
-          >
-            <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
-            <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
-          </TouchableOpacity>
-        )}
+            {(selected as any).matchScore > 0 && (
+              <View style={styles.matchBadge}>
+                <Ionicons name="thumbs-up" size={12} color="#fff" style={{ marginRight: 4 }} />
+                <Text style={styles.matchBadgeText}>{(selected as any).matchScore}% Match</Text>
+              </View>
+            )}
+          </View>
+          </LinearGradient>
+        </Animated.View>
 
         {/* SAVE RESULT BUTTON / DOCTOR ACTION */}
         {isDoctorAssessment ? (
@@ -253,26 +262,40 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
             style={[styles.consultButton, { backgroundColor: colors.success }]}
             onPress={handleSave}
           >
-            <Text style={styles.consultButtonText}>Save Result</Text>
+            <Text style={styles.consultButtonText}>Save Recommendation</Text>
             <Ionicons name="save-outline" size={24} color="#fff" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         )}
 
-        <View style={styles.listContainer}>
+        <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.listContainer}>
+          <View style={styles.listHeadingRow}>
+            <Text style={styles.listHeading}>All Methods</Text>
+            <View style={styles.listCountPill}>
+              <Text style={styles.listCountText}>{contraceptives.length}</Text>
+            </View>
+          </View>
           {contraceptives.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.listItem,
-                selected.name === item.name && styles.listItemSelected,
-              ]}
-              onPress={() => setSelected(item)}
-            >
-              <Image source={item.image} style={styles.listImage} />
-              <Text style={styles.listText}>{item.name}</Text>
-            </TouchableOpacity>
+            <Animated.View key={item.name} entering={FadeInRight.delay(260 + index * 70).duration(360)}>
+              <TouchableOpacity
+                style={[
+                  styles.listItem,
+                  selected.name === item.name && [styles.listItemSelected, { borderColor: item.color }],
+                ]}
+                onPress={() => setSelected(item)}
+                activeOpacity={0.85}
+              >
+                <Image source={item.image} style={styles.listImage} />
+                <View style={styles.listTextWrap}>
+                  <Text style={styles.listText}>{item.name}</Text>
+                  <Text style={styles.listSubText}>{item.description}</Text>
+                </View>
+                {selected.name === item.name && (
+                  <Ionicons name="checkmark-circle" size={20} color={item.color} />
+                )}
+              </TouchableOpacity>
+            </Animated.View>
           ))}
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -283,11 +306,11 @@ export default ViewRecom;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FAFC',
   },
   containerOne: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FAFC',
   },
   headerContainer: {
     backgroundColor: colors.primary,
@@ -332,28 +355,79 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
+  heroCard: {
+    marginHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#FCE7F3',
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  recommendationShell: {
+    padding: 18,
+  },
+  recommendationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  recommendationLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  recommendationPill: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#FFFFFFE6',
+  },
+  recommendationPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   mainCircleWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 8,
   },
   sideButton: {
-    backgroundColor: '#D9D9D9',
-    padding: 10,
-    borderRadius: 8,
-  },
-  mainCircle: {
-    height: 160,
-    width: 160,
-    borderRadius: 80,
-    borderWidth: 15,
+    backgroundColor: '#FFFFFF',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 25,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...shadows.sm,
+  },
+  sideButtonDisabled: {
+    opacity: 0.5,
+  },
+  mainCircleHalo: {
+    height: 194,
+    width: 194,
+    borderRadius: 97,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 14,
+  },
+  mainCircle: {
+    height: 170,
+    width: 170,
+    borderRadius: 85,
+    borderWidth: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.22,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
@@ -365,16 +439,26 @@ const styles = StyleSheet.create({
   },
   deviceInfo: {
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 12,
   },
   deviceName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
   },
   preferencesText: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 3,
+    color: '#64748B',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  badgesRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
   },
   addNotesButton: {
     alignSelf: 'center',
@@ -387,14 +471,39 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   listContainer: {
-    marginTop: 30,
+    marginTop: 24,
     paddingHorizontal: 20,
+  },
+  listHeadingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  listHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginLeft: 2,
+  },
+  listCountPill: {
+    backgroundColor: '#FCE7F3',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#FBCFE8',
+  },
+  listCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 15,
     marginBottom: 12,
@@ -403,11 +512,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   listItemSelected: {
-    backgroundColor: '#E8F0FF',
+    backgroundColor: '#F8FAFF',
     borderWidth: 2,
-    borderColor: '#4A90E2',
   },
   listImage: {
     width: 50,
@@ -415,10 +525,18 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginRight: 15,
   },
+  listTextWrap: {
+    flex: 1,
+  },
   listText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  listSubText: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
   },
   consultButton: {
     backgroundColor: colors.primary,
@@ -426,24 +544,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 20,
-    marginTop: 20,
-    paddingVertical: 15,
-    borderRadius: 30,
+    marginTop: 18,
+    paddingVertical: 16,
+    borderRadius: 16,
     elevation: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: 2 },
   },
   consultButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   mecBadge: {
-    marginTop: 10,
     paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingVertical: 7,
+    borderRadius: 14,
     alignSelf: 'center',
   },
   mecBadgeText: {
@@ -453,13 +571,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   matchBadge: {
-    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 15,
+    paddingVertical: 6,
+    borderRadius: 14,
   },
   matchBadgeText: {
     color: '#fff',
@@ -470,19 +587,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 6,
-    marginBottom: 8,
+    gap: 8,
+    marginTop: 14,
+    marginBottom: 6,
   },
   prefChip: {
-    backgroundColor: '#FFDBEB',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 15,
+    backgroundColor: '#FFF1F7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E45A92',
+    borderColor: '#FBCFE8',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   prefChipText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#E45A92',
     fontWeight: '700',
   },
