@@ -26,6 +26,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+from sklearn.metrics import fbeta_score, make_scorer
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
@@ -118,7 +119,7 @@ def _tune_feature_set(
         param_distributions=cfg.XGB_PARAM_SPACE,
         n_iter=cfg.N_ITER_SEARCH,
         cv=inner_cv,
-        scoring="recall",
+        scoring=make_scorer(fbeta_score, beta=cfg.FBETA_BETA, zero_division=0),
         n_jobs=-1,
         random_state=cfg.RANDOM_SEED,
         refit=True,
@@ -130,9 +131,9 @@ def _tune_feature_set(
         k: (v.item() if hasattr(v, "item") else v)
         for k, v in xgb_search.best_params_.items()
     }
-    xgb_best_recall = float(xgb_search.best_score_)
+    xgb_best_fbeta = float(xgb_search.best_score_)
 
-    print(f"  [{set_name}] XGB best CV recall = {xgb_best_recall:.4f}",
+    print(f"  [{set_name}] XGB best CV fbeta = {xgb_best_fbeta:.4f}",
           flush=True)
 
     # ---- Decision Tree search ----
@@ -146,7 +147,7 @@ def _tune_feature_set(
         param_distributions=cfg.DT_PARAM_SPACE,
         n_iter=cfg.N_ITER_SEARCH,
         cv=inner_cv,
-        scoring="recall",
+        scoring=make_scorer(fbeta_score, beta=cfg.FBETA_BETA, zero_division=0),
         n_jobs=-1,
         random_state=cfg.RANDOM_SEED,
         refit=True,
@@ -158,9 +159,9 @@ def _tune_feature_set(
         k: (v.item() if hasattr(v, "item") else v)
         for k, v in dt_search.best_params_.items()
     }
-    dt_best_recall = float(dt_search.best_score_)
+    dt_best_fbeta = float(dt_search.best_score_)
 
-    print(f"  [{set_name}] DT  best CV recall = {dt_best_recall:.4f}",
+    print(f"  [{set_name}] DT  best CV fbeta = {dt_best_fbeta:.4f}",
           flush=True)
 
     # ---- Build result dict ----
@@ -169,17 +170,17 @@ def _tune_feature_set(
         "n_features":  len(feature_cols),
         "xgb": {
             "best_params":    xgb_best_params,
-            "best_cv_recall": xgb_best_recall,
+            "best_cv_fbeta":  xgb_best_fbeta,
             "scale_pos_weight": scale_pos_weight,
         },
         "dt": {
             "best_params":    dt_best_params,
-            "best_cv_recall": dt_best_recall,
+            "best_cv_fbeta":  dt_best_fbeta,
         },
         "search_config": {
             "n_iter":          cfg.N_ITER_SEARCH,
             "inner_cv_folds":  cfg.INNER_CV_FOLDS,
-            "scoring":         "recall",
+            "scoring":         f"fbeta(beta={cfg.FBETA_BETA})",
             "random_state":    cfg.RANDOM_SEED,
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -200,11 +201,11 @@ def _extract_cv_rows(cv_results: dict, set_name: str, model: str) -> list[dict]:
     rows = []
     for i in range(len(cv_results["mean_test_score"])):
         rows.append({
-            "feature_set":       set_name,
-            "model":             model,
-            "rank":              cv_results["rank_test_score"][i],
-            "mean_cv_recall":    cv_results["mean_test_score"][i],
-            "std_cv_recall":     cv_results["std_test_score"][i],
+            "feature_set":      set_name,
+            "model":            model,
+            "rank":             cv_results["rank_test_score"][i],
+            "mean_cv_fbeta":    cv_results["mean_test_score"][i],
+            "std_cv_fbeta":     cv_results["std_test_score"][i],
         })
     return rows
 
