@@ -6,14 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { calculateMEC } from '../services/mecService';
 import ObHeader from '../components/ObHeader';
 
 import { useAssessment } from '../context/AssessmentContext';
 
-type Props = ObTabScreenProps<'ObRecommendations'> | DrawerScreenProps<'Recommendation'>;
+type Props = DrawerScreenProps<'Recommendation'>;
 
 const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();

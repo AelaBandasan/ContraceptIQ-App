@@ -121,12 +121,6 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
         </View>
       )}
 
-      {/* Recommendation */}
-      <View style={styles.recommendationContainer}>
-        <Text style={styles.recommendationLabel}>Recommended Action</Text>
-        <Text style={styles.recommendationValue}>{recommendation}</Text>
-      </View>
-
       {/* DT Upgrade Indicator */}
       {upgradedByDt && (
         <View style={[styles.dtBadge, { backgroundColor: COLORS.warningBg }]}>
@@ -135,12 +129,6 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
           </Text>
         </View>
       )}
-
-      {/* Disclaimer */}
-      <Text style={styles.disclaimer}>
-        This assessment is a supportive tool, not a diagnostic tool. Always
-        consult with healthcare providers for personalized medical advice.
-      </Text>
     </View>
   );
 };
@@ -211,8 +199,8 @@ export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LO
   const residingWithPartner = formData['RESIDING_WITH_PARTNER'];
   if (residingWithPartner === 'No') factors.push('Not residing with partner');
 
-  // Limit to top 4 most relevant
-  return factors.slice(0, 4);
+  // Limit to top 2 most relevant
+  return factors.slice(0, 2);
 }
 
 // ============================================================================

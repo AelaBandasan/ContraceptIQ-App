@@ -1,18 +1,15 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { LayoutDashboard, ClipboardList, User, Award, Book, History } from 'lucide-react-native';
+import { LayoutDashboard, ClipboardList, User, Shield, Book, History } from 'lucide-react-native';
 import DoctorDashboardScreen from '../screens/ObSide/DoctorDashboardScreen';
 import ObHistoryScreen from '../screens/ObSide/ObHistoryScreen';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import Whatsrightforme from '../screens/Whatsrightforme'; // Reusing for New Assessment
-import Recommendation from '../screens/Recommendation';   // Reusing
+
 import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import ProfileScreen from '../screens/ObSide/ProfileScreen';
 import MecGuideScreen from '../screens/ObSide/MecGuideScreen';
-import WhoMecConditionsScreen from '../screens/ObSide/WhoMecConditionsScreen';
-import WhoMecPreferencesScreen from '../screens/ObSide/WhoMecPreferencesScreen';
-import WhoMecResultsScreen from '../screens/ObSide/WhoMecResultsScreen';
-import FeedbackScreen from '../screens/FeedbackScreen';
+import FeedbackScreen from '../screens/ObSide/FeedbackScreen';
 import Contrafaqs from '../screens/Contrafaqs';
 import EmergencyContraception from '../screens/EmergencyContraception';
 import AboutUs from '../screens/AboutUs';
@@ -79,17 +76,7 @@ const ObTabNavigator = () => {
                     )
                 }}
             />
-            <Tab.Screen
-                name="ObRecommendations"
-                component={Recommendation as any}
-                initialParams={{ isDoctorAssessment: true }}
-                options={{
-                    tabBarLabel: 'Results',
-                    tabBarIcon: ({ color, size }) => (
-                        <Award color={color} size={size} />
-                    )
-                }}
-            />
+
             <Tab.Screen
                 name="ObMethods"
                 component={Contraceptivemethods as any}
@@ -139,21 +126,8 @@ const ObTabNavigator = () => {
                 component={ObAccountSettings}
                 options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
             />
-            <Tab.Screen
-                name="ObWhoMecConditions"
-                component={WhoMecConditionsScreen}
-                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
-            />
-            <Tab.Screen
-                name="ObWhoMecPreferences"
-                component={WhoMecPreferencesScreen as any}
-                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
-            />
-            <Tab.Screen
-                name="ObWhoMecResults"
-                component={WhoMecResultsScreen as any}
-                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
-            />
+
+
         </Tab.Navigator>
     );
 };

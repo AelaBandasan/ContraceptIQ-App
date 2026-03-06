@@ -21,7 +21,7 @@ SAVE_CONFIG = True
 # LOAD DATA
 # --------------------------------------------------
 data = joblib.load(
-    "machine-learning/data/processed/train_test_data.pkl"
+    "data/processed/train_test_data.pkl"
 )
 
 X_test = data["X_test"]
@@ -31,11 +31,11 @@ y_test = data["y_test"]
 # LOAD TRAINED MODELS (PIPELINES)
 # --------------------------------------------------
 xgb_pipeline = joblib.load(
-    "machine-learning/src/models/xgb_pipeline.joblib"
+    "src/models/xgb_pipeline.joblib"
 )
 
 dt_pipeline = joblib.load(
-    "machine-learning/src/models/dt_pipeline.joblib"
+    "src/models/dt_pipeline.joblib"
 )
 
 # --------------------------------------------------

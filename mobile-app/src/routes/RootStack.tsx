@@ -10,7 +10,6 @@ import SignupforOB from '../screens/ObSide/SignupforOB';
 import PendingVerificationScreen from '../screens/ObSide/PendingVerificationScreen';
 import ObTabNavigator from './ObTabNavigator';
 import ObAssessment from '../screens/ObSide/ObAssessment';
-import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -32,7 +31,6 @@ const RootStack = () => {
       {/* Doctor Flow */}
       <Stack.Screen name="ObMainTabs" component={ObTabNavigator} />
       <Stack.Screen name="ObAssessment" component={ObAssessment} />
-      <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
       <Stack.Screen name="MethodDetail" component={MethodDetail} />

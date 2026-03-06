@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors } from '../theme';
-import ObHeader from '../components/ObHeader';
+import { colors } from '../../theme';
+import ObHeader from '../../components/ObHeader';
 
 const FeedbackScreen = () => {
     const [feedback, setFeedback] = useState('');

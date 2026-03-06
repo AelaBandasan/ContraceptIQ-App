@@ -12,15 +12,15 @@ from sklearn.metrics import (
 # --------------------------
 # LOAD DATA
 # --------------------------
-data = joblib.load("machine-learning/data/processed/train_test_data.pkl")
+data = joblib.load("data/processed/train_test_data.pkl")
 X_test = data["X_test"]
 y_test = data["y_test"]
 
 # --------------------------
 # LOAD MODELS
 # --------------------------
-dt_pipeline = joblib.load("machine-learning/src/models/dt_pipeline.joblib")
-xgb_pipeline = joblib.load("machine-learning/src/models/xgb_pipeline.joblib")
+dt_pipeline = joblib.load("src/models/dt_pipeline.joblib")
+xgb_pipeline = joblib.load("src/models/xgb_pipeline.joblib")
 
 models = {
     "Decision Tree": dt_pipeline,
@@ -28,7 +28,7 @@ models = {
 }
 
 # Hybrid config for upgrade-only rule
-hybrid_config_path = "machine-learning/src/models/hybrid_config.json"
+hybrid_config_path = "src/models/hybrid_config.json"
 try:
     import json
     with open(hybrid_config_path) as f:

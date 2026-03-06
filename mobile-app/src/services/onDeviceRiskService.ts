@@ -152,24 +152,15 @@ export async function assessOffline(
         logger.warn('Some features missing, using defaults', { missing });
     }
 
-    const features = encodeFeatures(formData, clinicalData);
-    logger.debug('Features encoded', { featureCount: features.length });
-
-    // Step 3: Create input tensor [1, 26]
-    const inputTensor = new Tensor('float32', features, [1, 26]);
-    const inputName = xgbSession.inputNames[0];
+    const inputs = encodeFeatures(formData, clinicalData);
+    logger.debug('Features encoded', { featureCount: Object.keys(inputs).length });
 
     // Step 4: XGBoost inference
-    const xgbResults = await xgbSession.run({ [inputName]: inputTensor });
-    const xgbOutputNames = xgbSession.outputNames;
+    const xgbResults = await xgbSession.run(inputs);
 
-    // XGBoost typically outputs: [predictions, probabilities]
-    let xgbProbability: number;
-    if (xgbOutputNames.length >= 2) {
-        xgbProbability = extractProbability(xgbResults[xgbOutputNames[1]]);
-    } else {
-        xgbProbability = extractProbability(xgbResults[xgbOutputNames[0]]);
-    }
+    // With ZipMap disabled, output is a direct tensor named 'probabilities'
+    const probTensor = xgbResults['probabilities'] || Object.values(xgbResults)[1] || Object.values(xgbResults)[0];
+    const xgbProbability = extractProbability(probTensor);
 
     // Step 5: Base prediction from XGBoost
     const xgbPred = xgbProbability >= HYBRID_CONFIG.threshold_v3 ? 1 : 0;
@@ -183,9 +174,9 @@ export async function assessOffline(
     let hybridPred = xgbPred;
 
     if (isLowConfidence) {
-        const dtInputName = dtSession.inputNames[0];
-        const dtResults = await dtSession.run({ [dtInputName]: inputTensor });
-        dtPred = extractPrediction(dtResults[dtSession.outputNames[0]]);
+        const dtResults = await dtSession.run(inputs);
+        const labelTensor = dtResults['label'] || Object.values(dtResults)[0];
+        dtPred = extractPrediction(labelTensor);
 
         // Upgrade-only rule: if low-confidence AND DT predicts 1, upgrade to 1
         if (dtPred === 1 && xgbPred === 0) {

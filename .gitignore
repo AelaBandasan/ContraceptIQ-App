@@ -17,7 +17,6 @@ __pycache__/
 *.pyd
 .Python
 env/
-<<<<<<< HEAD
 venv/
 .venv/
 
@@ -34,8 +33,10 @@ web-build/
 # Build outputs
 android/app/build/
 ios/Pods/
-=======
 node_modules
 mobile-app/package-lock.json
 mobile-app/package-lock.json
->>>>>>> main
+
+.claude
+# Large Auto-generated Data Files
+mobile-app/src/data/mecConditionOutputs.json

@@ -178,87 +178,64 @@ function parseNumeric(value: string | number | undefined, fallback: number = 0):
     return isNaN(parsed) ? fallback : parsed;
 }
 
-// ============================================================================
-// MAIN ENCODER
-// ============================================================================
+import { Tensor } from 'onnxruntime-react-native';
 
 /**
- * The 26 features expected by the ML model, in the correct order.
- */
-export const FEATURE_ORDER: string[] = [
-    'AGE',
-    'REGION',
-    'EDUC_LEVEL',
-    'RELIGION',
-    'ETHNICITY',
-    'MARITAL_STATUS',
-    'RESIDING_WITH_PARTNER',
-    'HOUSEHOLD_HEAD_SEX',
-    'OCCUPATION',
-    'HUSBANDS_EDUC',
-    'HUSBAND_AGE',
-    'PARTNER_EDUC',
-    'SMOKE_CIGAR',
-    'PARITY',
-    'DESIRE_FOR_MORE_CHILDREN',
-    'WANT_LAST_CHILD',
-    'WANT_LAST_PREGNANCY',
-    'CONTRACEPTIVE_METHOD',
-    'MONTH_USE_CURRENT_METHOD',
-    'PATTERN_USE',
-    'TOLD_ABT_SIDE_EFFECTS',
-    'LAST_SOURCE_TYPE',
-    'LAST_METHOD_DISCONTINUED',
-    'REASON_DISCONTINUED',
-    'HSBND_DESIRE_FOR_MORE_CHILDREN',
-];
-
-/**
- * Encode raw form data into a Float32Array of 26 numeric features.
+ * Encode raw form data into a dictionary of ONNX Tensors.
  * 
  * @param formData - Raw form data from GuestAssessment (string values)
  * @param clinicalData - Optional clinical data added by the OB doctor
- * @returns Float32Array of 26 encoded features ready for model input
+ * @returns Record of explicitly typed ONNX Tensors for each feature column
  */
-export function encodeFeatures(formData: Record<string, any>, clinicalData?: Record<string, any>): Float32Array {
+export function encodeFeatures(formData: Record<string, any>, clinicalData?: Record<string, any>): Record<string, Tensor> {
     const merged = { ...formData, ...clinicalData };
 
-    const encoded: number[] = [
-        // Demographic features (13)
-        parseNumeric(merged.AGE, 25),
-        encodeValue(merged.REGION, REGION_MAP, 1),
-        encodeValue(merged.EDUC_LEVEL, EDUC_LEVEL_MAP, 2),
-        encodeValue(merged.RELIGION, RELIGION_MAP, 1),
-        encodeValue(merged.ETHNICITY, ETHNICITY_MAP, 1),
-        encodeValue(merged.MARITAL_STATUS, MARITAL_STATUS_MAP, 0),
-        encodeValue(merged.RESIDING_WITH_PARTNER, YES_NO_MAP, 0),
-        encodeValue(merged.HOUSEHOLD_HEAD_SEX, HOUSEHOLD_HEAD_SEX_MAP, 1),
-        encodeValue(merged.OCCUPATION, OCCUPATION_MAP, 0),
-        encodeValue(merged.HUSBAND_EDUC_LEVEL || merged.HUSBANDS_EDUC, EDUC_LEVEL_MAP, 2),
-        parseNumeric(merged.HUSBAND_AGE, 30),
-        encodeValue(merged.PARTNER_EDUC, EDUC_LEVEL_MAP, 2),
-        encodeValue(merged.SMOKE_CIGAR, SMOKE_CIGAR_MAP, 0),
+    // Helper functions for type conversion
+    const ensureString = (val: any) => val === undefined || val === null ? "Missing" : String(val);
+    const ensureFloat = (val: any) => {
+        if (val === undefined || val === null || val === '') return 0.0;
+        const parsed = parseFloat(String(val));
+        return isNaN(parsed) ? 0.0 : parsed;
+    };
 
-        // Fertility features (4)
-        parseNumeric(merged.PARITY, 0),
-        encodeValue(merged.DESIRE_FOR_MORE_CHILDREN, DESIRE_CHILDREN_MAP, 0),
-        encodeValue(merged.WANT_LAST_CHILD, DESIRE_CHILDREN_MAP, 0),
-        encodeValue(merged.WANT_LAST_PREGNANCY, DESIRE_CHILDREN_MAP, 0),
+    // Construct the ONNX input map. 
+    // Types correspond to how the Scikit-learn Pipeline was constructed.
+    // ALL variables are now purely Numerical Floats to bypass React Native JSI String Tensor memory limitations
+    const inputs: Record<string, Tensor> = {
+        'REGION': new Tensor('float32', new Float32Array([ensureFloat(merged.REGION)]), [1, 1]),
+        'EDUC_LEVEL': new Tensor('float32', new Float32Array([ensureFloat(merged.EDUC_LEVEL)]), [1, 1]),
+        'RELIGION': new Tensor('float32', new Float32Array([ensureFloat(merged.RELIGION)]), [1, 1]),
+        'ETHNICITY': new Tensor('float32', new Float32Array([ensureFloat(merged.ETHNICITY)]), [1, 1]),
+        'MARITAL_STATUS': new Tensor('float32', new Float32Array([ensureFloat(merged.MARITAL_STATUS)]), [1, 1]),
+        'HOUSEHOLD_HEAD_SEX': new Tensor('float32', new Float32Array([ensureFloat(merged.HOUSEHOLD_HEAD_SEX)]), [1, 1]),
+        'OCCUPATION': new Tensor('float32', new Float32Array([ensureFloat(merged.OCCUPATION)]), [1, 1]),
+        'HUSBANDS_EDUC': new Tensor('float32', new Float32Array([ensureFloat(merged.HUSBAND_EDUC_LEVEL || merged.HUSBANDS_EDUC)]), [1, 1]),
+        'PARTNER_EDUC': new Tensor('float32', new Float32Array([ensureFloat(merged.PARTNER_EDUC)]), [1, 1]),
+        'SMOKE_CIGAR': new Tensor('float32', new Float32Array([ensureFloat(merged.SMOKE_CIGAR)]), [1, 1]),
+        'DESIRE_FOR_MORE_CHILDREN': new Tensor('float32', new Float32Array([ensureFloat(merged.DESIRE_FOR_MORE_CHILDREN)]), [1, 1]),
+        'WANT_LAST_CHILD': new Tensor('float32', new Float32Array([ensureFloat(merged.WANT_LAST_CHILD)]), [1, 1]),
+        'WANT_LAST_PREGNANCY': new Tensor('float32', new Float32Array([ensureFloat(merged.WANT_LAST_PREGNANCY)]), [1, 1]),
+        'CONTRACEPTIVE_METHOD': new Tensor('float32', new Float32Array([ensureFloat(merged.CONTRACEPTIVE_METHOD)]), [1, 1]),
+        'CURRENT_USE_TYPE': new Tensor('float32', new Float32Array([ensureFloat(merged.CURRENT_USE_TYPE)]), [1, 1]),
+        'LAST_SOURCE_TYPE': new Tensor('float32', new Float32Array([ensureFloat(merged.LAST_SOURCE_TYPE)]), [1, 1]),
+        'LAST_METHOD_DISCONTINUED': new Tensor('float32', new Float32Array([ensureFloat(merged.LAST_METHOD_DISCONTINUED)]), [1, 1]),
+        'REASON_DISCONTINUED': new Tensor('float32', new Float32Array([ensureFloat(merged.REASON_DISCONTINUED)]), [1, 1]),
+        'PATTERN_USE': new Tensor('float32', new Float32Array([ensureFloat(merged.PATTERN_USE)]), [1, 1]),
+        'TOLD_ABT_SIDE_EFFECTS': new Tensor('float32', new Float32Array([ensureFloat(merged.TOLD_ABT_SIDE_EFFECTS)]), [1, 1]),
+        'HSBND_DESIRE_FOR_MORE_CHILDREN': new Tensor('float32', new Float32Array([ensureFloat(merged.HSBND_DESIRE_FOR_MORE_CHILDREN)]), [1, 1]),
+        'RESIDING_WITH_PARTNER': new Tensor('float32', new Float32Array([ensureFloat(merged.RESIDING_WITH_PARTNER)]), [1, 1]),
+        'MONTH_USE_CURRENT_METHOD': new Tensor('float32', new Float32Array([ensureFloat(merged.MONTH_USE_CURRENT_METHOD)]), [1, 1]),
+        'EDUC': new Tensor('float32', new Float32Array([ensureFloat(merged.EDUC || 0)]), [1, 1]),
+        'AGE_GRP': new Tensor('float32', new Float32Array([ensureFloat(merged.AGE_GRP || 0)]), [1, 1]),
+        'HUSBAND_AGE': new Tensor('float32', new Float32Array([ensureFloat(merged.HUSBAND_AGE)]), [1, 1]),
+        'AGE': new Tensor('float32', new Float32Array([ensureFloat(merged.AGE)]), [1, 1]),
+        'PARITY': new Tensor('float32', new Float32Array([ensureFloat(merged.PARITY)]), [1, 1]),
+    };
 
-        // Method/History features (9)
-        // These are typically provided by the OB doctor in Phase 2 of the assessment.
-        // Use defaults (0) if not available for guest-only assessments.
-        parseNumeric(merged.CONTRACEPTIVE_METHOD, 0),
-        parseNumeric(merged.MONTH_USE_CURRENT_METHOD, 0),
-        parseNumeric(merged.PATTERN_USE, 0),
-        parseNumeric(merged.TOLD_ABT_SIDE_EFFECTS, 0),
-        parseNumeric(merged.LAST_SOURCE_TYPE, 0),
-        encodeValue(merged.LAST_METHOD_DISCONTINUED, LAST_METHOD_MAP, 0),
-        encodeValue(merged.REASON_DISCONTINUED, REASON_DISCONTINUED_MAP, 0),
-        encodeValue(merged.HSBND_DESIRE_FOR_MORE_CHILDREN, DESIRE_CHILDREN_MAP, 0),
-    ];
+    // Required feature placeholder for 'CASEID' based on training schema
+    inputs['CASEID'] = new Tensor('float32', new Float32Array([ensureFloat(merged.CASEID || -1)]), [1, 1]);
 
-    return new Float32Array(encoded);
+    return inputs;
 }
 
 /**

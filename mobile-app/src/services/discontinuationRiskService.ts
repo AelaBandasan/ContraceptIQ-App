@@ -396,17 +396,22 @@ class DiscontinuationRiskService {
           throw serviceError;
         }
 
-        // Network errors - retry with backoff
-        if (error.code && ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT'].includes(error.code)) {
-          if (isRetryableError(error as any)) {
-            if (retryCount < this.MAX_RETRIES) {
-              logger.warn(
-                `Network error, retrying (${retryCount + 1}/${this.MAX_RETRIES})`,
-                { code: error.code, retryCount: retryCount + 1 }
-              );
-              await this.delay(1000 * (retryCount + 1));
-              return this.assessDiscontinuationRisk(data, retryCount + 1);
-            }
+        // Network errors - fallback to offline ONNX execution if the server is unreachable
+        if (error.code && ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT', 'ERR_NETWORK'].includes(error.code)) {
+          logger.warn(
+            `Network error calling Python API. Falling back to on-device ML (${error.code})`,
+            { code: error.code }
+          );
+          try {
+            const offlineResult = await assessOffline(data as Record<string, any>);
+            logger.info('On-device assessment completed upon network failure', {
+              riskLevel: offlineResult.risk_level,
+              source: 'on-device',
+            });
+            return offlineResult;
+          } catch (offlineError: any) {
+            logger.error('On-device assessment failed after network error', undefined, { error: offlineError });
+            throw createAppError(new Error(`Server unreachable and on-device model failed: ${offlineError.message || 'Unknown error'}`), 'assessDiscontinuationRisk');
           }
         }
 
