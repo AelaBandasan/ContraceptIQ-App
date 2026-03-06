@@ -87,6 +87,11 @@ CUMULATIVE_CAP  = 0.80   # cumulative importance threshold for _REDUCED_C
 REDUCED_C_MAX   = 12
 REDUCED_C_MIN   = 6
 
+# Features to exclude from importance analysis (geographic sampling artifact:
+# all class 1 cases come exclusively from NCR — this is a dataset construction
+# artifact, not a clinical predictor valid for general deployment).
+EXCLUDE_FEATURES = {"REGION"}
+
 # ============================================================================
 # HELPERS
 # ============================================================================
@@ -167,7 +172,10 @@ def main() -> None:
     # 2. Inner 80/20 stratified split of X_train
     # ------------------------------------------------------------------
     print("\nCreating inner 80/20 stratified split ...", flush=True)
-    all_features = cfg._ALL_FEATURES
+    all_features = [f for f in cfg._ALL_FEATURES if f not in EXCLUDE_FEATURES]
+    if EXCLUDE_FEATURES:
+        print(f"  Excluding features (sampling artifact): {sorted(EXCLUDE_FEATURES)}",
+              flush=True)
     X_sub = X_train[all_features].copy()
 
     sss = StratifiedShuffleSplit(
@@ -254,6 +262,11 @@ def main() -> None:
         f"  X_train shape    : {X_train.shape}",
         f"  Inner fit rows   : {len(y_fit)}",
         f"  Inner val rows   : {len(y_val)}",
+        f"  Excluded features: {sorted(EXCLUDE_FEATURES) if EXCLUDE_FEATURES else 'none'}",
+        (f"  Exclusion reason : REGION is a perfect class separator due to dataset "
+         f"construction artifact (all class 1 cases from NCR only). "
+         f"Including it would make the model a geography classifier, not a clinical one.")
+        if EXCLUDE_FEATURES else "",
         "",
         sep,
         "  SECTION 1 — FULL RANKED IMPORTANCE TABLE",
