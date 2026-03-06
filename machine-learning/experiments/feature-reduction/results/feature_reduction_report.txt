@@ -1,0 +1,94 @@
+
+======================================================================
+  FEATURE REDUCTION EXPERIMENT REPORT
+======================================================================
+  Generated : 2026-03-06 00:51:35
+  Recall target (class 1) : > 87%
+
+
+======================================================================
+  SUMMARY -- BEST THRESHOLD PER FEATURE SET
+======================================================================
+  Feature Set     N Features  Thresh    Recall     Prec      F1         AUC     Passes?   
+  ------------------------------------------------------------------------------------------
+  full_25 (baseline)  25          0.15      0.8780     0.2483    0.3871     0.9028  PASS      
+  reduced_A       23          0.20      0.9268     0.2657    0.4130     0.9053  PASS      
+  reduced_B       12          0.10      0.9756     0.2532    0.4020     0.9112  PASS      
+  reduced_C       10          0.10      0.9756     0.2548    0.4040     0.9174  PASS      
+
+
+======================================================================
+  THRESHOLD SWEEP DETAIL
+======================================================================
+
+  [full_25] [baseline -- pre-trained v3 models]
+  Features (25): AGE, REGION, EDUC_LEVEL, RELIGION, ETHNICITY, MARITAL_STATUS, RESIDING_WITH_PARTNER, HOUSEHOLD_HEAD_SEX, OCCUPATION, HUSBANDS_EDUC, HUSBAND_AGE, PARTNER_EDUC, SMOKE_CIGAR, PARITY, DESIRE_FOR_MORE_CHILDREN, WANT_LAST_CHILD, WANT_LAST_PREGNANCY, CONTRACEPTIVE_METHOD, MONTH_USE_CURRENT_METHOD, PATTERN_USE, TOLD_ABT_SIDE_EFFECTS, LAST_SOURCE_TYPE, LAST_METHOD_DISCONTINUED, REASON_DISCONTINUED, HSBND_DESIRE_FOR_MORE_CHILDREN
+
+    Thresh    Recall     Prec       F1        AUC        Passes?   
+    -----------------------------------------------------------------
+    0.10      0.9024     0.2434     0.3834    0.9028     PASS      
+    0.15      0.8780     0.2483     0.3871    0.9028     PASS      
+    0.12      0.8780     0.2449     0.3830    0.9028     PASS      
+    0.18      0.8537     0.2482     0.3846    0.9028     FAIL      
+    0.20      0.8293     0.2429     0.3757    0.9028     FAIL      
+
+
+  [reduced_A]
+  Features (23): AGE, REGION, EDUC_LEVEL, RELIGION, ETHNICITY, MARITAL_STATUS, RESIDING_WITH_PARTNER, HOUSEHOLD_HEAD_SEX, OCCUPATION, HUSBANDS_EDUC, HUSBAND_AGE, PARTNER_EDUC, SMOKE_CIGAR, PARITY, DESIRE_FOR_MORE_CHILDREN, WANT_LAST_CHILD, WANT_LAST_PREGNANCY, CONTRACEPTIVE_METHOD, MONTH_USE_CURRENT_METHOD, PATTERN_USE, LAST_METHOD_DISCONTINUED, REASON_DISCONTINUED, HSBND_DESIRE_FOR_MORE_CHILDREN
+
+    Thresh    Recall     Prec       F1        AUC        Passes?   
+    -----------------------------------------------------------------
+    0.12      0.9512     0.2600     0.4084    0.9053     PASS      
+    0.10      0.9512     0.2583     0.4062    0.9053     PASS      
+    0.20      0.9268     0.2657     0.4130    0.9053     PASS      
+    0.18      0.9268     0.2603     0.4064    0.9053     PASS      
+    0.15      0.9268     0.2550     0.4000    0.9053     PASS      
+
+
+  [reduced_B]
+  Features (12): AGE, REGION, RELIGION, MARITAL_STATUS, RESIDING_WITH_PARTNER, SMOKE_CIGAR, HUSBANDS_EDUC, HUSBAND_AGE, PARITY, PATTERN_USE, CONTRACEPTIVE_METHOD, REASON_DISCONTINUED
+
+    Thresh    Recall     Prec       F1        AUC        Passes?   
+    -----------------------------------------------------------------
+    0.10      0.9756     0.2532     0.4020    0.9112     PASS      
+    0.12      0.9756     0.2532     0.4020    0.9112     PASS      
+    0.15      0.9512     0.2516     0.3980    0.9112     PASS      
+    0.20      0.9268     0.2484     0.3918    0.9112     PASS      
+    0.18      0.9268     0.2468     0.3897    0.9112     PASS      
+
+
+  [reduced_C]
+  Features (10): REGION, CONTRACEPTIVE_METHOD, RELIGION, HUSBAND_AGE, PARITY, AGE, REASON_DISCONTINUED, HUSBANDS_EDUC, MARITAL_STATUS, PATTERN_USE
+
+    Thresh    Recall     Prec       F1        AUC        Passes?   
+    -----------------------------------------------------------------
+    0.10      0.9756     0.2548     0.4040    0.9174     PASS      
+    0.12      0.9512     0.2500     0.3959    0.9174     PASS      
+    0.15      0.9512     0.2500     0.3959    0.9174     PASS      
+    0.20      0.9024     0.2483     0.3895    0.9174     PASS      
+    0.18      0.9024     0.2450     0.3854    0.9174     PASS      
+
+
+======================================================================
+  RECOMMENDATION
+======================================================================
+  Recommended set : reduced_C  (10 features)
+  Best threshold  : 0.10
+  Recall          : 0.9756  (target > 87%)
+  Precision       : 0.2548
+  F1              : 0.4040
+  ROC-AUC         : 0.9174
+
+  Features kept:
+    - REGION
+    - CONTRACEPTIVE_METHOD
+    - RELIGION
+    - HUSBAND_AGE
+    - PARITY
+    - AGE
+    - REASON_DISCONTINUED
+    - HUSBANDS_EDUC
+    - MARITAL_STATUS
+    - PATTERN_USE
+
+  Configuration saved to results/feature_reduction_config.json

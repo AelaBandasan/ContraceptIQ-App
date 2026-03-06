@@ -194,36 +194,11 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
   const [state, setState] = useState<AssessmentState>(initialState);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load state from local storage on mount
+  // Persistence removed per user request: "everytime the user exit the app, the record she did in the assessment will be reset"
+  // State remains only in memory and resets on app restart.
   useEffect(() => {
-    const loadState = async () => {
-      try {
-        const savedState = await AsyncStorage.getItem(STORAGE_KEY);
-        if (savedState) {
-          setState(JSON.parse(savedState));
-        }
-      } catch (e) {
-        console.error("Failed to load assessment state", e);
-      } finally {
-        setIsInitialized(true);
-      }
-    };
-    loadState();
+    setIsInitialized(true);
   }, []);
-
-  // Save state to local storage when it changes
-  useEffect(() => {
-    if (isInitialized) {
-      const saveState = async () => {
-        try {
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (e) {
-          console.error("Failed to save assessment state", e);
-        }
-      };
-      saveState();
-    }
-  }, [state, isInitialized]);
 
   // Assessment data management
   const setAssessmentData = (data: AssessmentData) => {

@@ -1,12 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native'
 import React from 'react'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import ObHeader from '../../components/ObHeader';
-import { colors, spacing, typography, shadows, borderRadius } from '../../theme';
 import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../../types/navigation';
+import ObHeader from '../../components/ObHeader';
+import { colors, shadows } from '../../theme';
 
 type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'> | DrawerScreenProps<'Contraceptive Methods'>;
 
@@ -31,94 +31,96 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
   const methods: MethodItem[] = [
     {
       id: 'chc',
-      name: 'Combined Hormonal (CHC)',
-      shortName: 'The Pill, Patch, or Ring',
+      name: 'Combined Hormonal Contraception (CHC)',
+      shortName: 'Combined Pills',
       description: 'Contains both estrogen and progestin.',
-      effectiveness: '91% Effective',
+      effectiveness: '93% Effective',
       perfectEffectiveness: '>99%',
       icon: 'pill',
       iconFamily: 'MaterialCommunityIcons',
-      illustration: require('../../../assets/image/patchh.png'),
+      illustration: require('../../assets/image/sq_chcpills.png'),
       color: '#4A90E2',
     },
     {
       id: 'pop',
       name: 'Progestin-Only Pill (POP)',
-      shortName: 'Daily mini-pill',
+      shortName: 'Mini-pill',
       description: 'Hormone-free of estrogen; daily use.',
-      effectiveness: '91% Effective',
+      effectiveness: '93% Effective',
       perfectEffectiveness: '>99%',
       icon: 'pill',
       iconFamily: 'MaterialCommunityIcons',
-      illustration: require('../../../assets/image/pillss.png'),
+      illustration: require('../../assets/image/sq_poppills.png'),
       color: '#E45A92',
     },
     {
       id: 'implant',
-      name: 'Implants (LARC)',
-      shortName: 'Subdermal Implant',
-      description: 'Small rod under skin; lasts 3 years.',
+      name: 'Implant (LNG/ETG)',
+      shortName: 'Implant',
+      description: 'Small rod under skin; lasts 3-5 years.',
       effectiveness: '>99% Effective',
       perfectEffectiveness: '>99%',
       icon: 'ellipsis-horizontal-circle',
       iconFamily: 'Ionicons',
-      illustration: require('../../../assets/image/implantt.png'),
+      illustration: require('../../assets/image/sq_lngetg.png'),
       color: '#2E8B57',
     },
     {
       id: 'cu-iud',
       name: 'Copper IUD (Cu-IUD)',
-      shortName: 'Non-hormonal IUD',
-      description: 'Long-term protection (10 years).',
+      shortName: 'Copper IUD',
+      description: 'Long-term protection (10-12 years).',
       effectiveness: '>99% Effective',
       perfectEffectiveness: '>99%',
       icon: 'git-commit-outline',
       iconFamily: 'Ionicons',
-      illustration: require('../../../assets/image/copperiud.png'),
+      illustration: require('../../assets/image/sq_cuiud.png'),
       color: '#D4AF37',
     },
     {
       id: 'lng-ius',
-      name: 'Hormonal IUD (LNG-IUS)',
-      shortName: 'Levonorgestrel Device',
-      description: 'Hormone delivery device (3-8 years).',
+      name: 'Hormonal IUD (LNG-IUD)',
+      shortName: 'Hormonal IUD',
+      description: 'T-shaped device; lasts 3-8 years.',
       effectiveness: '>99% Effective',
       perfectEffectiveness: '>99%',
       icon: 'shield-checkmark-outline',
       iconFamily: 'Ionicons',
-      illustration: require('../../../assets/image/leviud.png'),
+      illustration: require('../../assets/image/sq_lngiud.png'),
       color: '#8E44AD',
     },
     {
       id: 'dmpa',
-      name: 'Injectable Contraceptives',
-      shortName: 'The Shot (DMPA)',
-      description: 'Injection given every 3 months.',
+      name: 'Injectable Contraceptives (DMPA)',
+      shortName: 'The Shot',
+      description: 'Progestin injection; every 3 months.',
       effectiveness: '94% Effective',
       perfectEffectiveness: '>99%',
       icon: 'flask-outline',
       iconFamily: 'Ionicons',
-      illustration: require('../../../assets/image/injectables.png'),
+      illustration: require('../../assets/image/sq_dmpainj.png'),
       color: '#EC6F5F',
     },
   ];
+
 
   return (
     <View style={styles.safeArea}>
       {!isDoctorAssessment && (
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
-              style={styles.gradient}
+          <TouchableOpacity
+            onPress={() => (navigation as any).toggleDrawer()}
+            style={styles.menuButton}
+          >
+            <View
+              style={styles.menuButtonSolid}
             >
               <Ionicons name="menu" size={24} color="#FFF" />
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerAppTitle}>ContraceptIQ</Text>
-            <Text style={styles.headerTagline}>Methods</Text>
+            <Text style={styles.screenTitle}>Contraceptive Methods</Text>
           </View>
         </View>
       )}
@@ -129,8 +131,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.screenHeading}>Explore Contraceptive Options</Text>
-        <Text style={styles.screenSubheading}>Find the right methods for you</Text>
+
 
         {methods.map((item) => (
           <TouchableOpacity
@@ -163,13 +164,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
                 </View>
               </View>
 
-              <View style={styles.illustrationContainer}>
-                <Image source={item.illustration} style={styles.illustration} />
-                <LinearGradient
-                  colors={['transparent', 'rgba(255,255,255,0.8)']}
-                  style={styles.illustrationOverlay}
-                />
-              </View>
+              <Image source={item.illustration} style={styles.illustration} />
             </View>
           </TouchableOpacity>
         ))}
@@ -190,12 +185,16 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: 'row',
     alignItems: 'center',
-    ...shadows.md,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   menuButton: {
     width: 42,
@@ -203,26 +202,33 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-  gradient: {
+  menuButtonSolid: {
     flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitleContainer: {
     marginLeft: 15,
   },
-  headerAppTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FFDBEB',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
+  // headerAppTitle: { // Removed as per instruction
+  //   fontSize: 20,
+  //   fontWeight: 'bold',
+  //   color: '#FFF',
+  // },
   headerTagline: {
-    fontSize: 21,
+    fontSize: 14,
+    color: '#FFDBEB',
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  screenTitle: { // Added as per instruction
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFF',
   },
+
+
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -290,26 +296,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#636E72',
   },
-  illustrationContainer: {
-    width: 100,
-    height: 100,
-    backgroundColor: '#F1F8F6',
-    borderRadius: 15,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   illustration: {
-    width: 80,
-    height: 80,
+    width: 140,
+    height: 140,
     resizeMode: 'contain',
-  },
-  illustrationOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 30,
   },
 
 })

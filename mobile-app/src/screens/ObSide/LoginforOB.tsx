@@ -22,8 +22,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../config/firebaseConfig";
 
 const COLORS = {
-  primary: "#E45A92",
-  primaryDark: "#D3347A",
+  primary: "#D81B60",
+  primaryDark: "#AD1457",
   textPrimary: "#0F172A",
   border: "#E2E8F0",
   white: "#FFFFFF",
@@ -211,11 +211,8 @@ const LoginforOB = ({ navigation }: any) => {
                 onPress={handleLogin}
                 disabled={isLoading}
               >
-                <LinearGradient
-                  colors={["#d3347a", "#e83c91"]}
-                  style={styles.buttonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                <View
+                  style={[styles.buttonGradient, { backgroundColor: COLORS.primary }]}
                 >
                   {isLoading ? (
                     <ActivityIndicator color="#FFFFFF" />
@@ -225,7 +222,7 @@ const LoginforOB = ({ navigation }: any) => {
                       <ArrowRight size={20} color="#FFFFFF" />
                     </>
                   )}
-                </LinearGradient>
+                </View>
               </Pressable>
             </View>
 
@@ -248,7 +245,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   backLinkText: {
-    color: "#E45A92",
+    color: COLORS.primary,
     fontWeight: "600",
     fontSize: 14,
     textDecorationLine: "underline",
@@ -309,18 +306,18 @@ const styles = StyleSheet.create({
   demoTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#E45A92",
+    color: COLORS.primary,
     marginBottom: 8,
   },
   demoText: {
     fontSize: 13,
-    color: "#E45A92",
+    color: COLORS.primary,
     marginBottom: 2,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   demoHint: {
     fontSize: 12,
-    color: "#E45A92",
+    color: COLORS.primary,
     marginTop: 8,
     fontWeight: "600",
   },
@@ -363,7 +360,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: "#E45A92",
+    color: COLORS.primary,
     fontWeight: "600",
     paddingTop: 10,
   },
@@ -387,12 +384,12 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   signInButton: {
-    backgroundColor: "#E45A92",
+    backgroundColor: COLORS.primary,
     height: 56,
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#E45A92",
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -410,7 +407,7 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontSize: 14,
-    color: "#E45A92",
+    color: COLORS.primary,
     fontWeight: "700",
   },
 });
