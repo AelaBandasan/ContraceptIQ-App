@@ -158,25 +158,6 @@ const Preferences = ({ navigation }: Props) => {
               </TouchableOpacity>
             </Animated.View>
           ))}
-
-          {/* CONSULT WITH DOCTOR BUTTON */}
-          <Animated.View entering={FadeInDown.delay(1000).duration(800)}>
-            <TouchableOpacity
-              style={styles.consultButton}
-              activeOpacity={0.9}
-              onPress={() => {
-                const currentNumericAge = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].numericAge : 25;
-                const preFilledData = {
-                  AGE: currentNumericAge.toString(),
-                  prefs: chosenPrefs
-                };
-                navigation.navigate('GuestAssessment', { preFilledData });
-              }}
-            >
-              <Text style={styles.consultButtonText}>Consult with Doctor (Start Intake)</Text>
-              <Ionicons name="arrow-forward-circle" size={24} color="#fff" style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
-          </Animated.View>
         </View>
       </ScrollView>
     </View>
@@ -215,7 +196,7 @@ const styles = StyleSheet.create({
   menuButtonSolid: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -393,24 +374,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF0F6',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  consultButton: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-    paddingVertical: 18,
-    borderRadius: 20,
-    elevation: 6,
-    shadowColor: colors.primary,
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  consultButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
   },
 });

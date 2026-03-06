@@ -1,23 +1,73 @@
 import React from "react";
 import {
   ScrollView,
-  View,
-  Text,
   StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import type { DrawerScreenProps } from "@react-navigation/drawer";
 import type { DrawerParamList } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { ShieldAlert, FileWarning } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors } from "../theme";
 
 export type PrivacyDisclaimerScreenProps = DrawerScreenProps<
   DrawerParamList,
   "PrivacyDisclaimer"
 >;
+
+type PrivacyBlock = {
+  id: number;
+  title: string;
+  content: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  tone: "privacy" | "medical";
+};
+
+const BLOCKS: PrivacyBlock[] = [
+  {
+    id: 1,
+    title: "What We Collect and Why",
+    content:
+      "ContraceptIQ is committed to protecting your privacy and handling your information responsibly. We may collect information you provide (such as account details and assessment inputs) and technical data (such as device type and app usage patterns). Information is used to deliver app features, personalize recommendations, maintain security, and meet legal or compliance obligations where applicable.",
+    iconName: "analytics-outline",
+    tone: "privacy",
+  },
+  {
+    id: 2,
+    title: "Security and Data Sharing",
+    content:
+      "We use industry-standard safeguards to protect your data. No method is 100% secure, and we continuously review our controls to mitigate risk. We do not sell your personal data. Limited sharing may occur with trusted providers to operate the service, subject to confidentiality and security obligations.",
+    iconName: "shield-checkmark-outline",
+    tone: "privacy",
+  },
+  {
+    id: 3,
+    title: "Contact Information",
+    content: "Questions or requests can be sent to support@contraceptiq.com.",
+    iconName: "mail-outline",
+    tone: "privacy",
+  },
+  {
+    id: 4,
+    title: "Clinical Use Limits",
+    content:
+      "Content and outputs from this app are for informational purposes only and are not a substitute for professional medical advice, diagnosis, or treatment. Outcomes and recommendations may vary. Always consult qualified healthcare providers for decisions about your reproductive care.",
+    iconName: "warning-outline",
+    tone: "medical",
+  },
+  {
+    id: 5,
+    title: "Liability and Research Use",
+    content:
+      "To the fullest extent permitted by law, ContraceptIQ and its contributors are not liable for any decisions or outcomes based on app use. Data may be used in aggregated or de-identified form to improve the service and support research and quality efforts.",
+    iconName: "document-text-outline",
+    tone: "medical",
+  },
+];
 
 const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
   navigation,
@@ -27,16 +77,13 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
   void route;
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      {/* Premium Header */}
+    <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
           onPress={() => (navigation as any).toggleDrawer()}
           style={styles.menuButton}
         >
-          <View
-            style={styles.menuButtonSolid}
-          >
+          <View style={styles.menuButtonSolid}>
             <Ionicons name="menu" size={24} color="#FFF" />
           </View>
         </TouchableOpacity>
@@ -46,101 +93,49 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        <Text style={styles.pageDescription}>
-          Please read this information carefully. It outlines how we handle your data and the limitations of our medical guidance.
-        </Text>
-
-        {/* Privacy Policy Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconContainerBlue}>
-              <ShieldAlert size={24} color="#2563EB" />
-            </View>
-            <Text style={styles.sectionTitle}>Privacy Policy</Text>
+        <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.brandCard}>
+          <View style={styles.brandMark}>
+            <Ionicons name="shield-outline" size={22} color={colors.primary} />
           </View>
-
-          <View style={styles.divider} />
-
-          <Text style={styles.subheading}>Introduction</Text>
-          <Text style={styles.paragraph}>
-            ContraceptIQ is committed to protecting your privacy and handling
-            your information responsibly. This notice explains what we collect,
-            how we use it, and the safeguards we apply.
+          <Text style={styles.brandTitle}>Your Data, Your Safety</Text>
+          <Text style={styles.brandSubtitle}>
+            Transparent privacy practices and clear medical guidance limits.
           </Text>
+        </Animated.View>
 
-          <Text style={styles.subheading}>Information We Collect</Text>
-          <Text style={styles.paragraph}>
-            We may collect information you provide (such as account details and
-            assessment inputs) and technical data (such as device type and app
-            usage patterns) to improve your experience.
+        {BLOCKS.map((block, index) => {
+          const isMedical = block.tone === "medical";
+          return (
+            <Animated.View
+              key={block.id}
+              entering={FadeInDown.delay(130 + index * 55).duration(360)}
+              style={[
+                styles.infoCard,
+                isMedical ? styles.infoCardMedical : styles.infoCardPrivacy,
+              ]}
+            >
+              <View
+                style={[
+                  styles.iconTop,
+                  isMedical ? styles.iconTopMedical : styles.iconTopPrivacy,
+                ]}
+              >
+                <Ionicons name={block.iconName} size={20} color={colors.primary} />
+              </View>
+              <Text style={styles.cardTitle}>{block.title}</Text>
+              <Text style={styles.cardContent}>{block.content}</Text>
+            </Animated.View>
+          );
+        })}
+
+        <Animated.View entering={FadeInDown.delay(460).duration(420)} style={styles.bannerCard}>
+          <Sparkles size={18} color="#166534" />
+          <Text style={styles.bannerText}>
+            If you are making medical decisions, please consult a qualified healthcare professional.
           </Text>
+        </Animated.View>
 
-          <Text style={styles.subheading}>How We Use Your Information</Text>
-          <Text style={styles.paragraph}>
-            Information is used to deliver app features, personalize
-            recommendations, maintain security, and meet legal or compliance
-            obligations where applicable.
-          </Text>
-
-          <Text style={styles.subheading}>Data Storage and Security</Text>
-          <Text style={styles.paragraph}>
-            We use industry-standard safeguards to protect your data. No method
-            is 100% secure, and we continuously review our controls to mitigate risk.
-          </Text>
-
-          <Text style={styles.subheading}>Data Sharing</Text>
-          <Text style={styles.paragraph}>
-            We do not sell your personal data. Limited sharing may occur with
-            trusted providers to operate the service, subject to confidentiality
-            and security obligations.
-          </Text>
-
-          <Text style={styles.subheading}>Contact Information</Text>
-          <Text style={styles.paragraph}>
-            Questions or requests can be sent to support@contraceptiq.com.
-          </Text>
-        </View>
-
-        {/* Medical Disclaimer Card */}
-        <View style={[styles.card, styles.disclaimerCard]}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconContainerOrange}>
-              <FileWarning size={24} color="#D97706" />
-            </View>
-            <Text style={[styles.sectionTitle, { color: '#92400E' }]}>Medical Disclaimer</Text>
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: '#FDE68A' }]} />
-
-          <Text style={styles.subheading}>Not Medical Advice</Text>
-          <Text style={styles.paragraph}>
-            Content and outputs from this app are for informational purposes
-            only and are not a substitute for professional medical advice,
-            diagnosis, or treatment.
-          </Text>
-
-          <Text style={styles.subheading}>No Guarantee of Outcomes</Text>
-          <Text style={styles.paragraph}>
-            Outcomes and recommendations may vary. Always consult qualified
-            healthcare providers for decisions about your reproductive care.
-          </Text>
-
-          <Text style={styles.subheading}>Limitation of Liability</Text>
-          <Text style={styles.paragraph}>
-            To the fullest extent permitted by law, ContraceptIQ and its
-            contributors are not liable for any decisions or outcomes based on
-            app use.
-          </Text>
-
-          <Text style={styles.subheading}>Research Use Notice</Text>
-          <Text style={styles.paragraph}>
-            Data may be used in aggregated or de-identified form to improve the
-            service and support research and quality efforts.
-          </Text>
-        </View>
-
-        <View style={{ height: 40 }} />
+        <View style={{ height: 34 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -151,7 +146,7 @@ export default PrivacyDisclaimerScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAF9',
+    backgroundColor: "#FAFAF9",
   },
   header: {
     backgroundColor: colors.primary,
@@ -159,8 +154,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -171,107 +166,122 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   menuButtonSolid: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitleContainer: {
-    marginLeft: 15,
-  },
-  headerAppTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  headerTagline: {
-    fontSize: 14,
-    color: '#FFDBEB',
-    fontStyle: 'italic',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   titleContainer: {
     marginLeft: 15,
   },
   headerText: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontWeight: "bold",
+    color: "#FFF",
   },
   scrollContent: {
-    padding: 24,
+    padding: 18,
+    paddingTop: 20,
   },
-  pageDescription: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: '#475569',
-    marginBottom: 24,
-    textAlign: 'center',
-    paddingHorizontal: 10,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 2,
+  brandCard: {
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: "#FBCFE8",
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 14,
+    alignItems: "center",
   },
-  disclaimerCard: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FEF3C7',
+  brandMark: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#FDF2F8",
+    borderWidth: 1,
+    borderColor: "#FBCFE8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconContainerBlue: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#EFF6FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  iconContainerOrange: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  sectionTitle: {
+  brandTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
+    fontWeight: "800",
+    color: colors.text.primary,
+    textAlign: "center",
+  },
+  brandSubtitle: {
+    marginTop: 4,
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#475569",
+    textAlign: "center",
+  },
+  infoCard: {
+    borderRadius: 15,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  infoCardPrivacy: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E2E8F0",
+  },
+  infoCardMedical: {
+    backgroundColor: "#FFFBEB",
+    borderColor: "#FDE68A",
+  },
+  iconTop: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  iconTopPrivacy: {
+    backgroundColor: "#FDF2F8",
+    borderColor: "#FBCFE8",
+  },
+  iconTopMedical: {
+    backgroundColor: "#FFF7ED",
+    borderColor: "#FED7AA",
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1F2937",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  cardContent: {
+    fontSize: 14.5,
+    lineHeight: 22,
+    color: "#475569",
+    textAlign: "center",
+  },
+  bannerCard: {
+    marginTop: 16,
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  bannerText: {
     flex: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginBottom: 20,
-  },
-  subheading: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 6,
-  },
-  paragraph: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: '#475569',
-    marginBottom: 20,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#166534",
+    fontWeight: "600",
   },
 });

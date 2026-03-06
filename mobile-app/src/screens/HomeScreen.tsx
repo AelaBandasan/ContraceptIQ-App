@@ -95,7 +95,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <View
               style={[styles.menuButton, styles.menuButtonSolid]}
             >
-              <Ionicons name="menu" size={26} color="#FFF" />
+              <Ionicons name="menu" size={24} color="#FFF" />
             </View>
           </TouchableOpacity>
 
@@ -302,8 +302,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   menuButton: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
     borderRadius: 16,
     overflow: 'hidden',
   },

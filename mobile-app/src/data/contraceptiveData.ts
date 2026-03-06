@@ -63,7 +63,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         effectiveness: '>99% effective (perfect use)',
         perfectEffectiveness: '>99%',
         typicalEffectiveness: '7 in 100',
-        priceRange: '₱150 - ₱500 / month',
+        priceRange: '₱150 - ₱650 / month',
         howToUse: [
             'Take one pill every day at the same time.',
             'No hormone-free break between packs.',
@@ -82,7 +82,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         ],
         reversible: true,
         pregnancyPlanning: 'Fertility returns quickly after stopping.',
-        illustration: require('../../assets/image/pillss.png'),
+        illustration: require('../../assets/image/sq_poppills.png'),
     },
     implant: {
         id: 'implant',
@@ -94,7 +94,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         effectiveness: '>99% effective',
         perfectEffectiveness: '>99%',
         typicalEffectiveness: '<1 in 1000',
-        priceRange: '₱3,000 - ₱8,000',
+        priceRange: '₱3,000 - ₱15,000',
         howToUse: [
             'Inserted by a trained healthcare provider.',
             'Placed under the skin of the upper arm.',
@@ -114,7 +114,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         ],
         reversible: true,
         pregnancyPlanning: 'Fertility returns quickly after removal.',
-        illustration: require('../../assets/image/implantt.png'),
+        illustration: require('../../assets/image/sq_lngetg.png'),
     },
     'cu-iud': {
         id: 'cu-iud',
@@ -126,7 +126,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         effectiveness: '>99% effective',
         perfectEffectiveness: '>99%',
         typicalEffectiveness: '<1 in 100',
-        priceRange: '₱2,000 - ₱6,000',
+        priceRange: '₱10,000 - ₱15,000',
         howToUse: [
             'Inserted by a trained healthcare provider.',
             'Placed inside the uterus.',
@@ -146,7 +146,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         ],
         reversible: true,
         pregnancyPlanning: 'Fertility returns quickly after removal.',
-        illustration: require('../../assets/image/copperiud.png'),
+        illustration: require('../../assets/image/sq_cuiud.png'),
     },
     'lng-ius': {
         id: 'lng-ius',
@@ -158,7 +158,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         effectiveness: '>99% effective',
         perfectEffectiveness: '>99%',
         typicalEffectiveness: '<1 in 100',
-        priceRange: '₱8,000 - ₱15,000',
+        priceRange: '₱15,000 - ₱20,000',
         howToUse: [
             'Inserted by a trained healthcare provider.',
             'Placed inside the uterus.',
@@ -178,7 +178,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         ],
         reversible: true,
         pregnancyPlanning: 'Fertility returns quickly after removal.',
-        illustration: require('../../assets/image/leviud.png'),
+        illustration: require('../../assets/image/sq_lngiud.png'),
     },
     dmpa: {
         id: 'dmpa',
@@ -190,7 +190,7 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         effectiveness: '>99% effective (perfect use)',
         perfectEffectiveness: '>99%',
         typicalEffectiveness: '6 in 100',
-        priceRange: '₱150 - ₱500 / injection',
+        priceRange: '₱150 - ₱850 / injection',
         howToUse: [
             'Injection received on schedule from a trained provider.',
             'Typically given every three months.',
@@ -210,6 +210,6 @@ export const CONTRACEPTIVE_DETAILS: Record<string, ContraceptiveDetail> = {
         ],
         reversible: true,
         pregnancyPlanning: 'Fertility may take several months to return.',
-        illustration: require('../../assets/image/injectables.png'),
+        illustration: require('../../assets/image/sq_dmpainj.png'),
     }
 };

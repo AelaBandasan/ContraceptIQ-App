@@ -5,12 +5,11 @@ import {
     View,
     ScrollView,
     TouchableOpacity,
-    Animated,
     LayoutAnimation,
     Platform,
     UIManager,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -18,15 +17,13 @@ import {
     Info,
     CheckCircle2,
     Clock,
-    ArrowRightLeft,
     AlertTriangle,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors, typography, spacing, shadows, borderRadius } from '../theme';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { colors, shadows } from '../theme';
 
-// Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -38,20 +35,17 @@ const EmergencyContraception = () => {
 
     const toggleBmi = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setBmiExpanded(!bmiExpanded);
+        setBmiExpanded((prev) => !prev);
     };
 
     return (
         <View style={styles.safeArea}>
-            {/* Header - Branded with Menu Toggle */}
-            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
                 <TouchableOpacity
                     onPress={() => navigation.goBack()}
                     style={styles.menuButton}
                 >
-                    <View
-                        style={styles.menuButtonSolid}
-                    >
+                    <View style={styles.menuButtonSolid}>
                         <Ionicons name="chevron-back" size={26} color="#FFF" />
                     </View>
                 </TouchableOpacity>
@@ -61,146 +55,108 @@ const EmergencyContraception = () => {
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-                {/* Section: What is EC? */}
-                <View style={styles.card}>
+                <Animated.View entering={FadeInDown.delay(140).duration(420)} style={[styles.infoCard, styles.primaryInfoCard]}>
                     <View style={styles.cardHeader}>
-                        <Info size={22} color={colors.primary} />
-                        <Text style={styles.cardTitle}>What is EC?</Text>
+                        <View style={styles.infoIconWrap}>
+                            <Info size={22} color={colors.primary} />
+                        </View>
+                        <Text style={styles.cardTitle}>Emergency Contraception</Text>
                     </View>
                     <Text style={styles.cardDescription}>
-                        Emergency contraception (EC) is used to prevent pregnancy after contraceptive failure or unprotected sex.
+                        Emergency contraception (EC) refers to methods used after unprotected sexual intercourse to prevent pregnancy. According to WHO guidance, emergency contraceptive pills work primarily by preventing or delaying ovulation and do not disrupt an existing pregnancy.
                     </Text>
-                    <View style={styles.highlightBar} />
-                </View>
+                    <Text style={styles.cardDescription}>
+                        Users may experience nausea, spotting, or temporary menstrual changes. Medical advice should be sought if the next period is more than one week late, if severe abdominal pain occurs, or if heavy bleeding develops.
+                    </Text>
+                    <View style={styles.cardLabelBottom}>
+                        <Text style={styles.cardLabelText}>For urgent situations</Text>
+                    </View>
+                </Animated.View>
 
-                {/* Section: Usage Guide Checklist */}
-                <View style={styles.card}>
+                <Animated.View entering={FadeInDown.delay(200).duration(420)} style={[styles.infoCard, styles.usageInfoCard]}>
                     <View style={styles.cardHeader}>
-                        <Clock size={22} color={colors.primary} />
+                        <View style={styles.clockIconWrap}>
+                            <Clock size={22} color="#2563EB" />
+                        </View>
                         <Text style={styles.cardTitle}>When should it be used?</Text>
                     </View>
                     <View style={styles.checklist}>
                         <View style={styles.checkItem}>
-                            <CheckCircle2 size={18} color="#10B981" />
-                            <Text style={styles.checkText}>Condom broke or slipped</Text>
+                            <CheckCircle2 size={20} color="#10B981" />
+                            <Text style={styles.checkText}>When no contraceptive method was used</Text>
                         </View>
                         <View style={styles.checkItem}>
-                            <CheckCircle2 size={18} color="#10B981" />
-                            <Text style={styles.checkText}>Missed 2 or more birth control pills</Text>
+                            <CheckCircle2 size={20} color="#10B981" />
+                            <Text style={styles.checkText}>After method failure (broken condom, missed pills)</Text>
                         </View>
                         <View style={styles.checkItem}>
-                            <CheckCircle2 size={18} color="#10B981" />
-                            <Text style={styles.checkText}>Diaphragm or cap was dislodged</Text>
-                        </View>
-                        <View style={styles.checkItem}>
-                            <CheckCircle2 size={18} color="#10B981" />
-                            <Text style={styles.checkText}>Had unprotected sex</Text>
+                            <CheckCircle2 size={20} color="#10B981" />
+                            <Text style={styles.checkText}>Following sexual assault</Text>
                         </View>
                     </View>
-                </View>
-
-                {/* Section: Comparison Table */}
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <ArrowRightLeft size={22} color={colors.primary} />
-                        <Text style={styles.cardTitle}>EC Comparison Guide</Text>
-                    </View>
-
-                    <View style={styles.table}>
-                        <View style={[styles.tableHeader, { backgroundColor: '#F8FAFC' }]}>
-                            <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>Method</Text>
-                            <Text style={styles.tableHeaderText}>Effectiveness</Text>
-                            <Text style={styles.tableHeaderText}>Timeframe</Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                            <Text style={[styles.methodName, { flex: 1.2 }]}>EC Pills (Levonorgestrel)</Text>
-                            <Text style={styles.tableCell}>~89%</Text>
-                            <Text style={styles.tableCell}>Within 72 hrs</Text>
-                        </View>
-
-                        <View style={styles.tableRow}>
-                            <Text style={[styles.methodName, { flex: 1.2 }]}>Copper IUD</Text>
-                            <Text style={[styles.tableCell, { fontWeight: '700', color: '#10B981' }]}>99.9%</Text>
-                            <Text style={styles.tableCell}>Within 5 days</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Section: Interactive BMI Note */}
-                <TouchableOpacity
-                    style={[styles.card, styles.bmiCard]}
-                    onPress={toggleBmi}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.row}>
-                        <AlertCircle size={22} color="#D97706" />
-                        <Text style={styles.bmiTitle}>Important: BMI Note</Text>
-                        {bmiExpanded ? <ChevronUp size={20} color="#64748B" /> : <ChevronDown size={20} color="#64748B" />}
-                    </View>
-                    <Text style={styles.bmiPreview}>
-                        If over 165lbs, certain pills are less effective. Tap to see why.
+                    <Text style={styles.cardDescription}>
+                        EC is intended for occasional use and should be taken as soon as possible after unprotected intercourse for greatest effectiveness.
                     </Text>
+                    <View style={styles.urgencyBadgeBottom}>
+                        <Clock size={22} color="#0F766E" />
+                        <Text style={styles.urgencyBadgeBottomText}>Use as soon as possible</Text>
+                    </View>
+                </Animated.View>
 
-                    {bmiExpanded && (
-                        <View style={styles.bmiExpandedContent}>
-                            <Text style={styles.bmiText}>
-                                Standard ECPs (Levonorgestrel) may lose effectiveness in individuals with a BMI over 25 or weight above 165lbs. In these cases, the Ella (Ulipristal) pill or a Copper IUD is highly recommended as they maintain full efficacy.
-                            </Text>
+                <Animated.View entering={FadeInDown.delay(260).duration(420)}>
+                    <TouchableOpacity
+                        style={[styles.infoCard, styles.cautionCard]}
+                        onPress={toggleBmi}
+                        activeOpacity={0.8}
+                    >
+                        <View style={styles.rowBetween}>
+                            <View style={styles.cautionHeaderLeft}>
+                                <AlertCircle size={22} color="#D97706" />
+                                <Text style={styles.cautionTitle}>Important: BMI Note</Text>
+                            </View>
+                            {bmiExpanded ? <ChevronUp size={20} color="#92400E" /> : <ChevronDown size={20} color="#92400E" />}
                         </View>
-                    )}
-                </TouchableOpacity>
+                        <Text style={styles.cautionPreview}>Tap to view clinically important guidance.</Text>
 
-                {/* Section: Side Effects */}
-                <View style={styles.card}>
+                        {bmiExpanded && (
+                            <View style={styles.cautionExpanded}>
+                                <Text style={styles.cautionText}>
+                                    WHO guidance indicates that the effectiveness of levonorgestrel emergency contraceptive pills may be reduced in individuals with higher body weight or body mass index. In such cases, ulipristal acetate or the copper IUD may provide more reliable protection when available.
+                                </Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </Animated.View>
+
+                <Animated.View entering={FadeInDown.delay(320).duration(420)} style={[styles.infoCard, styles.reassuranceCard]}>
                     <View style={styles.cardHeader}>
-                        <ActivityIcon />
-                        <Text style={styles.cardTitle}>What to Expect</Text>
+                        <CheckCircle2 size={22} color="#15803D" />
+                        <Text style={[styles.cardTitle, { color: '#166534' }]}>Common and usually temporary</Text>
                     </View>
-                    <View style={styles.sideEffectGrid}>
-                        <View style={styles.effectItem}>
-                            <Text style={styles.effectEmoji}>🤢</Text>
-                            <Text style={styles.effectLabel}>Nausea</Text>
-                        </View>
-                        <View style={styles.effectItem}>
-                            <Text style={styles.effectEmoji}>🚑</Text>
-                            <Text style={styles.effectLabel}>Fatigue</Text>
-                        </View>
-                        <View style={styles.effectItem}>
-                            <Text style={styles.effectEmoji}>🤕</Text>
-                            <Text style={styles.effectLabel}>Headache</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Section: Medical Advice Box */}
-                <View style={styles.adviceBox}>
-                    <View style={styles.adviceHeader}>
-                        <AlertTriangle size={24} color="#FFF" />
-                        <Text style={styles.adviceTitle}>When to Seek Medical Advice</Text>
-                    </View>
-                    <Text style={styles.adviceContent}>
-                        • If you vomit within 2 hours of taking the pill.{'\n'}
-                        • If your next period is more than 7 days late.{'\n'}
-                        • If you experience sudden, severe abdominal pain.{'\n'}
-                        • If you have persistent unusual bleeding.
+                    <Text style={styles.reassuranceText}>
+                        After taking emergency contraception, some users may experience temporary side effects such as nausea, mild abdominal discomfort, fatigue, or spotting. The next menstrual period may occur earlier or later than expected.
                     </Text>
-                </View>
+                    <Text style={styles.reassuranceText}>
+                        These effects are usually short-term and not harmful.
+                    </Text>
+                </Animated.View>
 
-                {/* Bottom Spacer */}
+                <Animated.View entering={FadeInDown.delay(380).duration(420)} style={styles.adviceCard}>
+                    <View style={styles.cardHeader}>
+                        <AlertTriangle size={22} color="#C2410C" />
+                        <Text style={[styles.cardTitle, { color: '#9A3412' }]}>When to Seek Medical Advice</Text>
+                    </View>
+                    <Text style={styles.adviceText}>- Next menstrual period is more than one week late</Text>
+                    <Text style={styles.adviceText}>- Severe lower abdominal pain develops</Text>
+                    <Text style={styles.adviceText}>- Unusually heavy bleeding occurs</Text>
+                    <Text style={styles.adviceText}>- Concern about possible pregnancy</Text>
+                </Animated.View>
+
                 <View style={{ height: 40 }} />
             </ScrollView>
         </View>
     );
 };
-
-// Helper Icon Component
-const ActivityIcon = () => (
-    <View style={{ width: 22, height: 22, justifyContent: 'center', alignItems: 'center' }}>
-        <Ionicons name="pulse" size={20} color={colors.primary} />
-    </View>
-)
 
 const styles = StyleSheet.create({
     safeArea: {
@@ -225,18 +181,10 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 15,
     },
-    headerAppTitle: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#FFDBEB',
-        textTransform: 'uppercase',
-        letterSpacing: 1.2,
-    },
     headerMainTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#FFF',
-        marginTop: 2,
     },
     menuButton: {
         width: 44,
@@ -251,164 +199,169 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     scrollContent: {
-        padding: 20,
+        padding: 18,
     },
-    card: {
+    infoCard: {
         backgroundColor: '#FFF',
-        borderRadius: 20,
-        padding: 20,
-        marginBottom: 16,
-        ...shadows.sm,
+        borderRadius: 15,
+        padding: 18,
+        marginBottom: 10,
+        ...shadows.md,
         borderWidth: 1,
-        borderColor: '#F1F5F9',
+        borderColor: '#E2E8F0',
+    },
+    primaryInfoCard: {
+        borderColor: '#FBCFE8',
+        backgroundColor: '#FFFDFE',
+    },
+    usageInfoCard: {
+        borderColor: '#BFDBFE',
+        backgroundColor: '#F8FBFF',
+    },
+    infoIconWrap: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: '#FDF2F8',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    clockIconWrap: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: '#DBEAFE',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cardLabelText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#BE185D',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    cardLabelBottom: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#FDF2F8',
+        borderColor: '#FBCFE8',
+        borderWidth: 1,
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        marginTop: 12,
     },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 10,
     },
     cardTitle: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '700',
-        color: '#1F2937',
+        color: colors.text.primary,
         marginLeft: 10,
+        flex: 1,
     },
     cardDescription: {
-        fontSize: 14,
-        color: '#475569',
+        fontSize: 15,
+        color: colors.text.secondary,
         lineHeight: 22,
+        marginTop: 1,
     },
-    highlightBar: {
-        height: 4,
-        width: 40,
-        backgroundColor: colors.primary,
-        borderRadius: 2,
-        marginTop: 15,
+    urgencyBadgeBottom: {
+        marginTop: 14,
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#ECFEFF',
+        borderWidth: 1,
+        borderColor: '#A5F3FC',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        gap: 6,
+    },
+    urgencyBadgeBottomText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#0F766E',
     },
     checklist: {
-        marginTop: 4,
+        marginTop: 2,
+        marginBottom: 6,
     },
     checkItem: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
+        alignItems: 'flex-start',
+        marginBottom: 6,
     },
     checkText: {
-        fontSize: 14,
-        color: '#475569',
-        marginLeft: 12,
-    },
-    table: {
-        borderRadius: 12,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: '#E2E8F0',
-        marginTop: 4,
-    },
-    tableHeader: {
-        flexDirection: 'row',
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E2E8F0',
-    },
-    tableHeaderText: {
         flex: 1,
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#64748B',
-    },
-    tableRow: {
-        flexDirection: 'row',
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F1F5F9',
-        alignItems: 'center',
-    },
-    methodName: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#1F2937',
-    },
-    tableCell: {
-        flex: 1,
-        fontSize: 13,
+        fontSize: 15,
         color: '#475569',
-        textAlign: 'left',
+        marginLeft: 10,
+        lineHeight: 21,
     },
-    bmiCard: {
-        borderColor: '#FEF3C7',
+    cautionCard: {
+        borderColor: '#FDE68A',
         backgroundColor: '#FFFBEB',
     },
-    row: {
+    rowBetween: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
     },
-    bmiTitle: {
+    cautionHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
         flex: 1,
+    },
+    cautionTitle: {
+        marginLeft: 10,
         fontSize: 15,
         fontWeight: '700',
         color: '#92400E',
-        marginLeft: 10,
     },
-    bmiPreview: {
+    cautionPreview: {
+        marginTop: 8,
         fontSize: 13,
         color: '#B45309',
-        marginTop: 8,
-        lineHeight: 18,
     },
-    bmiExpandedContent: {
+    cautionExpanded: {
         marginTop: 12,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: '#FEF3C7',
+        borderTopColor: '#FDE68A',
     },
-    bmiText: {
-        fontSize: 13,
+    cautionText: {
+        fontSize: 14,
         color: '#92400E',
         lineHeight: 20,
     },
-    sideEffectGrid: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
+    reassuranceCard: {
+        borderColor: '#BBF7D0',
+        backgroundColor: '#F0FDF4',
     },
-    effectItem: {
-        alignItems: 'center',
-        flex: 1,
+    reassuranceText: {
+        fontSize: 14,
+        color: '#166534',
+        lineHeight: 21,
+        marginTop: 4,
     },
-    effectEmoji: {
-        fontSize: 24,
-        marginBottom: 8,
+    adviceCard: {
+        backgroundColor: '#FFF7ED',
+        borderRadius: 15,
+        padding: 18,
+        borderWidth: 1,
+        borderColor: '#FED7AA',
+        ...shadows.sm,
     },
-    effectLabel: {
-        fontSize: 12,
-        color: '#64748B',
-        fontWeight: '500',
-    },
-    adviceBox: {
-        backgroundColor: '#1E293B',
-        borderRadius: 20,
-        padding: 20,
-        marginTop: 8,
-        ...shadows.md,
-    },
-    adviceHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    adviceTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#FFF',
-        marginLeft: 12,
-    },
-    adviceContent: {
-        fontSize: 13,
-        color: '#CBD5E1',
+    adviceText: {
+        fontSize: 14,
+        color: '#9A3412',
         lineHeight: 22,
+        marginBottom: 4,
     },
 });
 

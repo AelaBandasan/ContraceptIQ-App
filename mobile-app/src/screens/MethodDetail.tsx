@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Share } from 'react-native';
 import React, { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { RootStackScreenProps } from '../types/navigation';
 import { colors, spacing, typography, shadows, borderRadius } from '../theme';
@@ -60,9 +60,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 {/* Main Info Card */}
                 <Animated.View entering={FadeInDown.delay(100).duration(500)} style={[styles.mainCard, { flexDirection: 'column', alignItems: 'flex-start' }]}>
                     <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', marginBottom: 15 }}>
-                        <View style={styles.imageContainer}>
-                            <Image source={data.illustration} style={styles.mainImage} />
-                        </View>
+                        <Image source={data.illustration} style={styles.mainImage} />
                         <View style={[styles.mainTextContent, { marginLeft: 16, justifyContent: 'center' }]}>
                             <View style={styles.titleRow}>
                                 <Text style={styles.methodTitle}>{data.name}</Text>
@@ -108,9 +106,6 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                             <View>
                                 <Text style={styles.sectionTitle}>HOW TO USE</Text>
                                 <Text style={styles.sectionSubtitle}>{data.name}</Text>
-                            </View>
-                            <View style={styles.iconBadge}>
-                                <MaterialCommunityIcons name="pill" size={30} color={colors.primary} />
                             </View>
                         </View>
 
@@ -182,9 +177,6 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                             <Text style={styles.reversibleText}>Reversible</Text>
                         </View>
                     )}
-                    <TouchableOpacity style={styles.footerLink}>
-                        <Text style={styles.footerLinkText}>Explore Pregnancy Planning</Text>
-                    </TouchableOpacity>
                 </Animated.View>
             </ScrollView>
         </View>
@@ -238,25 +230,16 @@ const styles = StyleSheet.create({
     },
     mainCard: {
         backgroundColor: '#FFF',
-        borderRadius: 20,
+        borderRadius: 15,
         padding: 15,
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
         ...shadows.sm,
     },
-    imageContainer: {
-        width: 100,
-        height: 100,
-        backgroundColor: '#F1F8F6',
-        borderRadius: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-    },
     mainImage: {
-        width: 85,
-        height: 85,
+        width: 120,
+        height: 120,
         resizeMode: 'contain',
     },
     mainTextContent: {
@@ -270,27 +253,27 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     methodTitle: {
-        fontSize: 18,
+        fontSize: 19,
         fontWeight: 'bold',
-        color: '#2D3436',
+        color: colors.text.primary,
     },
     typeBadge: {
         backgroundColor: '#E9F9F0',
-        paddingHorizontal: 6,
+        alignSelf: 'flex-start',
+        paddingHorizontal: 15,
         paddingVertical: 2,
-        borderRadius: 4,
-        marginLeft: 6,
+        borderRadius: 12,
         marginTop: 2,
     },
     typeBadgeText: {
-        fontSize: 10,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#16A34A',
     },
     methodDescription: {
-        fontSize: 13,
+        fontSize: 15,
         color: '#636E72',
-        lineHeight: 18,
+        lineHeight: 20,
     },
     statsRow: {
         backgroundColor: '#FFF',
@@ -300,7 +283,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
         ...shadows.sm,
     },
     statItem: {
@@ -314,30 +297,30 @@ const styles = StyleSheet.create({
         backgroundColor: '#F0F0F0',
     },
     statLabel: {
-        fontSize: 11,
-        color: '#95A5A6',
+        fontSize: 14,
+        color: colors.text.primary,
+        fontWeight: 'bold',
         marginBottom: 4,
     },
     statValue: {
         fontSize: 14,
-        fontWeight: 'bold',
-        color: '#2D3436',
+        color: colors.text.primary,
     },
     statSubText: {
-        fontSize: 9,
-        color: '#636E72',
+        fontSize: 12,
+        color: colors.text.primary,
         marginTop: 2,
         textAlign: 'center'
     },
     effChipSmall: {
         backgroundColor: '#E9F9F0',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         borderRadius: 6,
         marginTop: 2
     },
     effChipTextSmall: {
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#16A34A',
         textAlign: 'center'
@@ -348,9 +331,9 @@ const styles = StyleSheet.create({
     },
     sectionCard: {
         backgroundColor: '#FFF',
-        borderRadius: 20,
+        borderRadius: 15,
         padding: 20,
-        marginBottom: 20,
+        marginBottom: 10,
         ...shadows.sm,
     },
     sectionHeader: {
@@ -366,17 +349,9 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     sectionSubtitle: {
-        fontSize: 18,
+        fontSize: 19,
         fontWeight: 'bold',
-        color: '#2D3436',
-    },
-    iconBadge: {
-        width: 50,
-        height: 50,
-        backgroundColor: '#F1F8F6',
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
+        color: colors.text.primary,
     },
     usageList: {
         marginBottom: 15,
@@ -388,23 +363,23 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     usageStepNumber: {
-        fontSize: 14,
-        color: '#636E72',
+        fontSize: 16,
+        color: colors.text.primary,
         fontWeight: 'bold',
         marginRight: 8,
-        lineHeight: 22,
+        lineHeight: 20,
     },
     usageStepBullet: {
         fontSize: 16,
         color: '#636E72',
         marginRight: 8,
-        lineHeight: 22,
+        lineHeight: 20,
     },
     usageStepText: {
         flex: 1,
-        fontSize: 14,
+        fontSize: 15,
         color: '#636E72',
-        lineHeight: 22,
+        lineHeight: 20,
     },
     usageBadge: {
         flexDirection: 'row',
@@ -422,12 +397,15 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     richComparisonContainer: {
-        gap: 16,
-        marginBottom: 24,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 15,
     },
     richComparisonBox: {
-        borderRadius: 24,
-        padding: 24,
+        width: '48%',
+        borderRadius: 15,
+        padding: 14,
         borderWidth: 1,
         ...shadows.sm,
     },
@@ -442,24 +420,24 @@ const styles = StyleSheet.create({
     comparisonHeaderRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 12,
     },
     iconBox: {
-        width: 44,
-        height: 44,
-        borderRadius: 14,
+        width: 34,
+        height: 34,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 8,
     },
     comparisonTitle: {
-        fontSize: 20,
-        fontWeight: '800',
+        fontSize: 16,
+        fontWeight: '700',
     },
     sideEffectIntro: {
         fontSize: 14,
         color: '#92400E',
-        marginBottom: 16,
+        marginBottom: 10,
         fontWeight: '600',
     },
     richBulletRow: {
@@ -488,10 +466,10 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     richBulletText: {
-        fontSize: 15,
+        fontSize: 14,
         color: '#3F3F46',
         flex: 1,
-        lineHeight: 22,
+        lineHeight: 16,
         fontWeight: '500',
     },
     footerContainer: {
@@ -508,19 +486,10 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     reversibleText: {
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: '700',
         color: '#16A34A',
         marginLeft: 6,
-    },
-    footerLink: {
-        paddingVertical: 10,
-    },
-    footerLinkText: {
-        color: colors.primary,
-        fontWeight: 'bold',
-        textDecorationLine: 'underline',
-        fontSize: 15,
     },
     errorContainer: {
         flex: 1,
