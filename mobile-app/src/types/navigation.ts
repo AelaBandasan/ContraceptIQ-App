@@ -33,6 +33,7 @@ export type RootStackParamList = {
   MethodDetail: {
     methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
   };
+  PregnancyPlanning: undefined;
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -41,7 +42,6 @@ export type DrawerParamList = {
   Home: undefined;
   'Find Method': undefined;
   'Contraceptive Methods': undefined;
-  'Did You Know?': undefined;
   Preferences: undefined;
   Recommendation: undefined;
   ColorMapping: undefined;
@@ -63,6 +63,17 @@ export type DrawerParamList = {
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
   PrivacyDisclaimer: undefined;
+  LearnHub: undefined;
+  LearnHubDetail: {
+    item: {
+      id: string;
+      title: string;
+      subtitle: string;
+      icon: any;
+      color: string;
+    };
+  };
+  WhatIsContraception: undefined;
 };
 
 // User Tab Navigator - main app navigation for authenticated users
@@ -70,7 +81,7 @@ export type UserTabParamList = {
   Home: undefined;
   'Find Method': undefined;
   'Contraceptive Methods': undefined;
-  'Did You Know?': undefined;
+  Preferences: undefined;
 };
 
 // OB Tab Navigator

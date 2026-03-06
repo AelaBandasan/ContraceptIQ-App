@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Dimensions, Share } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Share } from 'react-native';
+import React, { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { RootStackScreenProps } from '../types/navigation';
 import { colors, spacing, typography, shadows, borderRadius } from '../theme';
 import { CONTRACEPTIVE_DETAILS } from '../data/contraceptiveData';
@@ -13,13 +13,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
     const insets = useSafeAreaInsets();
     const { methodId } = route.params || {};
 
-    // Senior Dev Note: In a production Supabase integration, 
-    // we would replace this static lookup with a useQuery() hook:
-    // const { data, isLoading, error } = useContraceptiveData(methodId);
     const data = methodId ? CONTRACEPTIVE_DETAILS[methodId] : null;
-
-    // TODO: Implement loading state when switching to dynamic API calls
-    // if (isLoading) return <LoadingSpinner />;
 
     if (!data) {
         return (
@@ -45,19 +39,18 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
 
     return (
         <View style={styles.safeArea}>
-            {/* Premium Header */}
-            <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
-                style={[styles.header, { paddingTop: insets.top + 10 }]}
-            >
+            {/* Premium Header - Reverted to Original Pink style */}
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
-                    <Ionicons name="arrow-back" size={24} color="#FFF" />
+                    <Ionicons name="chevron-back" size={26} color="#FFF" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Contraceptiq</Text>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.screenTitle}>Method Details</Text>
+                </View>
                 <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
                     <Ionicons name="share-outline" size={24} color="#FFF" />
                 </TouchableOpacity>
-            </LinearGradient>
+            </View>
 
             <ScrollView
                 style={styles.container}
@@ -65,87 +58,134 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
             >
                 {/* Main Info Card */}
-                <View style={styles.mainCard}>
-                    <View style={styles.imageContainer}>
-                        <Image source={data.illustration} style={styles.mainImage} />
+                <Animated.View entering={FadeInDown.delay(100).duration(500)} style={[styles.mainCard, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+                    <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', marginBottom: 15 }}>
+                        <View style={styles.imageContainer}>
+                            <Image source={data.illustration} style={styles.mainImage} />
+                        </View>
+                        <View style={[styles.mainTextContent, { marginLeft: 16, justifyContent: 'center' }]}>
+                            <View style={styles.titleRow}>
+                                <Text style={styles.methodTitle}>{data.name}</Text>
+                            </View>
+                            {data.type && (
+                                <View style={styles.typeBadge}>
+                                    <Text style={styles.typeBadgeText}>{data.type}</Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
-                    <View style={styles.mainTextContent}>
-                        <Text style={styles.methodTitle}>{data.name}</Text>
-                        <Text style={styles.methodDescription}>{data.description}</Text>
-                    </View>
-                </View>
+                    <Text style={styles.methodDescription}>{data.description}</Text>
+                </Animated.View>
 
                 {/* Stats Row */}
-                <View style={styles.statsRow}>
+                <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.statsRow}>
                     <View style={styles.statItem}>
                         <Text style={styles.statLabel}>Effectiveness</Text>
-                        <Text style={styles.statValue}>{data.effectiveness}</Text>
+                        <View style={styles.effChipSmall}>
+                            <Text style={styles.effChipTextSmall}>{data.perfectEffectiveness || data.effectiveness}</Text>
+                        </View>
+                        {(data.perfectEffectiveness) && <Text style={styles.statSubText}>(perfect use)</Text>}
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
                         <Text style={styles.statLabel}>Frequency</Text>
                         <View style={styles.statValueRow}>
-                            <Ionicons name="time-outline" size={16} color={colors.primary} />
+                            <Ionicons name={data.frequencyIcon || "time-outline"} size={16} color={colors.primary} />
                             <Text style={[styles.statValue, { marginLeft: 4 }]}>{data.frequency}</Text>
                         </View>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
                         <Text style={styles.statLabel}>Estimated Price</Text>
-                        <Text style={styles.statValue}>{data.priceRange}</Text>
+                        <Text style={[styles.statValue, { fontSize: 13, textAlign: 'center' }]}>{data.priceRange}</Text>
                     </View>
-                </View>
+                </Animated.View>
 
                 {/* How to Use Section */}
-                <View style={styles.sectionCard}>
-                    <View style={styles.sectionHeader}>
-                        <View>
-                            <Text style={styles.sectionTitle}>How to Use</Text>
-                            <Text style={styles.sectionSubtitle}>{data.name}</Text>
+                <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+                    <View style={styles.sectionCard}>
+                        <View style={styles.sectionHeader}>
+                            <View>
+                                <Text style={styles.sectionTitle}>HOW TO USE</Text>
+                                <Text style={styles.sectionSubtitle}>{data.name}</Text>
+                            </View>
+                            <View style={styles.iconBadge}>
+                                <MaterialCommunityIcons name="pill" size={30} color={colors.primary} />
+                            </View>
                         </View>
-                        <View style={styles.iconBadge}>
-                            <MaterialCommunityIcons name="pill" size={30} color={colors.primary} />
+
+                        <View style={styles.usageList}>
+                            {Array.isArray(data.howToUse) ? (
+                                data.howToUse.map((step, index) => (
+                                    <View key={index} style={styles.usageStepRow}>
+                                        <Text style={styles.usageStepNumber}>{index + 1}.</Text>
+                                        <Text style={styles.usageStepText}>{step}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.usageStepRow}>
+                                    <Text style={styles.usageStepBullet}>•</Text>
+                                    <Text style={styles.usageStepText}>{data.howToUse}</Text>
+                                </View>
+                            )}
+                        </View>
+
+                        <View style={styles.usageBadge}>
+                            <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+                            <Text style={styles.usageBadgeText}>{data.effectiveness} {data.effectiveness.includes('effective') ? '' : 'Effective'}</Text>
                         </View>
                     </View>
-                    <View style={styles.usageList}>
-                        {data.howToUse.map((step, index) => (
-                            <Text key={index} style={styles.usageStep}>
-                                {index + 1}. {step}
-                            </Text>
-                        ))}
-                    </View>
-                    <View style={styles.usageBadge}>
-                        <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
-                        <Text style={styles.usageBadgeText}>{data.effectiveness} Effective</Text>
-                    </View>
-                </View>
+                </Animated.View>
 
                 {/* Benefits & Disadvantages Section */}
-                <View style={styles.comparisonContainer}>
-                    <View style={[styles.comparisonBox, styles.benefitsBox]}>
-                        <Text style={[styles.comparisonTitle, { color: '#2E8B57' }]}>Benefits</Text>
+                <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.richComparisonContainer}>
+                    <View style={[styles.richComparisonBox, styles.benefitsBox]}>
+                        <View style={styles.comparisonHeaderRow}>
+                            <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
+                                <Ionicons name="checkmark-circle" size={24} color="#16A34A" />
+                            </View>
+                            <Text style={[styles.comparisonTitle, { color: '#16A34A' }]}>Benefits</Text>
+                        </View>
                         {data.benefits.map((item, idx) => (
-                            <View key={idx} style={styles.bulletRow}>
-                                <Text style={styles.bullet}>•</Text>
-                                <Text style={styles.bulletText}>{item}</Text>
+                            <View key={idx} style={styles.richBulletRow}>
+                                <View style={styles.checkIconWrapper}>
+                                    <Ionicons name="checkmark" size={16} color="#16A34A" />
+                                </View>
+                                <Text style={styles.richBulletText}>{item}</Text>
                             </View>
                         ))}
                     </View>
-                    <View style={[styles.comparisonBox, styles.disadvantagesBox]}>
-                        <Text style={[styles.comparisonTitle, { color: '#E45A92' }]}>Disadvantages</Text>
+                    <View style={[styles.richComparisonBox, styles.disadvantagesBox]}>
+                        <View style={styles.comparisonHeaderRow}>
+                            <View style={[styles.iconBox, { backgroundColor: '#FEF3C7' }]}>
+                                <Ionicons name="warning" size={24} color="#D97706" />
+                            </View>
+                            <Text style={[styles.comparisonTitle, { color: '#D97706' }]}>Disadvantages</Text>
+                        </View>
+                        <Text style={styles.sideEffectIntro}>Common side effects include:</Text>
                         {data.disadvantages.map((item, idx) => (
-                            <View key={idx} style={styles.bulletRow}>
-                                <Text style={styles.bullet}>•</Text>
-                                <Text style={styles.bulletText}>{item}</Text>
+                            <View key={idx} style={styles.richBulletRow}>
+                                <View style={styles.warningIconWrapper}>
+                                    <Ionicons name="close" size={16} color="#D97706" />
+                                </View>
+                                <Text style={[styles.richBulletText, { color: '#92400E' }]}>{item}</Text>
                             </View>
                         ))}
                     </View>
-                </View>
+                </Animated.View>
 
                 {/* Pregnancy Planning Link */}
-                <TouchableOpacity style={styles.footerLink}>
-                    <Text style={styles.footerLinkText}>Explore Pregnancy Planning</Text>
-                </TouchableOpacity>
+                <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.footerContainer}>
+                    {data.reversible && (
+                        <View style={styles.reversibleBadge}>
+                            <Ionicons name="leaf" size={14} color="#16A34A" />
+                            <Text style={styles.reversibleText}>Reversible</Text>
+                        </View>
+                    )}
+                    <TouchableOpacity style={styles.footerLink}>
+                        <Text style={styles.footerLinkText}>Explore Pregnancy Planning</Text>
+                    </TouchableOpacity>
+                </Animated.View>
             </ScrollView>
         </View>
     );
@@ -159,19 +199,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#F7F8FA',
     },
     header: {
+        backgroundColor: colors.primary,
         paddingHorizontal: 15,
         paddingBottom: 20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomLeftRadius: 25,
-        borderBottomRightRadius: 25,
-        ...shadows.md,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
     },
     headerButton: {
-        padding: 5,
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.2)',
     },
-    headerTitle: {
+    headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    screenTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#FFF',
@@ -208,11 +263,29 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 15,
     },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        marginBottom: 4,
+    },
     methodTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#2D3436',
-        marginBottom: 4,
+    },
+    typeBadge: {
+        backgroundColor: '#E9F9F0',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        marginLeft: 6,
+        marginTop: 2,
+    },
+    typeBadgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#16A34A',
     },
     methodDescription: {
         fontSize: 13,
@@ -233,6 +306,7 @@ const styles = StyleSheet.create({
     statItem: {
         flex: 1,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     statDivider: {
         width: 1,
@@ -249,6 +323,25 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#2D3436',
     },
+    statSubText: {
+        fontSize: 9,
+        color: '#636E72',
+        marginTop: 2,
+        textAlign: 'center'
+    },
+    effChipSmall: {
+        backgroundColor: '#E9F9F0',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        marginTop: 2
+    },
+    effChipTextSmall: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#16A34A',
+        textAlign: 'center'
+    },
     statValueRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -264,7 +357,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 10,
     },
     sectionTitle: {
         fontSize: 14,
@@ -287,18 +380,37 @@ const styles = StyleSheet.create({
     },
     usageList: {
         marginBottom: 15,
+        marginTop: 10,
     },
-    usageStep: {
+    usageStepRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    usageStepNumber: {
+        fontSize: 14,
+        color: '#636E72',
+        fontWeight: 'bold',
+        marginRight: 8,
+        lineHeight: 22,
+    },
+    usageStepBullet: {
+        fontSize: 16,
+        color: '#636E72',
+        marginRight: 8,
+        lineHeight: 22,
+    },
+    usageStepText: {
+        flex: 1,
         fontSize: 14,
         color: '#636E72',
         lineHeight: 22,
-        marginBottom: 6,
     },
     usageBadge: {
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-end',
-        backgroundColor: '#F1F8F6',
+        backgroundColor: '#FDF0F5',
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 6,
@@ -309,49 +421,106 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 4,
     },
-    comparisonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 25,
+    richComparisonContainer: {
+        gap: 16,
+        marginBottom: 24,
     },
-    comparisonBox: {
-        flex: 0.48,
-        borderRadius: 15,
-        padding: 15,
+    richComparisonBox: {
+        borderRadius: 24,
+        padding: 24,
+        borderWidth: 1,
         ...shadows.sm,
     },
     benefitsBox: {
-        backgroundColor: '#E9F9F0',
+        backgroundColor: '#F0FDF4',
+        borderColor: '#DCFCE7',
     },
     disadvantagesBox: {
-        backgroundColor: '#FDF0F5',
+        backgroundColor: '#FFFBEB',
+        borderColor: '#FEF3C7',
+    },
+    comparisonHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    iconBox: {
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
     },
     comparisonTitle: {
-        fontSize: 15,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        fontSize: 20,
+        fontWeight: '800',
     },
-    bulletRow: {
-        flexDirection: 'row',
-        marginBottom: 5,
-    },
-    bullet: {
+    sideEffectIntro: {
         fontSize: 14,
-        marginRight: 5,
+        color: '#92400E',
+        marginBottom: 16,
+        fontWeight: '600',
     },
-    bulletText: {
-        fontSize: 13,
-        color: '#2D3436',
+    richBulletRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 12,
+    },
+    checkIconWrapper: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#DCFCE7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+        marginTop: 2,
+    },
+    warningIconWrapper: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#FEF3C7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+        marginTop: 2,
+    },
+    richBulletText: {
+        fontSize: 15,
+        color: '#3F3F46',
         flex: 1,
+        lineHeight: 22,
+        fontWeight: '500',
+    },
+    footerContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    reversibleBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#DCFCE7',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginBottom: 12,
+    },
+    reversibleText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#16A34A',
+        marginLeft: 6,
     },
     footerLink: {
-        alignItems: 'center',
         paddingVertical: 10,
     },
     footerLinkText: {
         color: colors.primary,
         fontWeight: 'bold',
         textDecorationLine: 'underline',
+        fontSize: 15,
     },
     errorContainer: {
         flex: 1,
@@ -366,6 +535,7 @@ const styles = StyleSheet.create({
     },
     backButton: {
         padding: 10,
+        elevation: 3,
     },
     backLink: {
         color: colors.primary,

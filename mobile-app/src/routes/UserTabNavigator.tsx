@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home as HomeIcon, List, BookOpen } from 'lucide-react-native';
+import { Home as HomeIcon, Sliders } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
-import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
-import Diduknow from '../screens/Diduknow';
+import Contraceptivemethods from '../screens/Contraceptivemethods';
+import Preferences from '../screens/Preferences';
 import { colors, typography, shadows } from '../theme';
 import { UserTabParamList } from '../types/navigation';
 
@@ -55,17 +56,17 @@ const UserTabNavigator = () => {
                 options={{
                     tabBarLabel: 'Methods',
                     tabBarIcon: ({ color, size }) => (
-                        <List color={color} size={size} />
+                        <Ionicons name="grid" color={color} size={size} />
                     ),
                 }}
             />
             <Tab.Screen
-                name="Did You Know?"
-                component={Diduknow}
+                name="Preferences"
+                component={Preferences}
                 options={{
-                    tabBarLabel: 'Learn',
+                    tabBarLabel: 'Preferences',
                     tabBarIcon: ({ color, size }) => (
-                        <BookOpen color={color} size={size} />
+                        <Sliders color={color} size={size} />
                     ),
                 }}
             />

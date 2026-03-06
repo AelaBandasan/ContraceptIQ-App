@@ -35,5 +35,5 @@ rootProject.name = 'thesis_contraceptIQ'
 
 expoAutolinking.useExpoVersionCatalog()
 
-include ':app'
+include ':app' 
 includeBuild(expoAutolinking.reactNativeGradlePlugin)

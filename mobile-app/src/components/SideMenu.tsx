@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, BackHandler, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, ScrollView } from 'react-native';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -43,16 +43,10 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
 
   const menuItems = [
     {
-      label: 'My Preferences',
-      route: 'Preferences',
-      Icon: Sliders,
-      show: hasAssessment,
-    },
-    {
-      label: 'Recommended for You',
-      route: 'Recommendation',
-      Icon: Award,
-      show: hasAssessment,
+      label: 'Home',
+      route: 'MainTabs',
+      Icon: HomeIcon,
+      show: true,
     },
     {
       label: 'Emergency Contraception',
@@ -67,11 +61,19 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
       label: 'FAQs',
       route: 'Contraceptive FAQs',
       Icon: HelpCircle,
+      show: true,
     },
     {
       label: 'About Us',
       route: 'About Us',
       Icon: Info,
+      show: true,
+    },
+    {
+      label: 'Privacy & Disclaimer',
+      route: 'PrivacyDisclaimer',
+      Icon: ShieldCheck,
+      show: true,
     },
   ];
 
@@ -85,17 +87,13 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
     }
   };
 
-  const handlePrivacy = () => {
-    navigation.navigate('PrivacyDisclaimer');
-  };
-
   const handleExit = () => {
     Alert.alert(
-      "Exit App",
-      "Are you sure you want to exit?",
+      "Exit to Start",
+      "Are you sure you want to return to the start screen?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Exit", onPress: () => BackHandler.exitApp() },
+        { text: "Exit", onPress: () => navigation.navigate('UserStartingScreen' as never) },
       ],
       { cancelable: true },
     );
@@ -116,7 +114,7 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
           <item.Icon
             size={22}
             color={colors.primary}
-            strokeWidth={2.5}
+            strokeWidth={focused ? 3 : 2.5}
           />
         </View>
         <Text style={[styles.menuLabel, focused && styles.menuLabelActive]}>
@@ -149,21 +147,17 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>SUPPORT</Text>
-          {supportItems.map((item, index) => renderItem(item, index))}
+          {supportItems.map((item, index) => renderItem(item, 100 + index))}
+        </View>
 
-          {/* Special Actions */}
+        <View style={styles.divider} />
+
+        <View style={styles.section}>
           <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
             <View style={styles.iconContainer}>
               <Mail size={22} color={colors.primary} strokeWidth={2.5} />
             </View>
             <Text style={styles.menuLabel}>Send Feedback</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem} onPress={handlePrivacy}>
-            <View style={styles.iconContainer}>
-              <ShieldCheck size={22} color={colors.primary} strokeWidth={2.5} />
-            </View>
-            <Text style={styles.menuLabel}>Privacy & Disclaimer</Text>
           </TouchableOpacity>
         </View>
       </DrawerContentScrollView>
