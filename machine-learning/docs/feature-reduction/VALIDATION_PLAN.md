@@ -73,11 +73,11 @@ config. Emit a definitive pass/fail verdict per feature set.
 
 | Task | Document | Status | Checkpoint File |
 |------|----------|--------|-----------------|
-| 01 | [task-01-data-split-refactor.md](task-01-data-split-refactor.md) | PENDING | `results/checkpoints/task_01_complete.json` |
-| 02 | [task-02-hyperparameter-search.md](task-02-hyperparameter-search.md) | PENDING | `results/checkpoints/task_02_complete.json` |
-| 03 | [task-03-stratified-10fold-cv.md](task-03-stratified-10fold-cv.md) | PENDING | `results/checkpoints/task_03_complete.json` |
-| 04 | [task-04-threshold-selection.md](task-04-threshold-selection.md) | PENDING | `results/checkpoints/task_04_complete.json` |
-| 05 | [task-05-results-report.md](task-05-results-report.md) | PENDING | `results/checkpoints/task_05_complete.json` |
+| 01 | [task-01-data-split-refactor.md](task-01-data-split-refactor.md) | COMPLETE | `results/checkpoints/task_01_complete.json` |
+| 02 | [task-02-hyperparameter-search.md](task-02-hyperparameter-search.md) | COMPLETE | `results/checkpoints/task_02_complete.json` |
+| 03 | [task-03-stratified-10fold-cv.md](task-03-stratified-10fold-cv.md) | COMPLETE | `results/checkpoints/task_03_complete.json` |
+| 04 | [task-04-threshold-selection.md](task-04-threshold-selection.md) | COMPLETE | `results/checkpoints/task_04_complete.json` |
+| 05 | [task-05-results-report.md](task-05-results-report.md) | COMPLETE | `results/checkpoints/task_05_complete.json` |
 
 Tasks must be completed in order. Each task saves a checkpoint file to disk on
 success. If the process is interrupted, check which checkpoint files exist to

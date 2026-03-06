@@ -1,6 +1,6 @@
 # Task 03 — Stratified 10-Fold Cross-Validation
 
-**Status:** PENDING
+**Status:** COMPLETE
 
 **Part of:** [VALIDATION_PLAN.md](VALIDATION_PLAN.md)
 **Previous task:** [task-02-hyperparameter-search.md](task-02-hyperparameter-search.md)
@@ -264,8 +264,6 @@ If the process is interrupted mid-CV:
 
 ## Status Log
 
-> Update this section when the task is completed.
-
 | Date | Event |
 |------|-------|
-| — | Task not yet started |
+| 2026-03-07 | Task completed successfully. `cv_runner.py` created. 10-fold outer CV run for all 4 feature sets. All folds achieved recall = 1.0 (mean ± std = 1.0000 ± 0.0000, 95% CI [1.0000, 1.0000]). All sets pass the >87% target. **Issue:** DT `class_weight` dictionary keys are serialised as strings by JSON (`"0"`, `"1"`) but sklearn `DecisionTreeClassifier` requires integer keys — caused `ValueError: classes [0,1] not in class_weight`. **Fix:** Added integer key conversion in `_build_and_fit_dt` on load (`{int(k): float(v) for k, v in ...}`). Checkpoint written and verified. |

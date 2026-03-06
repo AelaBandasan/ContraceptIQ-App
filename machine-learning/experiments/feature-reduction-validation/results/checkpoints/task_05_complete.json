@@ -1,0 +1,22 @@
+{
+  "task": "05",
+  "status": "complete",
+  "timestamp": "2026-03-06T16:30:34.789678+00:00",
+  "recommendation": {
+    "validated": true,
+    "feature_set": "reduced_C",
+    "n_features": 10,
+    "operating_threshold": 0.12,
+    "cv_recall_mean": 1.0,
+    "ci_95_lower": 1.0,
+    "final_test_recall": 1.0
+  },
+  "outputs": {
+    "report": "results\\validation_report.txt",
+    "config": "results\\validated_feature_reduction_config.json"
+  },
+  "sha256": {
+    "report": "1feae57e60beec6e254f7f23bddc935c1485bb98ea7d286dee0ffc665d8b8390",
+    "config": "a904c4a645c410be540215453c8500a1d5dd46537e927c7c3cfc8a8ea8790ccd"
+  }
+}
