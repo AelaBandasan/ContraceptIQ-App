@@ -84,32 +84,43 @@ _REDUCED_A = [f for f in _ALL_FEATURES if f not in {
     "LAST_SOURCE_TYPE",
 }]
 
+# Legacy _REDUCED_B (pre-fix, derived with look-ahead bias + REGION included):
+#   "AGE", "REGION", "RELIGION", "MARITAL_STATUS", "RESIDING_WITH_PARTNER",
+#   "SMOKE_CIGAR", "HUSBANDS_EDUC", "HUSBAND_AGE", "PARITY", "PATTERN_USE",
+#   "CONTRACEPTIVE_METHOD", "REASON_DISCONTINUED"
+# Replaced by derive_feature_sets.py (inner-split permutation importance,
+# REGION excluded as geographic sampling artifact, strictly positive importance).
 _REDUCED_B = [
-    "AGE",
-    "REGION",
-    "RELIGION",
-    "MARITAL_STATUS",
-    "RESIDING_WITH_PARTNER",
-    "SMOKE_CIGAR",
-    "HUSBANDS_EDUC",
-    "HUSBAND_AGE",
-    "PARITY",
     "PATTERN_USE",
+    "HUSBAND_AGE",
+    "AGE",
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
     "CONTRACEPTIVE_METHOD",
-    "REASON_DISCONTINUED",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY",
+    "RELIGION",
+    "WANT_LAST_PREGNANCY",
+    "RESIDING_WITH_PARTNER",
+    "HSBND_DESIRE_FOR_MORE_CHILDREN",
+    "LAST_METHOD_DISCONTINUED",
 ]
 
+# Legacy _REDUCED_C (pre-fix, derived with look-ahead bias + REGION included):
+#   "REGION", "CONTRACEPTIVE_METHOD", "RELIGION", "HUSBAND_AGE", "PARITY",
+#   "AGE", "REASON_DISCONTINUED", "HUSBANDS_EDUC", "MARITAL_STATUS", "PATTERN_USE"
+# Replaced by derive_feature_sets.py (cumulative >= 80%, min=9, REGION excluded).
 _REDUCED_C = [
-    "REGION",
-    "CONTRACEPTIVE_METHOD",
-    "RELIGION",
-    "HUSBAND_AGE",
-    "PARITY",
-    "AGE",
-    "REASON_DISCONTINUED",
-    "HUSBANDS_EDUC",
-    "MARITAL_STATUS",
     "PATTERN_USE",
+    "HUSBAND_AGE",
+    "AGE",
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
+    "CONTRACEPTIVE_METHOD",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY",
 ]
 
 FEATURE_SETS: dict[str, list[str]] = {
