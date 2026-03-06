@@ -146,13 +146,13 @@ DT_PARAMS: dict = {
 # ============================================================================
 
 # Confidence margin is fixed; only threshold is swept
-CONF_MARGIN: float = 0.20
+CONF_MARGIN: float = 0.05
 
 # Thresholds to sweep for each reduced feature set
-THRESHOLD_SWEEP: list[float] = [0.10, 0.12, 0.15, 0.18, 0.20]
+THRESHOLD_SWEEP: list[float] = [0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 
 # ============================================================================
 # SUCCESS CRITERION
 # ============================================================================
 
-RECALL_TARGET: float = 0.87
+RECALL_TARGET: float = 0.90
