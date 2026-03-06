@@ -176,11 +176,12 @@ BOOTSTRAP_N:     int = 1000    # iterations for 95% CI
 # HYBRID INFERENCE SETTINGS
 # ============================================================================
 
-CONF_MARGIN:      float = 0.20
-THRESHOLD_SWEEP:  list[float] = [0.10, 0.12, 0.15, 0.18, 0.20]
+CONF_MARGIN:      float = 0.05
+THRESHOLD_SWEEP:  list[float] = [0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 
 # ============================================================================
 # SUCCESS CRITERION
 # ============================================================================
 
-RECALL_TARGET: float = 0.87
+RECALL_TARGET: float = 0.90
+FBETA_BETA:    float = 2.0
