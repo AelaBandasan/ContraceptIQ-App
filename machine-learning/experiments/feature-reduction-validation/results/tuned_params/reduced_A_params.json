@@ -1,0 +1,37 @@
+{
+  "feature_set": "reduced_A",
+  "n_features": 23,
+  "xgb": {
+    "best_params": {
+      "model__colsample_bytree": 0.718509402281633,
+      "model__gamma": 0.04958008171890075,
+      "model__learning_rate": 0.010471167612644676,
+      "model__max_depth": 3,
+      "model__min_child_weight": 7,
+      "model__n_estimators": 100,
+      "model__subsample": 0.679486272613669
+    },
+    "best_cv_fbeta": 0.6619066864390877,
+    "scale_pos_weight": 14.57638888888889
+  },
+  "dt": {
+    "best_params": {
+      "model__min_samples_split": 10,
+      "model__min_samples_leaf": 15,
+      "model__max_depth": 8,
+      "model__criterion": "entropy",
+      "model__class_weight": {
+        "0": 1.0,
+        "1": 4.0
+      }
+    },
+    "best_cv_fbeta": 0.5094422207071447
+  },
+  "search_config": {
+    "n_iter": 30,
+    "inner_cv_folds": 5,
+    "scoring": "fbeta(beta=2.0)",
+    "random_state": 42
+  },
+  "timestamp": "2026-03-06T17:58:59.927055+00:00"
+}

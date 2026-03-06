@@ -1,0 +1,24 @@
+{
+  "task": "02",
+  "status": "complete",
+  "timestamp": "2026-03-06T18:00:42.830338+00:00",
+  "sets_completed": [
+    "full_25",
+    "reduced_A",
+    "reduced_B",
+    "reduced_C"
+  ],
+  "outputs": {
+    "full_25": "results\\tuned_params\\full_25_params.json",
+    "reduced_A": "results\\tuned_params\\reduced_A_params.json",
+    "reduced_B": "results\\tuned_params\\reduced_B_params.json",
+    "reduced_C": "results\\tuned_params\\reduced_C_params.json",
+    "search_summary": "results\\tuned_params\\search_summary.csv"
+  },
+  "sha256": {
+    "full_25": "b53753a18169c4b9a8a1fcdb2175763ef9683e93114f244b53ee0be114f3134d",
+    "reduced_A": "705845604b66b26cb9308f82d46ba2f88c60bda636d74d2342260716613a1723",
+    "reduced_B": "5b746af3db710ff8eea6332f7f0ad85d32077b1c6d507e04f86a73f3f9ab65fc",
+    "reduced_C": "86d146e510baf33912168d79ac0f2ec61305d260ccb4059c9bc6525214c95228"
+  }
+}

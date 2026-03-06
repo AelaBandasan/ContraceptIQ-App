@@ -1,0 +1,92 @@
+======================================================================
+  FEATURE REDUCTION VALIDATION REPORT
+======================================================================
+  Generated        : 2026-03-06T18:01:39.578698+00:00
+  Recall target    : > 90%
+  CV strategy      : Stratified 10-fold
+  Threshold rule   : Leak-free (selected on inner val split per fold)
+  Final test set   : results/splits/test.pkl  (locked, 15% of full data)
+
+======================================================================
+  SECTION 2 — CV SUMMARY TABLE
+======================================================================
+Feature Set    N Feat  CV Recall Mean     Std                95% CI   ROC-AUC  CI>Target
+------------------------------------------------------------------------------------------
+full_25            25          1.0000  0.0000      [1.0000, 1.0000]    0.9083        YES
+reduced_A          23          1.0000  0.0000      [1.0000, 1.0000]    0.9073        YES
+reduced_B          14          1.0000  0.0000      [1.0000, 1.0000]    0.9071        YES
+reduced_C           9          1.0000  0.0000      [1.0000, 1.0000]    0.9169        YES
+
+======================================================================
+  SECTION 3 — FINAL TEST-SET METRICS
+======================================================================
+Feature Set    Threshold    Recall  Precision        F1   ROC-AUC    TP   FP    TN   FN
+------------------------------------------------------------------------------------------
+full_25             0.25    1.0000     0.2562    0.4079    0.9054    31   90   360    0
+reduced_A           0.25    1.0000     0.2562    0.4079    0.9106    31   90   360    0
+reduced_B           0.25    1.0000     0.2562    0.4079    0.9004    31   90   360    0
+reduced_C           0.50    0.9677     0.2586    0.4082    0.9029    30   86   364    1
+
+======================================================================
+  SECTION 4 — PER-FEATURE-SET DETAIL
+======================================================================
+  full_25  (25 features)
+    10-fold recall values : [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    Mode threshold (CV)   : 0.25
+    Final test recall     : 1.0000
+    Final test precision  : 0.2562
+    Final test F1         : 0.4079
+    Final test ROC-AUC    : 0.9054
+    Confusion matrix      : TP=31 FP=90 TN=360 FN=0
+    CI lower > 90%     : YES
+
+  reduced_A  (23 features)
+    10-fold recall values : [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    Mode threshold (CV)   : 0.25
+    Final test recall     : 1.0000
+    Final test precision  : 0.2562
+    Final test F1         : 0.4079
+    Final test ROC-AUC    : 0.9106
+    Confusion matrix      : TP=31 FP=90 TN=360 FN=0
+    CI lower > 90%     : YES
+
+  reduced_B  (14 features)
+    10-fold recall values : [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    Mode threshold (CV)   : 0.25
+    Final test recall     : 1.0000
+    Final test precision  : 0.2562
+    Final test F1         : 0.4079
+    Final test ROC-AUC    : 0.9004
+    Confusion matrix      : TP=31 FP=90 TN=360 FN=0
+    CI lower > 90%     : YES
+
+  reduced_C  (9 features)
+    10-fold recall values : [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    Mode threshold (CV)   : 0.50
+    Final test recall     : 0.9677
+    Final test precision  : 0.2586
+    Final test F1         : 0.4082
+    Final test ROC-AUC    : 0.9029
+    Confusion matrix      : TP=30 FP=86 TN=364 FN=1
+    CI lower > 90%     : YES
+
+======================================================================
+  SECTION 5 — RECOMMENDATION
+======================================================================
+  Recommended set      : reduced_C  (9 features)
+  Operating threshold  : 0.50
+  CV recall mean       : 1.0000  (95% CI: [1.0000, 1.0000])
+  Final test recall    : 0.9677
+  Verdict              : VALIDATED
+
+  Features kept:
+    - PATTERN_USE
+    - HUSBAND_AGE
+    - AGE
+    - ETHNICITY
+    - HOUSEHOLD_HEAD_SEX
+    - CONTRACEPTIVE_METHOD
+    - SMOKE_CIGAR
+    - DESIRE_FOR_MORE_CHILDREN
+    - PARITY
+======================================================================
