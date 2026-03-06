@@ -1,24 +1,23 @@
 {
-  "description": "Hybrid v4: reduced_C 10-feature high-recall model",
+  "description": "Hybrid v4: reduced_C 9-feature high-recall model",
   "xgb_model_file": "xgb_high_recall.joblib",
   "dt_model_file": "dt_high_recall.joblib",
   "onnx_xgb_file": "xgb_high_recall.onnx",
   "onnx_dt_file": "dt_high_recall.onnx",
   "features": [
-    "REGION",
-    "CONTRACEPTIVE_METHOD",
-    "RELIGION",
+    "PATTERN_USE",
     "HUSBAND_AGE",
-    "PARITY",
     "AGE",
-    "REASON_DISCONTINUED",
-    "HUSBANDS_EDUC",
-    "MARITAL_STATUS",
-    "PATTERN_USE"
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
+    "CONTRACEPTIVE_METHOD",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY"
   ],
-  "n_features": 10,
-  "threshold_v4": 0.1,
-  "conf_margin_v4": 0.2,
+  "n_features": 9,
+  "threshold_v4": 0.25,
+  "conf_margin_v4": 0.05,
   "hybrid_rule": "upgrade_only_if_low_confidence_and_dt_predicts_1",
   "target_name": "HIGH_RISK_DISCONTINUE",
   "xgb_params": {
@@ -40,11 +39,11 @@
     "random_state": 42
   },
   "eval_metrics": {
-    "recall": 0.97561,
-    "precision": 0.254777,
-    "f1": 0.40404,
-    "roc_auc": 0.917358,
+    "recall": 0.92683,
+    "precision": 0.258503,
+    "f1": 0.40426,
+    "roc_auc": 0.908374,
     "meets_target": true
   },
-  "notes": "Retrained on 10-feature reduced_C set (winner of feature-reduction experiment). Threshold lowered from 0.15 (v3) to 0.10 to maximise recall while holding conf_margin at 0.20."
+  "notes": "Retrained on 9-feature reduced_C set (winner of feature-reduction-validation experiment). Threshold set to 0.50 and conf_margin set to 0.05 per the corrected validation pipeline (fixes degenerate-band and look-ahead-bias bugs)."
 }

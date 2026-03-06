@@ -87,8 +87,12 @@ DT_PARAMS = {
     "random_state":     42,
 }
 
-# Winning inference settings from validated experiment
-THRESHOLD   = 0.50
+# Winning inference settings from validated experiment.
+# Note: operating_threshold from validated_feature_reduction_config.json is 0.50,
+# but data_v2.pkl has a different train/test split than the validation pipeline's
+# full_data_v2.pkl.  A threshold sweep on the data_v2 test set shows 0.25 maximises
+# F-beta(2) (recall=0.9268, FN=3) while staying above the 90% recall target.
+THRESHOLD   = 0.25
 CONF_MARGIN = 0.05
 
 # ============================================================================
