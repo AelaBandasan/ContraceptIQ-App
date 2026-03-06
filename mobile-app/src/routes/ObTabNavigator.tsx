@@ -8,6 +8,7 @@ import Whatsrightforme from '../screens/Whatsrightforme'; // Reusing for New Ass
 
 import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import ProfileScreen from '../screens/ObSide/ProfileScreen';
+import WhoMecConditionsScreen from '../screens/ObSide/WhoMecConditionsScreen';
 import MecGuideScreen from '../screens/ObSide/MecGuideScreen';
 import FeedbackScreen from '../screens/ObSide/FeedbackScreen';
 import Contrafaqs from '../screens/Contrafaqs';
@@ -84,6 +85,16 @@ const ObTabNavigator = () => {
                 options={{
                     tabBarButton: () => null,
                     tabBarItemStyle: { display: 'none' },
+                }}
+            />
+            <Tab.Screen
+                name="ObWhoMecConditions"
+                component={WhoMecConditionsScreen}
+                options={{
+                    tabBarLabel: 'MEC',
+                    tabBarIcon: ({ color, size }) => (
+                        <Book color={color} size={size} />
+                    )
                 }}
             />
             <Tab.Screen

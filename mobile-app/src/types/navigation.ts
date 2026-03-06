@@ -34,6 +34,11 @@ export type RootStackParamList = {
     methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
   };
   PregnancyPlanning: undefined;
+
+  // WHO MEC Tool
+  ObWhoMecConditions: undefined;
+  ObWhoMecPreferences: { age: number; conditionIds: string[] };
+  ObWhoMecResults: { age: number; conditionIds: string[]; preferences: string[] };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -98,6 +103,9 @@ export type ObTabParamList = {
   ObEducation: undefined;
   ObEmergency: undefined;
   ObAbout: undefined;
+
+  // WHO MEC Tool standalone tab (Preferences/Results navigate via RootStack)
+  ObWhoMecConditions: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack

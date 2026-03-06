@@ -175,7 +175,7 @@ const GUEST_STEPS = [
     type: "select",
     options: ["Unemployed", "Student", "Farmer", "Others"],
   },
-  { id: "HUSBAND_AGE", label: "Husband's Age", type: "wheel" },
+  { id: "HUSBAND_AGE", label: "Husband's Age", type: "wheel", range: [15, 70] },
   {
     id: "HUSBAND_EDUC_LEVEL",
     label: "Husband's Education Level",
@@ -482,6 +482,21 @@ const ObAssessment = ({ navigation, route }: any) => {
               setMecRecommendations(patientData.mec_recommendations);
             if (patientData.method_eligibility)
               setMethodEligibility(patientData.method_eligibility);
+
+            // Restore Risk Results
+            if (data.riskResults) {
+              const restoredResults: Record<string, RiskAssessmentResponse> = {};
+              Object.entries(data.riskResults).forEach(([method, res]: [string, any]) => {
+                restoredResults[method] = {
+                  risk_level: res.riskLevel,
+                  confidence: res.confidence,
+                  recommendation: res.recommendation,
+                  xgb_probability: res.probability,
+                  upgraded_by_dt: res.upgradedByDt || false,
+                };
+              });
+              setAllMethodResults(restoredResults);
+            }
           }
         } catch (error) {
           Alert.alert("Error", "Failed to load patient data.");
@@ -548,7 +563,7 @@ const ObAssessment = ({ navigation, route }: any) => {
       ),
       SMOKE_CIGAR:
         data["SMOKE_CIGAR"] === "Thinking about quitting" ||
-        data["SMOKE_CIGAR"] === "Current daily"
+          data["SMOKE_CIGAR"] === "Current daily"
           ? 1
           : 0,
       PARITY: getNumber("PARITY", 0),
@@ -767,13 +782,24 @@ const ObAssessment = ({ navigation, route }: any) => {
           }
           results[methodName] = result;
         } catch (error: any) {
-          console.error(
+          console.warn(
             `Risk assessment failed for ${methodName}:`,
             error.message,
           );
           results[methodName] = null;
         }
       }
+      console.log('Final Assessment Results:', results);
+
+      const validCount = Object.values(results).filter((r) => r !== null).length;
+      if (validCount === 0) {
+        Alert.alert(
+          "Prediction Failed",
+          "Could not generate risk predictions. Ensure the server is reachable at the configured URL, or check your network.",
+        );
+        return;
+      }
+
       setAllMethodResults(results);
       setScreen("results");
     } catch (error: any) {
@@ -1428,6 +1454,7 @@ const ObAssessment = ({ navigation, route }: any) => {
               </View>
             ) : (
               <>
+                {console.log('Rendering Risk Results Screen. allMethodResults keys:', Object.keys(allMethodResults))}
                 {Object.entries(allMethodResults).map(
                   ([methodName, result]) => {
                     if (!result) return null;
@@ -1550,14 +1577,14 @@ const ObAssessment = ({ navigation, route }: any) => {
                 activeSelectorStep?.options ||
                 (activeSelectorStep?.range
                   ? Array.from(
-                      {
-                        length:
-                          activeSelectorStep.range[1] -
-                          activeSelectorStep.range[0] +
-                          1,
-                      },
-                      (_, i) => String(activeSelectorStep.range[0] + i),
-                    )
+                    {
+                      length:
+                        activeSelectorStep.range[1] -
+                        activeSelectorStep.range[0] +
+                        1,
+                    },
+                    (_, i) => String(activeSelectorStep.range[0] + i),
+                  )
                   : [])
               }
               keyExtractor={(item) => item}

@@ -11,6 +11,8 @@ import PendingVerificationScreen from '../screens/ObSide/PendingVerificationScre
 import ObTabNavigator from './ObTabNavigator';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import PregnancyPlanningScreen from '../screens/PregnancyPlanning';
+import WhoMecPreferencesScreen from '../screens/ObSide/WhoMecPreferencesScreen';
+import WhoMecResultsScreen from '../screens/ObSide/WhoMecResultsScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +38,10 @@ const RootStack = () => {
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
       <Stack.Screen name="MethodDetail" component={MethodDetail} />
       <Stack.Screen name="PregnancyPlanning" component={PregnancyPlanningScreen} />
+
+      {/* WHO MEC Steps */}
+      <Stack.Screen name="ObWhoMecPreferences" component={WhoMecPreferencesScreen} />
+      <Stack.Screen name="ObWhoMecResults" component={WhoMecResultsScreen} />
     </Stack.Navigator>
   );
 };

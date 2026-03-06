@@ -138,7 +138,7 @@ export interface RequiredFeaturesResponse {
 class DiscontinuationRiskService {
   private client: AxiosInstance;
   private readonly API_BASE_URL: string;
-  private readonly API_TIMEOUT: number = 30000; // 30 seconds
+  private readonly API_TIMEOUT: number = 5000; // 5 seconds — fail fast for unreachable server
   private readonly MAX_RETRIES: number = 3;
 
   constructor(baseURL?: string) {
@@ -397,10 +397,15 @@ class DiscontinuationRiskService {
         }
 
         // Network errors - fallback to offline ONNX execution if the server is unreachable
-        if (error.code && ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT', 'ERR_NETWORK'].includes(error.code)) {
+        if (
+          error.code &&
+          ["ECONNABORTED", "ECONNREFUSED", "ETIMEDOUT", "ERR_NETWORK", "ERR_CONNECTION_REFUSED"].includes(error.code) ||
+          error.message?.includes("Network Error") ||
+          error.message?.includes("network failure")
+        ) {
           logger.warn(
-            `Network error calling Python API. Falling back to on-device ML (${error.code})`,
-            { code: error.code }
+            `Network error calling Python API. Falling back to on-device ML (${error.code || "unknown"})`,
+            { code: error.code, message: error.message }
           );
           try {
             const offlineResult = await assessOffline(data as Record<string, any>);
@@ -505,10 +510,12 @@ class DiscontinuationRiskService {
    * Handle axios errors with logging.
    */
   private handleError(error: AxiosError): Promise<never> {
-    console.error('API Error:', {
+    // Silence console.error to prevent Red Box overlays in development
+    // when using on-device fallbacks. Log as warn/debug instead.
+    console.warn("API Error (handled):", {
       status: error.response?.status,
       message: error.message,
-      data: error.response?.data,
+      code: error.code,
     });
 
     return Promise.reject(error);
