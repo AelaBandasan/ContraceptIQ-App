@@ -30,6 +30,7 @@ import pandas as pd
 from sklearn.metrics import (
     confusion_matrix,
     f1_score,
+    fbeta_score,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -188,30 +189,31 @@ def select_threshold(
     """
     Select the best decision threshold using the validation split only.
 
+    Selects the threshold from THRESHOLD_SWEEP that maximises F-beta (β=2)
+    on X_val.  F-beta weights recall 2× more than precision, preventing the
+    degenerate all-positive outcome that pure recall maximisation produces.
+
     Returns
     -------
     best_threshold : float
-        The threshold from THRESHOLD_SWEEP that maximises recall on X_val,
-        ties broken by precision.
+        The threshold that maximises F-beta(β=2) on X_val.
     target_met_on_val : bool
         True if the best threshold achieved recall > RECALL_TARGET on X_val.
+        Diagnostic only — does not influence which threshold is returned.
     """
-    best_thresh    = thresholds[0]
-    best_recall    = -1.0
-    best_precision = -1.0
+    best_thresh = thresholds[0]
+    best_score  = -1.0
+    best_recall = 0.0
 
     for t in thresholds:
-        preds, probs = _run_hybrid(xgb_pipe, dt_pipe, X_val, t, conf_margin)
-        r = float(recall_score(y_val, preds, zero_division=0))
-        p = float(precision_score(y_val, preds, zero_division=0))
+        preds, _ = _run_hybrid(xgb_pipe, dt_pipe, X_val, t, conf_margin)
+        score = float(fbeta_score(y_val, preds, beta=cfg.FBETA_BETA, zero_division=0))
+        if score > best_score:
+            best_score  = score
+            best_thresh = t
+            best_recall = float(recall_score(y_val, preds, zero_division=0))
 
-        # Select threshold maximising recall; break ties by precision
-        if r > best_recall or (r == best_recall and p > best_precision):
-            best_recall    = r
-            best_precision = p
-            best_thresh    = t
-
-    target_met = best_recall > cfg.RECALL_TARGET
+    target_met = best_recall > cfg.RECALL_TARGET   # diagnostic only
     return best_thresh, target_met
 
 
