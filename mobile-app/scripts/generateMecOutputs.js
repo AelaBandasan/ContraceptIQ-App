@@ -6,13 +6,8 @@
  *
  * 1. mecConditionOutputs.json — All pre-computed MEC category outputs for
  *    every valid (age group × up to 3 conditions) combination.
- *    This is the core lookup table.
  *
  * 2. mecPreferenceScores.json — All preference combo → method match scores.
- *    Independent of conditions, so computed separately.
- *
- * The app combines both at runtime: look up MEC categories from file 1,
- * look up match scores from file 2, sort and display.
  *
  * Usage:  node scripts/generateMecOutputs.js
  */
@@ -20,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// ─── Data (mirrors whoMecData.ts) ────────────────────────────────────────────
+// ─── Data (mirrors whoMecData.ts — all 55 parent conditions, 116 sub-entries) ─
 
 const METHOD_IDS = ['Cu-IUD', 'LNG-IUD', 'Implant', 'DMPA', 'POP', 'CHC'];
 
@@ -47,94 +42,140 @@ const METHOD_ATTRIBUTES = {
 
 const PREFERENCE_KEYS = ['regular', 'effectiveness', 'longterm', 'privacy', 'client', 'nonhormonal', 'sti'];
 
-// Condition categories stored as arrays [Cu-IUD, LNG-IUD, Implant, DMPA, POP, CHC]
+// All 116 condition entries — [Cu-IUD, LNG-IUD, Implant, DMPA, POP, CHC]
 const CONDITIONS = {
-  'pp_bf_lt6w': [1,1,2,2,2,4],
-  'pp_bf_6w_6m': [1,1,1,1,1,3],
-  'pp_bf_gte6m': [1,1,1,1,1,2],
+  // Personal Characteristics
+  'bf_lt6w': [1,1,2,2,2,4],
+  'bf_6w_6m': [1,1,1,1,1,3],
+  'bf_gte6m': [1,1,1,1,1,2],
+  'obesity': [1,1,1,2,1,2],
+  'parity_nulliparous': [2,2,1,1,1,1],
+  'parity_parous': [1,1,1,1,1,1],
+  'post_abortion_1st': [1,1,1,1,1,1],
+  'post_abortion_2nd': [2,2,1,1,1,1],
+  'post_abortion_septic': [4,4,1,1,1,1],
   'pp_nbf_lt21d': [1,1,1,1,1,4],
   'pp_nbf_21_42d_no_vte': [1,1,1,1,1,2],
   'pp_nbf_21_42d_vte': [1,1,1,1,1,3],
   'pp_nbf_gt42d': [1,1,1,1,1,1],
-  'post_abortion_1st': [1,1,1,1,1,1],
-  'post_abortion_2nd': [2,2,1,1,1,1],
-  'post_abortion_septic': [4,4,1,1,1,1],
+  'pregnancy': [4,4,4,4,4,4],
   'smoking_lt35': [1,1,1,1,1,2],
   'smoking_gte35_lt15': [1,1,1,1,1,3],
   'smoking_gte35_gte15': [1,1,1,1,1,4],
-  'obesity': [1,1,1,2,1,2],
+
+  // Cardiovascular
+  'bp_unavailable': [1,1,1,1,1,2],
+  'cvd_ppcm_lt6m_normal': [2,2,1,1,1,4],
+  'cvd_ppcm_lt6m_impaired': [2,2,1,1,1,4],
+  'cvd_ppcm_gte6m_normal': [2,2,1,1,1,2],
+  'cvd_ppcm_gte6m_impaired': [2,2,1,1,1,4],
+  'ihd': [1,2,2,3,2,4],
+  'dvt_history': [1,2,2,2,2,4],
+  'dvt_current': [1,3,3,3,3,4],
+  'dvt_family_history': [1,1,1,1,1,2],
+  'dvt_surgery_immobilization': [1,2,2,2,2,4],
+  'dvt_surgery_no_immobilization': [1,1,1,1,1,2],
+  'dvt_minor_surgery': [1,1,1,1,1,1],
+  'htn_pregnancy_history': [1,1,1,1,1,2],
   'htn_controlled': [1,1,1,2,1,3],
   'htn_140_159': [1,1,1,2,1,3],
   'htn_gte160': [1,2,2,3,2,4],
   'htn_vascular': [1,2,2,3,2,4],
-  'htn_pregnancy_history': [1,1,1,1,1,2],
-  'dvt_history': [1,2,2,2,2,4],
-  'dvt_current': [1,3,3,3,3,4],
-  'dvt_family_history': [1,1,1,1,1,2],
-  'thrombogenic_mutations': [1,2,2,2,2,4],
-  'surgery_immobilization': [1,2,2,2,2,4],
-  'surgery_no_immobilization': [1,1,1,1,1,2],
-  'svt': [1,1,1,1,1,2],
-  'ihd': [1,2,2,3,2,4],
-  'stroke': [1,2,2,3,2,4],
   'dyslipidaemia': [1,2,2,2,2,2],
+  'thrombogenic_mutations': [1,2,2,2,2,4],
+  'stroke': [1,2,2,3,2,4],
+  'svd_varicose': [1,1,1,1,1,1],
+  'svd_thrombophlebitis': [1,1,1,1,1,2],
   'vhd_uncomplicated': [1,1,1,1,1,2],
   'vhd_complicated': [2,2,1,1,1,4],
-  'ppcm_lt6m_normal': [2,2,1,1,1,4],
-  'ppcm_lt6m_impaired': [2,2,1,1,1,4],
-  'ppcm_gte6m_normal': [2,2,1,1,1,2],
-  'ppcm_gte6m_impaired': [2,2,1,1,1,4],
+
+  // Neurological
+  'depressive_disorders': [1,1,1,1,1,1],
+  'epilepsy': [1,1,1,1,1,1],
   'headache_nonmigraine': [1,1,1,1,1,2],
   'migraine_no_aura_lt35': [1,2,2,2,1,2],
   'migraine_no_aura_gte35': [1,2,2,2,1,3],
   'migraine_with_aura': [1,2,2,2,2,4],
-  'epilepsy': [1,1,1,1,1,1],
-  'vaginal_bleeding_irregular': [1,1,1,2,2,1],
-  'vaginal_bleeding_heavy': [2,1,1,1,1,1],
-  'vaginal_bleeding_unexplained': [4,4,3,3,3,3],
-  'cervical_cancer': [4,4,2,2,1,2],
+
+  // Reproductive / Gynaecological
+  'benign_ovarian_tumours': [1,1,1,1,1,1],
+  'breast_benign': [1,1,1,1,1,1],
+  'breast_family_history': [1,1,1,1,1,1],
   'breast_undiagnosed_mass': [1,2,2,2,2,2],
   'breast_cancer_current': [1,4,4,4,4,4],
   'breast_cancer_past': [1,3,3,3,3,3],
+  'cervical_cancer': [4,4,2,2,1,2],
+  'cin': [1,2,2,2,1,2],
   'endometrial_cancer': [4,4,1,1,1,1],
+  'endometriosis': [2,1,1,1,1,1],
+  'pelvic_surgery': [1,1,1,1,1,1],
   'ovarian_cancer': [3,3,1,1,1,1],
+  'past_ectopic': [1,1,1,1,1,1],
+  'pid_current': [4,4,1,1,1,1],
+  'pid_past_with_pregnancy': [1,1,1,1,1,1],
+  'pid_past_without_pregnancy': [2,2,1,1,1,1],
+  'severe_dysmenorrhoea': [2,1,1,1,1,1],
+  'sti_current_purulent': [4,4,1,1,1,1],
+  'sti_vaginitis': [2,2,1,1,1,1],
+  'sti_increased_risk': [2,2,1,1,1,1],
+  'vaginal_bleeding_unexplained': [4,4,3,3,3,3],
   'fibroids_no_distortion': [1,1,1,1,1,1],
   'fibroids_with_distortion': [4,4,1,1,1,1],
-  'pid_current': [4,4,1,1,1,1],
-  'sti_current_purulent': [4,4,1,1,1,1],
-  'sti_increased_risk': [2,2,1,1,1,1],
+  'vaginal_bleeding_irregular': [1,1,1,2,2,1],
+  'vaginal_bleeding_heavy': [2,1,1,1,1,1],
+
+  // Infections
   'hiv_high_risk': [2,2,1,1,1,1],
   'hiv_infected': [2,2,1,1,1,1],
   'hiv_aids': [3,3,1,1,1,1],
-  'tb_pelvic': [4,4,1,1,1,1],
+  'malaria': [1,1,1,1,1,1],
+  'schistosomiasis_uncomplicated': [1,1,1,1,1,1],
+  'schistosomiasis_fibrosis': [1,1,1,1,1,1],
   'tb_nonpelvic': [1,1,1,1,1,1],
-  'diabetes_gestational_history': [1,1,1,1,1,1],
+  'tb_pelvic': [4,4,1,1,1,1],
+
+  // Endocrine / Metabolic
+  'diabetes_gestational': [1,1,1,1,1,1],
   'diabetes_no_vascular': [1,2,2,2,2,2],
   'diabetes_vascular': [1,2,2,3,2,3],
   'thyroid': [1,1,1,1,1,1],
+
+  // Gastrointestinal / Hepatic
+  'cirrhosis_mild': [1,1,1,1,1,1],
+  'cirrhosis_severe': [1,3,3,3,3,4],
   'gallbladder_cholecystectomy': [1,2,2,2,2,2],
   'gallbladder_medically_treated': [1,2,2,2,2,3],
   'gallbladder_current': [1,2,2,2,2,3],
+  'gallbladder_asymptomatic': [1,2,2,2,2,2],
+  'gtd_decreasing': [3,3,1,1,1,1],
+  'gtd_persistent': [4,4,1,1,1,1],
   'cholestasis_pregnancy': [1,1,1,1,1,2],
   'cholestasis_coc': [1,1,1,1,1,3],
+  'liver_tumour_fnh': [1,2,2,2,2,2],
+  'liver_tumour_adenoma': [1,3,3,3,3,4],
+  'liver_tumour_malignant': [1,3,3,3,3,4],
   'hepatitis_acute': [1,1,1,1,1,3],
   'hepatitis_carrier': [1,1,1,1,1,1],
-  'cirrhosis_mild': [1,1,1,1,1,1],
-  'cirrhosis_severe': [1,3,3,3,3,4],
-  'liver_tumour_benign': [1,3,3,3,3,4],
-  'liver_tumour_malignant': [1,3,3,3,3,4],
+
+  // Haematological / Autoimmune
+  'iron_deficiency_anaemia': [2,1,1,1,1,1],
+  'sickle_cell': [2,2,1,1,1,2],
   'sle_antiphospholipid': [1,3,3,3,3,4],
   'sle_thrombocytopenia': [3,2,2,2,2,2],
   'sle_immunosuppressive': [2,2,2,2,2,2],
   'sle_none': [1,1,1,1,1,2],
-  'anaemia_iron_deficiency': [2,1,1,1,1,1],
-  'sickle_cell': [2,2,1,1,1,2],
   'thalassaemia': [2,1,1,1,1,1],
-  'organ_transplant_complicated': [3,3,2,2,2,4],
-  'organ_transplant_uncomplicated': [2,2,2,2,2,2],
-  'drug_rifampicin': [1,1,2,1,3,3],
-  'drug_anticonvulsants': [1,1,2,1,3,3],
-  'drug_arv_ritonavir': [1,1,2,1,3,3],
+
+  // Drug Interactions
+  'anticonvulsant_enzyme_inducing': [1,1,2,1,3,3],
+  'anticonvulsant_lamotrigine': [1,1,1,1,1,3],
+  'antimicrobial_broad_spectrum': [1,1,1,1,1,1],
+  'antimicrobial_antifungals': [1,1,1,1,1,1],
+  'antimicrobial_antiparasitics': [1,1,1,1,1,1],
+  'antimicrobial_rifampicin': [1,1,2,1,3,3],
+  'arv_nrtis': [1,1,1,1,1,1],
+  'arv_nnrtis': [1,1,1,1,1,1],
+  'arv_ritonavir_boosted': [1,1,2,1,3,3],
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -175,20 +216,6 @@ function powerSet(arr) {
   return result;
 }
 
-function calcMatchScores(prefs) {
-  const scores = {};
-  for (const methodId of METHOD_IDS) {
-    if (!prefs || prefs.length === 0) { scores[methodId] = 0; continue; }
-    const attrs = METHOD_ATTRIBUTES[methodId];
-    let matches = 0;
-    for (const pref of prefs) {
-      if (attrs[pref]) matches++;
-    }
-    scores[methodId] = Math.round((matches / prefs.length) * 100);
-  }
-  return scores;
-}
-
 // ─── Generate condition outputs ──────────────────────────────────────────────
 
 function generateConditionOutputs() {
@@ -209,7 +236,6 @@ function generateConditionOutputs() {
   console.log(`  Total condition combos: ${allCombos.length}`);
   console.log(`  × ${AGE_GROUPS.length} age groups = ${allCombos.length * AGE_GROUPS.length} entries\n`);
 
-  // Use compact format: each entry is [ageIdx, [condIds...], [6 categories]]
   const entries = [];
 
   for (let ageIdx = 0; ageIdx < AGE_GROUPS.length; ageIdx++) {
@@ -232,6 +258,7 @@ function generateConditionOutputs() {
       methods: METHOD_IDS,
       methodOrder: 'Cu-IUD, LNG-IUD, Implant, DMPA, POP, CHC',
       totalConditions: N,
+      totalParentConditions: 55,
       maxConditions: 3,
       totalEntries: entries.length,
       format: '[ageGroupIndex, [conditionIds], [6 MEC categories]]',
@@ -281,7 +308,7 @@ function generatePreferenceOutputs() {
 
 function main() {
   console.log('═══════════════════════════════════════════════════');
-  console.log('  WHO MEC Output Generator');
+  console.log('  WHO MEC Output Generator (55 conditions)');
   console.log('═══════════════════════════════════════════════════\n');
 
   const outDir = path.join(__dirname, '..', 'src', 'data');
@@ -303,6 +330,7 @@ function main() {
   console.log('\n═══════════════════════════════════════════════════');
   console.log('  Summary');
   console.log('═══════════════════════════════════════════════════');
+  console.log(`  Condition entries: ${Object.keys(CONDITIONS).length}`);
   console.log(`  Condition combos: ${condOutputs.entries.length}`);
   console.log(`  Preference combos: ${prefOutputs.entries.length}`);
   console.log(`  Total unique outputs: ${condOutputs.entries.length} × ${prefOutputs.entries.length} = ${condOutputs.entries.length * prefOutputs.entries.length}`);
