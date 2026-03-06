@@ -1,0 +1,26 @@
+{
+  "task": "03",
+  "status": "complete",
+  "timestamp": "2026-03-06T18:01:37.054598+00:00",
+  "sets_completed": [
+    "full_25",
+    "reduced_A",
+    "reduced_B",
+    "reduced_C"
+  ],
+  "total_folds_run": 40,
+  "outputs": {
+    "full_25_folds": "results\\cv_fold_results\\full_25_folds.csv",
+    "reduced_A_folds": "results\\cv_fold_results\\reduced_A_folds.csv",
+    "reduced_B_folds": "results\\cv_fold_results\\reduced_B_folds.csv",
+    "reduced_C_folds": "results\\cv_fold_results\\reduced_C_folds.csv",
+    "cv_summary": "results\\cv_fold_results\\cv_summary.json"
+  },
+  "sha256": {
+    "full_25": "1fdfae422fcef85b1307fc08b9ed8b372ef649494900a7cdb38e4dd0e18e810f",
+    "reduced_A": "69774ff4c6b83869c65458ec0e296ecf64692d6d5d87f7f88eb0e92859dfdf7a",
+    "reduced_B": "bd9eb7a616ba6252af4ef27d081efc754e48237db3adf5709d81c7288ab13e18",
+    "reduced_C": "7729030fa580af99c514d76ac8a5ee756f2f6e4d96981790875fd42a514ae979",
+    "cv_summary": "12e662f5ad1f0ebd12be570a62acb36c9fe4d5512450ae53ea6c78a22baa588d"
+  }
+}

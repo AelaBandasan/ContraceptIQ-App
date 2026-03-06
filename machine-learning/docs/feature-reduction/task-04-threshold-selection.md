@@ -1,6 +1,6 @@
 # Task 04 — Leak-Free Threshold Selection
 
-**Status:** PENDING
+**Status:** COMPLETE
 
 **Part of:** [VALIDATION_PLAN.md](VALIDATION_PLAN.md)
 **Previous task:** [task-03-stratified-10fold-cv.md](task-03-stratified-10fold-cv.md)
@@ -209,8 +209,6 @@ for s in ['full_25', 'reduced_A', 'reduced_B', 'reduced_C']:
 
 ## Status Log
 
-> Update this section when the task is completed.
-
 | Date | Event |
 |------|-------|
-| — | Task not yet started |
+| 2026-03-07 | Task completed as part of `cv_runner.py`. Leak-free `select_threshold` function implemented: threshold is selected on inner_val split (20% of fold's train portion), never on the fold test split. All threshold values fall within the valid sweep set `[0.10, 0.12, 0.15, 0.18, 0.20]`. Thresholds vary across folds (full_25: {0.10, 0.12}; reduced_A: {0.18, 0.20}; reduced_B: {0.12, 0.15}; reduced_C: {0.10, 0.12, 0.15}). Val target met rate = 1.0 for all feature sets. Task 04 checkpoint written and verified. |

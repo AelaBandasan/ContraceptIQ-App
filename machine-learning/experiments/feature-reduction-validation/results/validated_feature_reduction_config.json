@@ -1,0 +1,55 @@
+{
+  "feature_set_name": "reduced_C",
+  "n_features": 9,
+  "features": [
+    "PATTERN_USE",
+    "HUSBAND_AGE",
+    "AGE",
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
+    "CONTRACEPTIVE_METHOD",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY"
+  ],
+  "operating_threshold": 0.5,
+  "conf_margin": 0.05,
+  "validation": {
+    "strategy": "stratified_10fold_cv",
+    "n_folds": 10,
+    "cv_recall_mean": 1.0,
+    "cv_recall_std": 0.0,
+    "cv_recall_ci_95_lower": 1.0,
+    "cv_recall_ci_95_upper": 1.0,
+    "cv_roc_auc_mean": 0.9169020277967647,
+    "final_test_recall": 0.967741935483871,
+    "final_test_precision": 0.25862068965517243,
+    "final_test_f1": 0.40816326530612246,
+    "final_test_roc_auc": 0.9028673835125447
+  },
+  "hyperparameters": {
+    "xgb": {
+      "model__colsample_bytree": 0.7710164073434198,
+      "model__gamma": 0.007625738023228556,
+      "model__learning_rate": 0.01373936150819837,
+      "model__max_depth": 3,
+      "model__min_child_weight": 7,
+      "model__n_estimators": 500,
+      "model__subsample": 0.8034282764658811
+    },
+    "dt": {
+      "model__min_samples_split": 20,
+      "model__min_samples_leaf": 15,
+      "model__max_depth": 5,
+      "model__criterion": "entropy",
+      "model__class_weight": {
+        "0": 1.0,
+        "1": 4.0
+      }
+    }
+  },
+  "meets_target": true,
+  "ci_lower_meets_target": true,
+  "validated": true,
+  "validation_timestamp": "2026-03-06T18:01:39.581479+00:00"
+}

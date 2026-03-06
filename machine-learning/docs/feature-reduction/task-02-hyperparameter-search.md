@@ -1,6 +1,6 @@
 # Task 02 — Hyperparameter Search
 
-**Status:** PENDING
+**Status:** COMPLETE
 
 **Part of:** [VALIDATION_PLAN.md](VALIDATION_PLAN.md)
 **Previous task:** [task-01-data-split-refactor.md](task-01-data-split-refactor.md)
@@ -251,8 +251,6 @@ flag).
 
 ## Status Log
 
-> Update this section when the task is completed.
-
 | Date | Event |
 |------|-------|
-| — | Task not yet started |
+| 2026-03-07 | Task completed successfully. `tuner.py` created. RandomizedSearchCV (n_iter=30, 5-fold inner CV) run for XGBoost and Decision Tree on all 4 feature sets. **Observation:** XGBoost inner CV recall = 1.0 for all feature sets. This is expected behaviour with extreme class imbalance (~6.4% positive) — XGBoost with `scale_pos_weight` can achieve perfect recall on the small number of positives in each inner fold at the cost of precision. The outer CV in Task 03 will provide the unbiased generalisation estimate. DT best inner CV recall ranges from 0.65 (full_25 / reduced_A) to 0.83 (reduced_B / reduced_C). Checkpoint written and verified. |

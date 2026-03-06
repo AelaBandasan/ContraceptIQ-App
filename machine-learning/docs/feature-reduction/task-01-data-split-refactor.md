@@ -1,6 +1,6 @@
 # Task 01 — Data Split Refactor
 
-**Status:** PENDING
+**Status:** COMPLETE
 
 **Part of:** [VALIDATION_PLAN.md](VALIDATION_PLAN.md)
 **Next task:** [task-02-hyperparameter-search.md](task-02-hyperparameter-search.md)
@@ -174,8 +174,6 @@ proceeding.
 
 ## Status Log
 
-> Update this section when the task is completed.
-
 | Date | Event |
 |------|-------|
-| — | Task not yet started |
+| 2026-03-07 | Task completed successfully. `data_splitter.py` created. 3205 rows split into train=2243 / val=481 / test=481 (70/15/15%). Class-1 fraction balanced across splits (~6.4%). Checkpoint written and verified. **Issue:** Full data pickle (`discontinuation_design1_full_data_v2.pkl`) is a raw `pd.DataFrame` (not the expected 2-tuple or dict). **Fix:** Updated `_load_full_data` to detect and handle the raw DataFrame format by dropping metadata columns (`CASEID`, `AGE_GRP`, `EDUC`, etc.) and using `HIGH_RISK_DISCONTINUE` as the target. |
