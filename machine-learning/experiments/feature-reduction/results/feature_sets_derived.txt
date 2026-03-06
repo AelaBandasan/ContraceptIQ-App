@@ -1,7 +1,7 @@
 ======================================================================
   DERIVED FEATURE SETS — ContraceptIQ Discontinuation Risk
 ======================================================================
-  Generated        : 2026-03-06T17:49:32+00:00
+  Generated        : 2026-03-06T17:53:16+00:00
   Source           : train.pkl (inner 20% of X_train)
   Inner split      : StratifiedShuffleSplit 80/20 of X_train only
   Importance method: permutation_importance (roc_auc, n_repeats=20)
@@ -66,13 +66,16 @@
 ======================================================================
   SECTION 3 — RECOMMENDED _REDUCED_C (elbow / cumulative >= 80%)
 ======================================================================
-  Features (N=6, min=6, max=12):
+  Features (N=9, min=9, max=12):
     - PATTERN_USE                     cumulative=85.1%
     - HUSBAND_AGE                     cumulative=88.7%
     - AGE                             cumulative=90.4%
     - ETHNICITY                       cumulative=92.1%
     - HOUSEHOLD_HEAD_SEX              cumulative=93.7%
     - CONTRACEPTIVE_METHOD            cumulative=94.9%
+    - SMOKE_CIGAR                     cumulative=96.0%
+    - DESIRE_FOR_MORE_CHILDREN        cumulative=97.1%
+    - PARITY                          cumulative=98.2%
 
 ======================================================================
   NOTE: This script is READ-ONLY.

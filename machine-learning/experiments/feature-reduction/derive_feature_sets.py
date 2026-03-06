@@ -85,7 +85,7 @@ N_REPEATS       = 20
 SCORING         = "roc_auc"
 CUMULATIVE_CAP  = 0.80   # cumulative importance threshold for _REDUCED_C
 REDUCED_C_MAX   = 12
-REDUCED_C_MIN   = 6
+REDUCED_C_MIN   = 9
 
 # Features to exclude from importance analysis (geographic sampling artifact:
 # all class 1 cases come exclusively from NCR — this is a dataset construction
