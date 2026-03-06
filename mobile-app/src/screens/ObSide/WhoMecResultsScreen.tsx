@@ -58,9 +58,10 @@ const WhoMecResultsScreen = () => {
     conditionIds.map(id => {
       const entry = WHO_MEC_CONDITIONS.find(c => c.id === id);
       if (!entry) return id;
-      return entry.subCondition
-        ? `${entry.condition}: ${entry.subCondition}`
-        : entry.condition;
+      let label = entry.condition;
+      if (entry.subCondition) label += ` — ${entry.subCondition}`;
+      if (entry.variant) label += ` (${entry.variant === 'I' ? 'Initiation' : 'Continuation'})`;
+      return label;
     }),
     [conditionIds]
   );

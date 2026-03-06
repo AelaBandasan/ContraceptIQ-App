@@ -1,8 +1,7 @@
 {
   "metadata": {
     "source": "ContraceptIQ method attributes",
-    "generatedAt": "2026-03-06T00:36:22.004Z",
-    "description": "Pre-computed preference match scores for all preference combinations",
+    "generatedAt": "2026-03-06T04:30:25.462Z",
     "methods": [
       "Cu-IUD",
       "LNG-IUD",
@@ -11,7 +10,6 @@
       "POP",
       "CHC"
     ],
-    "methodOrder": "Cu-IUD, LNG-IUD, Implant, DMPA, POP, CHC",
     "preferences": [
       "regular",
       "effectiveness",

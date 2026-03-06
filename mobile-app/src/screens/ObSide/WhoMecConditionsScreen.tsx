@@ -10,8 +10,8 @@ import {
 } from 'lucide-react-native';
 import { colors, shadows, spacing, borderRadius } from '../../theme';
 import {
-  WHO_MEC_CONDITIONS, CONDITION_GROUPS, getConditionsByGroup,
-  type MecConditionEntry, type MecConditionGroup,
+  WHO_MEC_CONDITIONS, getParentConditions, buildConditionTree,
+  type ConditionTreeNode,
 } from '../../data/whoMecData';
 import ObHeader from '../../components/ObHeader';
 
@@ -29,39 +29,33 @@ const WhoMecConditionsScreen = () => {
 
   const [selectedAge, setSelectedAge] = useState<number | null>(null);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
+  const [expandedSubs, setExpandedSubs] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
 
-  const groupedConditions = useMemo(() => getConditionsByGroup(), []);
+  const tree = useMemo(() => buildConditionTree(), []);
+  const parentConditions = useMemo(() => getParentConditions(), []);
 
-  // Filter conditions by search
-  const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) return groupedConditions;
+  // Filter parents by search
+  const filteredParents = useMemo(() => {
+    if (!searchQuery.trim()) return parentConditions;
     const q = searchQuery.toLowerCase();
-    const filtered = {} as Record<MecConditionGroup, MecConditionEntry[]>;
-    for (const group of CONDITION_GROUPS) {
-      const items = groupedConditions[group].filter(
-        c =>
-          c.condition.toLowerCase().includes(q) ||
-          (c.subCondition && c.subCondition.toLowerCase().includes(q)) ||
-          c.description.toLowerCase().includes(q)
-      );
-      if (items.length > 0) filtered[group] = items;
-    }
-    return filtered;
-  }, [searchQuery, groupedConditions]);
+    return parentConditions.filter(name => name.toLowerCase().includes(q));
+  }, [searchQuery, parentConditions]);
 
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  const toggleParent = (name: string) => {
+    setExpandedParents(prev => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const toggleSub = (key: string) => {
+    setExpandedSubs(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const toggleCondition = (id: string) => {
     setSelectedConditions(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(c => c !== id);
-      }
+      if (prev.includes(id)) return prev.filter(c => c !== id);
       if (prev.length >= MAX_CONDITIONS) {
-        Alert.alert('Maximum Conditions', `You can select up to ${MAX_CONDITIONS} conditions, matching the WHO MEC Tool limit.`);
+        Alert.alert('Maximum Conditions', `You can select up to ${MAX_CONDITIONS} conditions.`);
         return prev;
       }
       return [...prev, id];
@@ -75,9 +69,10 @@ const WhoMecConditionsScreen = () => {
   const getConditionLabel = (id: string) => {
     const entry = WHO_MEC_CONDITIONS.find(c => c.id === id);
     if (!entry) return id;
-    return entry.subCondition
-      ? `${entry.condition}: ${entry.subCondition}`
-      : entry.condition;
+    let label = entry.condition;
+    if (entry.subCondition) label += ` — ${entry.subCondition}`;
+    if (entry.variant) label += ` (${entry.variant === 'I' ? 'Initiation' : 'Continuation'})`;
+    return label;
   };
 
   const handleNext = () => {
@@ -89,6 +84,100 @@ const WhoMecConditionsScreen = () => {
       age: selectedAge,
       conditionIds: selectedConditions,
     });
+  };
+
+  const isDisabled = (id: string) =>
+    !selectedConditions.includes(id) && selectedConditions.length >= MAX_CONDITIONS;
+
+  const renderCheckbox = (id: string, label: string, indent: number) => {
+    const isSelected = selectedConditions.includes(id);
+    const disabled = isDisabled(id);
+
+    return (
+      <TouchableOpacity
+        key={id}
+        style={[
+          styles.leafItem,
+          { paddingLeft: 16 + indent * 16 },
+          isSelected && styles.leafItemSelected,
+          disabled && styles.leafItemDisabled,
+        ]}
+        onPress={() => toggleCondition(id)}
+        disabled={disabled}
+      >
+        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+          {isSelected && <Check size={12} color="#fff" />}
+        </View>
+        <Text style={[styles.leafLabel, isSelected && styles.leafLabelSelected]} numberOfLines={2}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderNode = (condName: string, node: ConditionTreeNode) => {
+    const subKeys = Object.keys(node.subs);
+    const hasContent = node.directEntry || node.initiation || subKeys.length > 0;
+
+    // Parent-level direct entry (no subs, no I/C) — e.g. "Epilepsy"
+    if (node.directEntry && subKeys.length === 0 && !node.initiation) {
+      return renderCheckbox(node.directEntry.id, condName, 0);
+    }
+
+    // Parent has I/C only (no subs) — e.g. "Stroke"
+    if (!node.directEntry && subKeys.length === 0 && node.initiation) {
+      return (
+        <View key={condName + '_ic'}>
+          {node.initiation && renderCheckbox(node.initiation.id, 'Initiation', 1)}
+          {node.continuation && renderCheckbox(node.continuation.id, 'Continuation', 1)}
+        </View>
+      );
+    }
+
+    // Parent has sub-conditions
+    return (
+      <View key={condName + '_subs'}>
+        {subKeys.map(subKey => {
+          const sub = node.subs[subKey];
+          const subExpandKey = `${condName}::${subKey}`;
+
+          // Sub has I/C
+          if (sub.initiation || sub.continuation) {
+            const isSubExpanded = expandedSubs[subExpandKey];
+            return (
+              <View key={subExpandKey}>
+                <TouchableOpacity
+                  style={[styles.subHeader, { paddingLeft: 32 }]}
+                  onPress={() => toggleSub(subExpandKey)}
+                >
+                  {isSubExpanded
+                    ? <ChevronDown size={14} color={colors.text.secondary} />
+                    : <ChevronRight size={14} color={colors.text.secondary} />}
+                  <Text style={styles.subLabel} numberOfLines={2}>{subKey}</Text>
+                </TouchableOpacity>
+                {isSubExpanded && (
+                  <View>
+                    {sub.initiation && renderCheckbox(sub.initiation.id, 'Initiation', 3)}
+                    {sub.continuation && renderCheckbox(sub.continuation.id, 'Continuation', 3)}
+                  </View>
+                )}
+              </View>
+            );
+          }
+
+          // Sub is a direct leaf
+          if (sub.directEntry) {
+            return renderCheckbox(sub.directEntry.id, subKey, 1);
+          }
+
+          return null;
+        })}
+
+        {/* Parent-level I/C (in addition to subs) */}
+        {node.initiation && renderCheckbox(node.initiation.id, 'Initiation', 1)}
+        {node.continuation && renderCheckbox(node.continuation.id, 'Continuation', 1)}
+      </View>
+    );
   };
 
   return (
@@ -107,16 +196,10 @@ const WhoMecConditionsScreen = () => {
             {AGE_OPTIONS.map(opt => (
               <TouchableOpacity
                 key={opt.value}
-                style={[
-                  styles.ageChip,
-                  selectedAge === opt.value && styles.ageChipSelected,
-                ]}
+                style={[styles.ageChip, selectedAge === opt.value && styles.ageChipSelected]}
                 onPress={() => setSelectedAge(opt.value)}
               >
-                <Text style={[
-                  styles.ageChipText,
-                  selectedAge === opt.value && styles.ageChipTextSelected,
-                ]}>
+                <Text style={[styles.ageChipText, selectedAge === opt.value && styles.ageChipTextSelected]}>
                   {opt.label}
                 </Text>
               </TouchableOpacity>
@@ -124,15 +207,15 @@ const WhoMecConditionsScreen = () => {
           </View>
         </View>
 
-        {/* Selected Conditions Summary */}
+        {/* Selected Conditions */}
         {selectedConditions.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              Selected Conditions ({selectedConditions.length}/{MAX_CONDITIONS})
+              Selected ({selectedConditions.length}/{MAX_CONDITIONS})
             </Text>
             {selectedConditions.map(id => (
               <View key={id} style={styles.selectedChip}>
-                <Text style={styles.selectedChipText} numberOfLines={1}>
+                <Text style={styles.selectedChipText} numberOfLines={2}>
                   {getConditionLabel(id)}
                 </Text>
                 <TouchableOpacity onPress={() => removeCondition(id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -160,61 +243,40 @@ const WhoMecConditionsScreen = () => {
           )}
         </View>
 
-        {/* Condition Groups */}
-        {(Object.keys(filteredGroups) as MecConditionGroup[]).map(group => (
-          <View key={group} style={styles.groupContainer}>
-            <TouchableOpacity
-              style={styles.groupHeader}
-              onPress={() => toggleGroup(group)}
-            >
-              <Text style={styles.groupTitle}>{group}</Text>
-              <View style={styles.groupHeaderRight}>
-                <Text style={styles.groupCount}>
-                  {filteredGroups[group].length}
-                </Text>
-                {expandedGroups[group]
-                  ? <ChevronDown size={20} color={colors.text.secondary} />
-                  : <ChevronRight size={20} color={colors.text.secondary} />
-                }
+        {/* Alphabetical Condition List */}
+        {filteredParents.map(condName => {
+          const node = tree[condName];
+          if (!node) return null;
+
+          const subKeys = Object.keys(node.subs);
+          const isSimple = node.directEntry && subKeys.length === 0 && !node.initiation;
+
+          // Simple condition (no subs, no I/C) — show as direct selectable row
+          if (isSimple) {
+            return (
+              <View key={condName} style={styles.parentContainer}>
+                {renderCheckbox(node.directEntry!.id, condName, 0)}
               </View>
-            </TouchableOpacity>
+            );
+          }
 
-            {expandedGroups[group] && filteredGroups[group].map(entry => {
-              const isSelected = selectedConditions.includes(entry.id);
-              const isDisabled = !isSelected && selectedConditions.length >= MAX_CONDITIONS;
-
-              return (
-                <TouchableOpacity
-                  key={entry.id}
-                  style={[
-                    styles.conditionItem,
-                    isSelected && styles.conditionItemSelected,
-                    isDisabled && styles.conditionItemDisabled,
-                  ]}
-                  onPress={() => toggleCondition(entry.id)}
-                  disabled={isDisabled}
-                >
-                  <View style={styles.conditionCheckbox}>
-                    {isSelected && <Check size={14} color="#fff" />}
-                  </View>
-                  <View style={styles.conditionInfo}>
-                    <Text style={[
-                      styles.conditionLabel,
-                      isSelected && styles.conditionLabelSelected,
-                    ]}>
-                      {entry.subCondition
-                        ? `${entry.condition} — ${entry.subCondition}`
-                        : entry.condition}
-                    </Text>
-                    <Text style={styles.conditionDesc} numberOfLines={2}>
-                      {entry.description}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
+          // Complex condition — expandable
+          const isExpanded = expandedParents[condName];
+          return (
+            <View key={condName} style={styles.parentContainer}>
+              <TouchableOpacity
+                style={styles.parentHeader}
+                onPress={() => toggleParent(condName)}
+              >
+                {isExpanded
+                  ? <ChevronDown size={18} color={colors.text.primary} />
+                  : <ChevronRight size={18} color={colors.text.primary} />}
+                <Text style={styles.parentLabel}>{condName}</Text>
+              </TouchableOpacity>
+              {isExpanded && renderNode(condName, node)}
+            </View>
+          );
+        })}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -276,33 +338,36 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, paddingVertical: 12, paddingHorizontal: 8, fontSize: 14, color: colors.text.primary },
 
-  groupContainer: { marginBottom: spacing.sm },
-  groupHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 14, paddingHorizontal: 12,
-    backgroundColor: colors.background.card, borderRadius: borderRadius.md,
-    ...shadows.sm,
+  parentContainer: {
+    marginBottom: 2,
+    borderBottomWidth: 1, borderBottomColor: colors.border.light + '60',
   },
-  groupTitle: { fontSize: 15, fontWeight: '600', color: colors.text.primary, flex: 1 },
-  groupHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  groupCount: { fontSize: 12, color: colors.text.disabled, fontWeight: '500' },
+  parentHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 8,
+  },
+  parentLabel: { fontSize: 15, fontWeight: '600', color: colors.text.primary, flex: 1, marginLeft: 6 },
 
-  conditionItem: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    paddingVertical: 12, paddingHorizontal: 12,
-    marginLeft: 8, borderBottomWidth: 1, borderBottomColor: colors.border.light + '60',
+  subHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 10,
   },
-  conditionItemSelected: { backgroundColor: colors.primary + '08' },
-  conditionItemDisabled: { opacity: 0.4 },
-  conditionCheckbox: {
-    width: 22, height: 22, borderRadius: 4, borderWidth: 1.5,
+  subLabel: { fontSize: 14, fontWeight: '500', color: colors.text.secondary, flex: 1, marginLeft: 6 },
+
+  leafItem: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 10, paddingRight: 12,
+  },
+  leafItemSelected: { backgroundColor: colors.primary + '08' },
+  leafItemDisabled: { opacity: 0.4 },
+  checkbox: {
+    width: 20, height: 20, borderRadius: 4, borderWidth: 1.5,
     borderColor: colors.border.main, alignItems: 'center', justifyContent: 'center',
-    marginRight: 10, marginTop: 1, backgroundColor: '#fff',
+    marginRight: 10, backgroundColor: '#fff',
   },
-  conditionInfo: { flex: 1 },
-  conditionLabel: { fontSize: 14, fontWeight: '500', color: colors.text.primary, marginBottom: 2 },
-  conditionLabelSelected: { color: colors.primary },
-  conditionDesc: { fontSize: 12, color: colors.text.disabled, lineHeight: 16 },
+  checkboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  leafLabel: { fontSize: 14, color: colors.text.primary, flex: 1 },
+  leafLabelSelected: { color: colors.primary, fontWeight: '500' },
 
   bottomBar: {
     paddingHorizontal: spacing.lg, paddingTop: 12,
