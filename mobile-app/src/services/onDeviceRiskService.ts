@@ -5,16 +5,19 @@
  * Enables offline risk assessment without requiring the Flask backend.
  *
  * Architecture:
- *   1. Load ONNX models from bundled assets (lazy, singleton)
- *   2. Encode 9 input features via encodeFeaturesV4 (string + float32 per-column tensors)
+ *   1. Load flat ONNX models from bundled assets (lazy, singleton)
+ *   2. Build 133-dim float32 OHE vector via buildOHEVector()
  *   3. Run XGBoost → get P(discontinue)
  *   4. Apply hybrid upgrade rule with Decision Tree (threshold=0.25, conf_margin=0.05)
  *   5. Return RiskAssessmentResponse (same interface as API)
+ *
+ * The flat models accept a single FloatTensorType input "float_input" [1, 133],
+ * bypassing the onnxruntime-react-native string tensor bug.
  */
 
 import { InferenceSession, Tensor } from 'onnxruntime-react-native';
 import { Asset } from 'expo-asset';
-import { encodeFeaturesV4, validateFeaturesV4 } from '../utils/featureEncoder';
+import { buildOHEVector, validateFeaturesV4 } from '../utils/featureEncoder';
 import { createModuleLogger } from '../utils/loggerUtils';
 import type { RiskAssessmentResponse } from './discontinuationRiskService';
 
@@ -49,7 +52,7 @@ async function loadModels(): Promise<void> {
 
     loadingPromise = (async () => {
         try {
-            logger.info('Loading ONNX v4 models from assets...');
+            logger.info('Loading flat ONNX v4 models from assets...');
 
             const xgbAsset = Asset.fromModule(require('../../assets/models/xgb_high_recall.onnx'));
             const dtAsset = Asset.fromModule(require('../../assets/models/dt_high_recall.onnx'));
@@ -70,7 +73,7 @@ async function loadModels(): Promise<void> {
             });
 
             modelsLoaded = true;
-            logger.info('ONNX v4 models loaded successfully');
+            logger.info('Flat ONNX v4 models loaded successfully');
         } catch (error) {
             logger.error('Failed to load ONNX models', undefined, { error });
             modelsLoaded = false;
@@ -88,47 +91,7 @@ async function loadModels(): Promise<void> {
 // ============================================================================
 
 /**
- * Extract class-1 probability from ONNX output tensor.
- */
-function extractProbability(probOutput: Tensor): number {
-    const data = probOutput.data as Float32Array | number[];
-
-    if (probOutput.dims.length === 2 && probOutput.dims[1] === 2) {
-        return Number(data[1]);
-    }
-    if (data.length === 2) {
-        return Number(data[1]);
-    }
-    return Number(data[0]);
-}
-
-/**
- * Extract prediction label from ONNX output tensor.
- */
-function extractPrediction(predOutput: Tensor): number {
-    return Number(predOutput.data[0]);
-}
-
-/**
- * Build the per-column ONNX feed dict for a v4 inference session.
- * XGBoost and Decision Tree share the same 9 named inputs.
- */
-function buildFeed(features: ReturnType<typeof encodeFeaturesV4>): Record<string, Tensor> {
-    return {
-        PATTERN_USE:              new Tensor('string',  [features.PATTERN_USE],              [1, 1]),
-        HUSBAND_AGE:              new Tensor('string',  [features.HUSBAND_AGE],              [1, 1]),
-        AGE:                      new Tensor('float32', new Float32Array([features.AGE]),     [1, 1]),
-        ETHNICITY:                new Tensor('string',  [features.ETHNICITY],                [1, 1]),
-        HOUSEHOLD_HEAD_SEX:       new Tensor('string',  [features.HOUSEHOLD_HEAD_SEX],       [1, 1]),
-        CONTRACEPTIVE_METHOD:     new Tensor('string',  [features.CONTRACEPTIVE_METHOD],     [1, 1]),
-        SMOKE_CIGAR:              new Tensor('string',  [features.SMOKE_CIGAR],              [1, 1]),
-        DESIRE_FOR_MORE_CHILDREN: new Tensor('string',  [features.DESIRE_FOR_MORE_CHILDREN], [1, 1]),
-        PARITY:                   new Tensor('float32', new Float32Array([features.PARITY]),  [1, 1]),
-    };
-}
-
-/**
- * Assess discontinuation risk using on-device ONNX v4 models.
+ * Assess discontinuation risk using on-device flat ONNX v4 models.
  *
  * Hybrid logic (mirrors Flask backend):
  *   1. XGBoost → P(y=1)
@@ -136,7 +99,7 @@ function buildFeed(features: ReturnType<typeof encodeFeaturesV4>): Record<string
  *   3. Low-confidence band: |P - 0.25| < 0.05
  *   4. If low-confidence AND Decision Tree predicts 1 → upgrade to HIGH
  *
- * @param formData Raw form data (display strings) OR numeric-coded data from mapFormDataToApi
+ * @param formData Raw form data (display strings from ObAssessment/GuestAssessment)
  */
 export async function assessOffline(
     formData: Record<string, any>,
@@ -154,20 +117,25 @@ export async function assessOffline(
         logger.warn('Some v4 features missing, using defaults', { missing });
     }
 
-    const features = encodeFeaturesV4(formData);
-    logger.debug('V4 features encoded', { features });
+    // Build 133-dim float32 OHE vector
+    const oheVec = buildOHEVector(formData);
+    logger.debug('OHE vector built', { length: oheVec.length });
 
-    const feed = buildFeed(features);
+    const feed = { float_input: new Tensor('float32', oheVec, [1, oheVec.length]) };
 
     // XGBoost inference
     const xgbResults = await xgbSession.run(feed);
     const xgbOutputNames = xgbSession.outputNames;
 
+    // Output 0 = labels (int64), Output 1 = probabilities (float32 [N,2])
     let xgbProbability: number;
     if (xgbOutputNames.length >= 2) {
-        xgbProbability = extractProbability(xgbResults[xgbOutputNames[1]]);
+        const probTensor = xgbResults[xgbOutputNames[1]];
+        const data = probTensor.data as Float32Array;
+        xgbProbability = data.length >= 2 ? Number(data[1]) : Number(data[0]);
     } else {
-        xgbProbability = extractProbability(xgbResults[xgbOutputNames[0]]);
+        const data = xgbResults[xgbOutputNames[0]].data as Float32Array;
+        xgbProbability = Number(data[0]);
     }
 
     // Base prediction
@@ -180,7 +148,7 @@ export async function assessOffline(
 
     if (isLowConfidence) {
         const dtResults = await dtSession.run(feed);
-        const dtPred = extractPrediction(dtResults[dtSession.outputNames[0]]);
+        const dtPred = Number(dtResults[dtSession.outputNames[0]].data[0]);
 
         if (dtPred === 1 && xgbPred === 0) {
             hybridPred = 1;
