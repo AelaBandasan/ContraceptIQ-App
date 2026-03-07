@@ -29,6 +29,9 @@ venv/
 .env.emulator
 .env.local
 
+# Large generated data files (too big for GitHub)
+mobile-app/src/data/mecConditionOutputs.json
+
 # Expo
 .expo/
 web-build/
