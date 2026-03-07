@@ -7,11 +7,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
     CheckCircle2, AlertTriangle, ChevronDown, ChevronUp,
     User as UserIcon, Baby, Cigarette, Calendar, MapPin,
-    ClipboardList, FileText, Activity, Stethoscope, BookOpen,
-    Hash, Clock, Heart, MessageSquare
+    ClipboardList, Activity, Stethoscope, BookOpen,
+    Hash, Clock, Heart, MessageSquare, WifiOff,
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
-import { fetchDoctorHistory, ConsultationRecord } from '../../services/doctorService';
+import { fetchDoctorHistory, loadHistoryCache, ConsultationRecord } from '../../services/doctorService';
+import { isOnline } from '../../utils/networkUtils';
 import ObHeader from '../../components/ObHeader';
 
 // Enable LayoutAnimation on Android
@@ -19,98 +20,13 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// --- Mock Data ---
-const MOCK_HISTORY: ConsultationRecord[] = [
-    {
-        code: 'A7X99P',
-        patientData: {
-            NAME: 'Elena Ramos',
-            AGE: '28',
-            AGE_GROUP: '25–29',
-            SMOKE_CIGAR: 'Never',
-            PARITY: '2',
-            RISK_LEVEL: 'Low',
-            RECOMMENDED: 'Implant',
-            REGION: 'Metro Manila',
-            MARITAL_STATUS: 'Married',
-            RELIGION: 'Catholic',
-            EDUC_LEVEL: 'College graduate',
-            DESIRE_FOR_MORE_CHILDREN: 'No',
-            LAST_METHOD_DISCONTINUED: 'Pills',
-            REASON_DISCONTINUED: 'Side effects',
-        },
-        riskResults: {
-            Implant: { riskLevel: 'LOW', probability: 0.12, recommendation: 'Highly recommended based on profile', confidence: 'High' },
-            Pills: { riskLevel: 'MODERATE', probability: 0.38, recommendation: 'Use with monitoring', confidence: 'Medium' },
-        },
-        riskResult: { riskLevel: 'LOW', probability: 0.12, recommendation: 'Implant is the top match', confidence: 'High' },
-        clinicalNotes: 'Patient has history of pill discontinuation due to nausea. Switched to implant. No contraindications noted. Follow-up in 3 months.',
-        obName: 'Dr. Maria Santos, OB-GYN',
-        status: 'completed',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-        assessedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2 + 3600000).toISOString(),
-        expiresIn: 3600,
-    },
-    {
-        code: 'B2Z11K',
-        patientData: {
-            NAME: 'Maria Clara',
-            AGE: '34',
-            AGE_GROUP: '30–34',
-            SMOKE_CIGAR: 'Current daily',
-            PARITY: '4',
-            RISK_LEVEL: 'High',
-            RECOMMENDED: 'None (Referral Required)',
-            REGION: 'Cebu City',
-            MARITAL_STATUS: 'Married',
-            RELIGION: 'Catholic',
-            EDUC_LEVEL: 'Secondary',
-            DESIRE_FOR_MORE_CHILDREN: 'No',
-            LAST_METHOD_DISCONTINUED: 'Injectable',
-            REASON_DISCONTINUED: 'Health concerns',
-        },
-        riskResults: {
-            'Copper IUD': { riskLevel: 'HIGH', probability: 0.74, recommendation: 'High discontinuation risk. Referral recommended.', confidence: 'High' },
-        },
-        riskResult: { riskLevel: 'HIGH', probability: 0.74, recommendation: 'Immediate referral advised.', confidence: 'High' },
-        clinicalNotes: 'Referred to specialist due to cardiovascular risk factors and heavy smoking. Patient counseled on smoking cessation.',
-        obName: 'Dr. Maria Santos, OB-GYN',
-        status: 'critical',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-        assessedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5 + 3600000).toISOString(),
-        expiresIn: 3600,
-    },
-    {
-        code: 'C5M44L',
-        patientData: {
-            NAME: 'Liza Soberano',
-            AGE: '22',
-            AGE_GROUP: '20–24',
-            SMOKE_CIGAR: 'Never',
-            PARITY: '0',
-            RISK_LEVEL: 'Low',
-            RECOMMENDED: 'Pills',
-            REGION: 'Davao',
-            MARITAL_STATUS: 'Single',
-            RELIGION: 'Christian',
-            EDUC_LEVEL: 'College undergraduate',
-            DESIRE_FOR_MORE_CHILDREN: 'Not Sure',
-            LAST_METHOD_DISCONTINUED: 'None',
-            REASON_DISCONTINUED: 'None / Not Applicable',
-        },
-        riskResults: {
-            Pills: { riskLevel: 'LOW', probability: 0.09, recommendation: 'Well-suited for oral contraceptives', confidence: 'High' },
-            Implant: { riskLevel: 'LOW', probability: 0.11, recommendation: 'Alternative long-term option', confidence: 'High' },
-        },
-        riskResult: { riskLevel: 'LOW', probability: 0.09, recommendation: 'Pills are the top match', confidence: 'High' },
-        clinicalNotes: 'First-time contraceptive user. Educated on pill schedule adherence. Started on 21-day combined OCP.',
-        obName: 'Dr. Maria Santos, OB-GYN',
-        status: 'completed',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
-        assessedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10 + 3600000).toISOString(),
-        expiresIn: 3600,
-    },
-];
+const formatRelativeTime = (ms: number): string => {
+    const minutes = Math.floor(ms / 60000);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+};
 
 // --- Helpers ---
 const getRiskColor = (risk?: string) => {
@@ -360,25 +276,49 @@ const HistoryCard = ({ item }: { item: ConsultationRecord }) => {
 // ─── Screen ─────────────────────────────────────────────────────────────────
 const ObHistoryScreen = () => {
     const [history, setHistory] = useState<ConsultationRecord[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [isOffline, setIsOffline] = useState(false);
+    const [cachedAt, setCachedAt] = useState<number | null>(null);
     const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'Moderate' | 'High'>('All');
 
     const doctorUid = auth.currentUser?.uid;
 
-    const loadHistory = useCallback(async () => {
-        setLoading(true);
-        try {
-            if (doctorUid) {
-                const data = await fetchDoctorHistory(doctorUid);
-                setHistory(data.length > 0 ? data : MOCK_HISTORY);
-            } else {
-                setHistory(MOCK_HISTORY);
-            }
-        } catch {
-            setHistory(MOCK_HISTORY);
-        } finally {
+    const loadHistory = useCallback(async (isManualRefresh = false) => {
+        if (!doctorUid) {
             setLoading(false);
+            return;
         }
+
+        if (isManualRefresh) setRefreshing(true);
+
+        // Step 1: Load cache immediately for instant display
+        try {
+            const cached = await loadHistoryCache(doctorUid);
+            if (cached) {
+                setHistory(cached.records);
+                setCachedAt(cached.cachedAt);
+                setLoading(false);
+            }
+        } catch { /* ignore cache read errors */ }
+
+        // Step 2: Try to refresh from Firestore in background
+        const online = await isOnline();
+        setIsOffline(!online);
+
+        if (online) {
+            try {
+                const fresh = await fetchDoctorHistory(doctorUid);
+                setHistory(fresh);
+                setCachedAt(Date.now());
+                setIsOffline(false);
+            } catch {
+                // Firestore failed — cache is already shown
+            }
+        }
+
+        setLoading(false);
+        setRefreshing(false);
     }, [doctorUid]);
 
     useFocusEffect(useCallback(() => { loadHistory(); }, [loadHistory]));
@@ -392,6 +332,17 @@ const ObHistoryScreen = () => {
     return (
         <View style={styles.container}>
             <ObHeader title="Patient History" subtitle="Completed Consultations" />
+
+            {/* Offline Banner */}
+            {isOffline && (
+                <View style={styles.offlineBanner}>
+                    <WifiOff size={13} color="#92400E" />
+                    <Text style={styles.offlineBannerText}>
+                        Offline — showing cached data
+                        {cachedAt ? ` · ${formatRelativeTime(Date.now() - cachedAt)}` : ''}
+                    </Text>
+                </View>
+            )}
 
             {/* Filter Chips */}
             <View style={styles.filterBar}>
@@ -429,7 +380,13 @@ const ObHistoryScreen = () => {
                 renderItem={({ item }) => <HistoryCard item={item} />}
                 keyExtractor={item => item.code}
                 contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
-                refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor="#E45A92" />}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => loadHistory(true)}
+                        tintColor="#E45A92"
+                    />
+                }
                 ListEmptyComponent={
                     loading ? (
                         <View style={styles.emptyContainer}>
@@ -441,7 +398,11 @@ const ObHistoryScreen = () => {
                                 <BookOpen size={32} color="#CBD5E1" />
                             </View>
                             <Text style={styles.emptyTitle}>No completed consultations</Text>
-                            <Text style={styles.emptySub}>Completed assessments will appear here.</Text>
+                            <Text style={styles.emptySub}>
+                                {isOffline
+                                    ? 'Connect to the internet to sync your history.'
+                                    : 'Completed assessments will appear here.'}
+                            </Text>
                         </View>
                     )
                 }
@@ -454,6 +415,14 @@ export default ObHistoryScreen;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8FAFC' },
+
+    // OFFLINE BANNER
+    offlineBanner: {
+        flexDirection: 'row', alignItems: 'center', gap: 7,
+        backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 8,
+        borderBottomWidth: 1, borderBottomColor: '#FDE68A',
+    },
+    offlineBannerText: { fontSize: 12, color: '#92400E', fontWeight: '500' },
 
     // FILTER BAR
     filterBar: { backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingVertical: 10 },

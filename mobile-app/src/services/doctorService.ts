@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../config/firebaseConfig';
 import {
     collection,
@@ -10,6 +11,30 @@ import {
     orderBy,
     limit
 } from 'firebase/firestore';
+
+// ─── History Cache ─────────────────────────────────────────────────────────
+
+const HISTORY_CACHE_PREFIX = '@history_';
+
+interface HistoryCache {
+    records: ConsultationRecord[];
+    cachedAt: number;
+}
+
+function historyCacheKey(doctorUid: string) {
+    return `${HISTORY_CACHE_PREFIX}${doctorUid}`;
+}
+
+export async function saveHistoryCache(doctorUid: string, records: ConsultationRecord[]): Promise<void> {
+    const cache: HistoryCache = { records, cachedAt: Date.now() };
+    await AsyncStorage.setItem(historyCacheKey(doctorUid), JSON.stringify(cache));
+}
+
+export async function loadHistoryCache(doctorUid: string): Promise<HistoryCache | null> {
+    const raw = await AsyncStorage.getItem(historyCacheKey(doctorUid));
+    if (!raw) return null;
+    return JSON.parse(raw) as HistoryCache;
+}
 
 export interface ConsultationRecord {
     code: string;
@@ -107,7 +132,7 @@ export const fetchDoctorQueue = async (doctorId: string): Promise<ConsultationRe
 };
 
 /**
- * Fetches the completed history for a specific doctor.
+ * Fetches the completed history for a specific doctor and saves it to the local cache.
  */
 export const fetchDoctorHistory = async (doctorId: string): Promise<ConsultationRecord[]> => {
     try {
@@ -125,11 +150,15 @@ export const fetchDoctorHistory = async (doctorId: string): Promise<Consultation
         });
 
         // Sort by assessed time descending
-        return results.sort((a, b) => {
+        const sorted = results.sort((a, b) => {
             const timeA = a.assessedAt || a.createdAt;
             const timeB = b.assessedAt || b.createdAt;
             return new Date(timeB).getTime() - new Date(timeA).getTime();
         });
+
+        // Persist to local cache for offline access
+        await saveHistoryCache(doctorId, sorted);
+        return sorted;
 
     } catch (error) {
         console.error("Fetch History Error:", error);
