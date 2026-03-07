@@ -17,6 +17,9 @@ __pycache__/
 *.pyd
 .Python
 env/
+node_modules
+mobile-app/package-lock.json
+mobile-app/package-lock.json
 venv/
 .venv/
 
@@ -26,6 +29,9 @@ venv/
 .env.emulator
 .env.local
 
+# Large generated data files (too big for GitHub)
+mobile-app/src/data/mecConditionOutputs.json
+
 # Expo
 .expo/
 web-build/
@@ -33,3 +39,4 @@ web-build/
 # Build outputs
 android/app/build/
 ios/Pods/
+nul

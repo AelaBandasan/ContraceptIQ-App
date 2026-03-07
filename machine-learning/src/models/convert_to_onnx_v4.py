@@ -19,6 +19,7 @@ After this script succeeds, copy the two .onnx files to:
     mobile-app/assets/models/
 """
 
+import math
 import sys
 from pathlib import Path
 
@@ -52,37 +53,35 @@ sys.path.insert(0, str(_SRC))
 # ============================================================================
 
 FEATURES = [
-    "REGION",
-    "CONTRACEPTIVE_METHOD",
-    "RELIGION",
-    "HUSBAND_AGE",
-    "PARITY",
-    "AGE",
-    "REASON_DISCONTINUED",
-    "HUSBANDS_EDUC",
-    "MARITAL_STATUS",
     "PATTERN_USE",
+    "HUSBAND_AGE",
+    "AGE",
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
+    "CONTRACEPTIVE_METHOD",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY",
 ]
 
-N_FEATURES = len(FEATURES)   # 10
+N_FEATURES = len(FEATURES)   # 9
 
 # Winning inference settings
-THRESHOLD   = 0.10
-CONF_MARGIN = 0.20
+THRESHOLD   = 0.25
+CONF_MARGIN = 0.05
 
-# Dtypes of the 10 features (from the training data pickle)
+# Dtypes of the 9 reduced_C features (from the training data pickle).
 # Used to build per-column initial_types for skl2onnx.
 FEATURE_DTYPES: dict[str, str] = {
-    "REGION":                "object",
-    "CONTRACEPTIVE_METHOD":  "object",
-    "RELIGION":              "object",
-    "HUSBAND_AGE":           "object",
-    "PARITY":                "int64",
-    "AGE":                   "int64",
-    "REASON_DISCONTINUED":   "object",
-    "HUSBANDS_EDUC":         "object",
-    "MARITAL_STATUS":        "object",
-    "PATTERN_USE":           "object",
+    "PATTERN_USE":              "object",
+    "HUSBAND_AGE":              "object",   # cat transformer (fitted as string)
+    "AGE":                      "int64",
+    "ETHNICITY":                "object",
+    "HOUSEHOLD_HEAD_SEX":       "object",
+    "CONTRACEPTIVE_METHOD":     "object",
+    "SMOKE_CIGAR":              "object",
+    "DESIRE_FOR_MORE_CHILDREN": "object",
+    "PARITY":                   "int64",
 }
 
 # ============================================================================
@@ -104,10 +103,28 @@ def register_xgboost_converter() -> None:
 # STEP 2: Convert a pipeline to ONNX
 # ============================================================================
 
+def _patch_cat_imputer(pipeline) -> None:
+    """
+    skl2onnx requires SimpleImputer.missing_values to be a string (e.g. "")
+    for string-typed columns, but the fitted pipeline stores np.nan.
+    Patch the in-memory imputer only — the .joblib files are never modified.
+    """
+    prep = pipeline.steps[0][1]   # ColumnTransformer
+    for tname, tobj, _tcols in prep.transformers_:
+        if tname == "cat" and hasattr(tobj, "steps"):
+            for sname, sobj in tobj.steps:
+                if sname == "imputer" and isinstance(sobj.missing_values, float) and math.isnan(sobj.missing_values):
+                    sobj.missing_values = ""
+                    print(f"  Patched cat imputer missing_values: nan -> ''")
+
+
 def convert_pipeline_to_onnx(pipeline, output_path: Path, model_name: str) -> None:
     print(f"\n{'='*60}")
     print(f"Converting {model_name} ...")
     print(f"{'='*60}")
+
+    # Patch categorical imputer so skl2onnx can handle string columns
+    _patch_cat_imputer(pipeline)
 
     # Build per-column initial_types so skl2onnx can resolve ColumnTransformer
     # column references by name.
@@ -122,7 +139,7 @@ def convert_pipeline_to_onnx(pipeline, output_path: Path, model_name: str) -> No
     onnx_model = convert_sklearn(
         pipeline,
         initial_types=initial_type,
-        target_opset=15,
+        target_opset={"": 15, "ai.onnx.ml": 3},
         options={id(pipeline): {"zipmap": False}},
     )
 
@@ -219,7 +236,7 @@ def validate(xgb_pipeline, dt_pipeline, xgb_onnx: Path, dt_onnx: Path) -> bool:
 
 def main() -> None:
     print("=" * 60)
-    print("ContraceptIQ -- ONNX Conversion v4 (10 features)")
+    print("ContraceptIQ -- ONNX Conversion v4 (9 features)")
     print("=" * 60)
 
     register_xgboost_converter()
@@ -261,7 +278,7 @@ def main() -> None:
     print("\nAll validations passed. ONNX models ready for mobile deployment.")
     print("\nNext steps:")
     print("  1. Copy .onnx files to mobile-app/assets/models/")
-    print("  2. Update mobile-app/src/utils/featureEncoder.ts (10 features)")
+    print("  2. Update mobile-app/src/utils/featureEncoder.ts (9 features)")
     print("  3. Update mobile-app/src/screens/GuestAssessment.tsx (8 questions)")
 
 

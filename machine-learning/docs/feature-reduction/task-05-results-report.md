@@ -1,6 +1,6 @@
 # Task 05 — Results Report
 
-**Status:** PENDING
+**Status:** COMPLETE
 
 **Part of:** [VALIDATION_PLAN.md](VALIDATION_PLAN.md)
 **Previous task:** [task-04-threshold-selection.md](task-04-threshold-selection.md)
@@ -292,8 +292,6 @@ If **no reduced set passes**, the report must clearly state:
 
 ## Status Log
 
-> Update this section when the task is completed.
-
 | Date | Event |
 |------|-------|
-| — | Task not yet started |
+| 2026-03-07 | Task completed successfully. `reporter.py` and `run_validation.py` created. Final evaluation on locked test set run for all 4 feature sets. All sets achieved recall=1.0, precision=0.2562, F1=0.4079, ROC-AUC≈0.91 on the 481-sample test set (TP=31, FP=90, TN=360, FN=0). **Recommendation: `reduced_C` (10 features) — VALIDATED.** Operating threshold: 0.12. No issues encountered in this task. Checkpoint written and verified. |

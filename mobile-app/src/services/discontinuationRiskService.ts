@@ -8,15 +8,9 @@
 import axios, {
   AxiosInstance,
   AxiosError,
-  AxiosResponse,
 } from 'axios';
 import { createModuleLogger } from '../utils/loggerUtils';
-import {
-  createAppError,
-  isRetryableError,
-  isOfflineError,
-  AppError,
-} from '../utils/errorHandler';
+import { createAppError } from '../utils/errorHandler';
 import { isOnline } from '../utils/networkUtils';
 import { assessOffline } from './onDeviceRiskService';
 
@@ -138,7 +132,7 @@ export interface RequiredFeaturesResponse {
 class DiscontinuationRiskService {
   private client: AxiosInstance;
   private readonly API_BASE_URL: string;
-  private readonly API_TIMEOUT: number = 30000; // 30 seconds
+  private readonly API_TIMEOUT: number = 5000; // 5 seconds — fail fast so ONNX fallback triggers quickly
   private readonly MAX_RETRIES: number = 3;
 
   constructor(baseURL?: string) {
@@ -396,17 +390,30 @@ class DiscontinuationRiskService {
           throw serviceError;
         }
 
-        // Network errors - retry with backoff
-        if (error.code && ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT'].includes(error.code)) {
-          if (isRetryableError(error as any)) {
-            if (retryCount < this.MAX_RETRIES) {
-              logger.warn(
-                `Network error, retrying (${retryCount + 1}/${this.MAX_RETRIES})`,
-                { code: error.code, retryCount: retryCount + 1 }
-              );
-              await this.delay(1000 * (retryCount + 1));
-              return this.assessDiscontinuationRisk(data, retryCount + 1);
-            }
+        // Network errors — server unreachable, fall back to on-device ONNX immediately
+        if (
+          error.code &&
+          ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT', 'ERR_NETWORK', 'ERR_CONNECTION_REFUSED'].includes(error.code) ||
+          error.message?.includes('Network Error') ||
+          error.message?.includes('network failure')
+        ) {
+          logger.warn(
+            `Network error — falling back to on-device ML (${error.code || 'unknown'})`,
+            { code: error.code, message: error.message }
+          );
+          try {
+            const offlineResult = await assessOffline(data as Record<string, any>);
+            logger.info('On-device assessment completed upon network failure', {
+              riskLevel: offlineResult.risk_level,
+              source: 'on-device',
+            });
+            return offlineResult;
+          } catch (offlineError: any) {
+            logger.error('On-device assessment failed after network error', undefined, { error: offlineError });
+            throw createAppError(
+              new Error(`Server unreachable and on-device model failed: ${offlineError.message || 'Unknown error'}`),
+              'assessDiscontinuationRisk'
+            );
           }
         }
 

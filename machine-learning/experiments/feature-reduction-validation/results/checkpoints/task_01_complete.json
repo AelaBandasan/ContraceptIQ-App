@@ -1,0 +1,21 @@
+{
+  "task": "01",
+  "status": "complete",
+  "timestamp": "2026-03-06T17:55:47.510489+00:00",
+  "outputs": {
+    "train_pkl": "results\\splits\\train.pkl",
+    "val_pkl": "results\\splits\\val.pkl",
+    "test_pkl": "results\\splits\\test.pkl",
+    "manifest": "results\\splits\\split_manifest.json"
+  },
+  "split_sizes": {
+    "n_train": 2243,
+    "n_val": 481,
+    "n_test": 481
+  },
+  "sha256": {
+    "train": "0bb8871b982b7221030dc182b9919dfac0a2ced1839c60a9356e4f4249276233",
+    "val": "4020092f776a59be56e14de9a6d148755febb5efd49816842c653213a0a93292",
+    "test": "e57e07bf9cb7e7fbb765b52626ad23bc7961a7e6cfc851f0d451c52f8985cd63"
+  }
+}

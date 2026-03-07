@@ -74,36 +74,42 @@ _REDUCED_A = [f for f in _ALL_FEATURES if f not in {
     "LAST_SOURCE_TYPE",
 }]
 
-# Reduced-B: keep only features with strictly positive permutation importance
-# (drops all negatives + zeros = 13 features removed → 12 kept)
+# Reduced-B: strictly positive permutation importance (inner-split, REGION excluded).
+# Legacy (pre-fix, look-ahead bias + REGION): "AGE", "REGION", "RELIGION",
+#   "MARITAL_STATUS", "RESIDING_WITH_PARTNER", "SMOKE_CIGAR", "HUSBANDS_EDUC",
+#   "HUSBAND_AGE", "PARITY", "PATTERN_USE", "CONTRACEPTIVE_METHOD",
+#   "REASON_DISCONTINUED"
 _REDUCED_B = [
-    "AGE",
-    "REGION",
-    "RELIGION",
-    "MARITAL_STATUS",
-    "RESIDING_WITH_PARTNER",
-    "SMOKE_CIGAR",
-    "HUSBANDS_EDUC",
-    "HUSBAND_AGE",
-    "PARITY",
     "PATTERN_USE",
+    "HUSBAND_AGE",
+    "AGE",
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
     "CONTRACEPTIVE_METHOD",
-    "REASON_DISCONTINUED",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY",
+    "RELIGION",
+    "WANT_LAST_PREGNANCY",
+    "RESIDING_WITH_PARTNER",
+    "HSBND_DESIRE_FOR_MORE_CHILDREN",
+    "LAST_METHOD_DISCONTINUED",
 ]
 
-# Reduced-C: top 6 by permutation importance + 4 high-SHAP borderline features
-# (10 features)
+# Reduced-C: top features by cumulative importance >= 80%, min=9, REGION excluded.
+# Legacy (pre-fix, look-ahead bias + REGION): "REGION", "CONTRACEPTIVE_METHOD",
+#   "RELIGION", "HUSBAND_AGE", "PARITY", "AGE", "REASON_DISCONTINUED",
+#   "HUSBANDS_EDUC", "MARITAL_STATUS", "PATTERN_USE"
 _REDUCED_C = [
-    "REGION",
-    "CONTRACEPTIVE_METHOD",
-    "RELIGION",
-    "HUSBAND_AGE",
-    "PARITY",
-    "AGE",
-    "REASON_DISCONTINUED",
-    "HUSBANDS_EDUC",
-    "MARITAL_STATUS",
     "PATTERN_USE",
+    "HUSBAND_AGE",
+    "AGE",
+    "ETHNICITY",
+    "HOUSEHOLD_HEAD_SEX",
+    "CONTRACEPTIVE_METHOD",
+    "SMOKE_CIGAR",
+    "DESIRE_FOR_MORE_CHILDREN",
+    "PARITY",
 ]
 
 # Registry: ordered from least-aggressive to most-aggressive reduction
@@ -146,13 +152,13 @@ DT_PARAMS: dict = {
 # ============================================================================
 
 # Confidence margin is fixed; only threshold is swept
-CONF_MARGIN: float = 0.20
+CONF_MARGIN: float = 0.05
 
 # Thresholds to sweep for each reduced feature set
-THRESHOLD_SWEEP: list[float] = [0.10, 0.12, 0.15, 0.18, 0.20]
+THRESHOLD_SWEEP: list[float] = [0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
 
 # ============================================================================
 # SUCCESS CRITERION
 # ============================================================================
 
-RECALL_TARGET: float = 0.87
+RECALL_TARGET: float = 0.90

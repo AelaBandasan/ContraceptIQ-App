@@ -26,7 +26,6 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
     setSelectedPrefs,
     reset
   } = useAssessment();
-  const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new RNAnimated.Value(500)).current;
 
   // Check if we are in Doctor/OB mode
@@ -135,44 +134,7 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
     return colorMap[code] || "#ccc";
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dy) > 20,
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100) {
-          RNAnimated.timing(translateY, {
-            toValue: 500,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            translateY.setValue(500);
-            setModalVisible(false);
-          });
-        } else {
-          RNAnimated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
 
-  useEffect(() => {
-    if (modalVisible) {
-      RNAnimated.timing(translateY, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [modalVisible]);
 
   const togglePreference = (key: string) => {
     const isSelected = selectedPrefs.includes(key);
@@ -652,5 +614,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  ageChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginBottom: 8,
+  },
+  ageChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  ageChipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  ageChipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
