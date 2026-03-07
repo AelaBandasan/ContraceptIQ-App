@@ -5,17 +5,15 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  FlatList,
+  Image,
   StatusBar,
   TextInput,
-  Modal,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import {
-  X,
   CheckCircle2,
   Check,
   Heart,
@@ -25,7 +23,9 @@ import {
   UserCheck,
   Leaf,
   Shield,
+  ChevronLeft,
   ChevronDown,
+  ChevronUp,
 } from "lucide-react-native";
 
 import {
@@ -47,6 +47,7 @@ import { saveAssessment, AssessmentRecord } from "../../services/doctorService";
 import ObHeader from "../../components/ObHeader";
 import { WHO_MEC_CONDITIONS } from "../../data/whoMecData";
 import { MecTreeSelector } from "../../components/MecTreeSelector";
+import { colors, shadows } from "../../theme";
 
 // ─── Field Definitions (9 V4 features + patient name) ───────────────────────
 
@@ -117,21 +118,6 @@ const FORM_FIELDS = [
     ],
   },
   {
-    id: "CONTRACEPTIVE_METHOD",
-    label: "Current Contraceptive Method",
-    type: "select",
-    options: [
-      "Pills",
-      "Copper IUD",
-      "Intrauterine Device (IUD)",
-      "Injectable",
-      "Implant",
-      "Patch",
-      "Condom",
-      "None",
-    ],
-  },
-  {
     id: "PATTERN_USE",
     label: "Pattern of Use",
     type: "select",
@@ -169,11 +155,7 @@ const PREFERENCES = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const ObAssessment = ({ navigation, route }: any) => {
-  const hasPatientData = !!(
-    route.params?.patientData ||
-    route.params?.consultationId ||
-    route.params?.viewOnly
-  );
+  const hasPatientData = !!route.params?.record;
 
   // screen: 'form' → 'mec' → 'mec_results' → 'results'
   const [screen, setScreen] = useState(hasPatientData ? "results" : "form");
@@ -192,8 +174,7 @@ const ObAssessment = ({ navigation, route }: any) => {
   const [mecPrefs, setMecPrefs] = useState<string[]>([]);
 
   // Modal selector
-  const [selectorVisible, setSelectorVisible] = useState(false);
-  const [activeSelectorField, setActiveSelectorField] = useState<any>(null);
+  const [openDropdownFieldId, setOpenDropdownFieldId] = useState<string | null>(null);
 
   // Clinical notes
   const [clinicalNotes, setClinicalNotes] = useState("");
@@ -233,11 +214,6 @@ const ObAssessment = ({ navigation, route }: any) => {
   const updateVal = (val: string, id: string) =>
     setFormData((prev) => ({ ...prev, [id]: val }));
 
-  const openSelector = (field: any) => {
-    setActiveSelectorField(field);
-    setSelectorVisible(true);
-  };
-
   const toggleCondition = (id: string) => {
     setMecConditionIds((prev) => {
       if (prev.includes(id)) return prev.filter((c) => c !== id);
@@ -261,10 +237,6 @@ const ObAssessment = ({ navigation, route }: any) => {
     }
     if (!formData.ETHNICITY) {
       Alert.alert("Required", "Please select the patient's ethnicity.");
-      return false;
-    }
-    if (!formData.CONTRACEPTIVE_METHOD) {
-      Alert.alert("Required", "Please select a contraceptive method.");
       return false;
     }
     return true;
@@ -437,21 +409,59 @@ const ObAssessment = ({ navigation, route }: any) => {
           keyboardType={field.type === "numeric" ? "numeric" : "default"}
         />
       ) : (
-        <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={() => openSelector(field)}
-        >
-          <Text
-            style={
-              formData[field.id]
-                ? styles.dropdownTextSelected
-                : styles.dropdownTextPlaceholder
+        <View>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() =>
+              setOpenDropdownFieldId((prev) => (prev === field.id ? null : field.id))
             }
+            activeOpacity={0.85}
           >
-            {formData[field.id] || "Select…"}
-          </Text>
-          <ChevronDown size={20} color="#64748B" />
-        </TouchableOpacity>
+            <Text
+              style={
+                formData[field.id]
+                  ? styles.dropdownTextSelected
+                  : styles.dropdownTextPlaceholder
+              }
+            >
+              {formData[field.id] || "Select…"}
+            </Text>
+            {openDropdownFieldId === field.id ? (
+              <ChevronUp size={20} color="#64748B" />
+            ) : (
+              <ChevronDown size={20} color="#64748B" />
+            )}
+          </TouchableOpacity>
+
+          {openDropdownFieldId === field.id ? (
+            <View style={styles.dropdownPanel}>
+              {(field.options || []).map((option: string) => {
+                const isSelected = formData[field.id] === option;
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    style={[styles.dropdownOption, isSelected && styles.dropdownOptionSelected]}
+                    onPress={() => {
+                      updateVal(option, field.id);
+                      setOpenDropdownFieldId(null);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownOptionText,
+                        isSelected && styles.dropdownOptionTextSelected,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                    {isSelected ? <CheckCircle2 size={18} color={colors.primary} /> : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : null}
+        </View>
       )}
     </View>
   );
@@ -469,13 +479,13 @@ const ObAssessment = ({ navigation, route }: any) => {
       return label;
     };
 
-    const methodMap: Record<string, string> = {
-      CHC: "Pills / Patch / Ring",
-      POP: "Progestogen-only Pill",
-      DMPA: "Injectable (DMPA)",
-      Implant: "Implant",
-      "Cu-IUD": "Copper IUD",
-      "LNG-IUD": "LNG-IUD (Hormonal)",
+    const methodMap: Record<string, { label: string; image: any }> = {
+      CHC: { label: "Pills / Patch / Ring", image: require("../../../assets/image/sq_chcpills.png") },
+      POP: { label: "Progestogen-only Pill", image: require("../../../assets/image/sq_poppills.png") },
+      DMPA: { label: "Injectable (DMPA)", image: require("../../../assets/image/sq_dmpainj.png") },
+      Implant: { label: "Implant", image: require("../../../assets/image/sq_lngetg.png") },
+      "Cu-IUD": { label: "Copper IUD", image: require("../../../assets/image/sq_cuiud.png") },
+      "LNG-IUD": { label: "LNG-IUD (Hormonal)", image: require("../../../assets/image/sq_lngiud.png") },
     };
 
     return (
@@ -493,12 +503,15 @@ const ObAssessment = ({ navigation, route }: any) => {
         {([1, 2, 3, 4] as MECCategory[]).map((cat) => {
           const methodsInCat = Object.entries(mecResults)
             .filter(([, value]) => value === cat)
-            .map(([key]) => methodMap[key] || key);
+            .map(([key]) => ({
+              label: methodMap[key]?.label || key,
+              image: methodMap[key]?.image,
+            }));
           if (methodsInCat.length === 0) return null;
           return (
             <View key={cat} style={{ marginBottom: 16 }}>
               <View style={styles.mecCatRow}>
-                <View style={[styles.mecCatBadge, { backgroundColor: getMECColor(cat) }]}>
+                <View style={styles.mecCatBadge}>
                   <Text style={styles.mecCatBadgeText}>Category {cat}</Text>
                 </View>
                 <Text style={styles.mecCatDesc}>
@@ -511,13 +524,20 @@ const ObAssessment = ({ navigation, route }: any) => {
               <View style={styles.mecMethodCard}>
                 {methodsInCat.map((method, i) => (
                   <View
-                    key={i}
+                    key={`${method.label}_${i}`}
                     style={[
                       styles.mecMethodItem,
                       i < methodsInCat.length - 1 && styles.mecMethodItemBorder,
                     ]}
                   >
-                    <Text style={styles.mecMethodText}>{method}</Text>
+                    <View style={styles.mecMethodRow}>
+                      {method.image ? (
+                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}>
+                          <Image source={method.image} style={styles.mecMethodImage} resizeMode="cover" />
+                        </View>
+                      ) : null}
+                      <Text style={styles.mecMethodText}>{method.label}</Text>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -530,6 +550,16 @@ const ObAssessment = ({ navigation, route }: any) => {
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
 
+  const currentStep =
+    screen === "form" ? 1 : screen === "mec" ? 2 : screen === "mec_results" ? 3 : 4;
+
+  const steps = [
+    { id: 1, label: "Details" },
+    { id: 2, label: "MEC" },
+    { id: 3, label: "Rules" },
+    { id: 4, label: "Results" },
+  ];
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -539,6 +569,45 @@ const ObAssessment = ({ navigation, route }: any) => {
         showBack
         onBackPress={() => navigation.navigate('ObHome')}
       />
+
+      <View style={styles.stepperWrap}>
+        {steps.map((step) => {
+          const isDone = step.id < currentStep;
+          const isActive = step.id === currentStep;
+          return (
+            <View key={step.id} style={styles.stepItem}>
+              <View
+                style={[
+                  styles.stepDot,
+                  isDone && styles.stepDotDone,
+                  isActive && styles.stepDotActive,
+                ]}
+              >
+                {isDone ? (
+                  <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                ) : (
+                  <Text
+                    style={[
+                      styles.stepDotText,
+                      (isDone || isActive) && styles.stepDotTextActive,
+                    ]}
+                  >
+                    {step.id}
+                  </Text>
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  (isDone || isActive) && styles.stepLabelActive,
+                ]}
+              >
+                {step.label}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
 
       {/* ── SCREEN 1: FORM (9 V4 features) ─────────────────────────────── */}
       {screen === "form" && (
@@ -639,6 +708,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("form")}>
+            <ChevronLeft size={16} color="#6B4254" />
             <Text style={styles.secondaryBtnText}>Back to Patient Details</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -674,6 +744,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec")}>
+            <ChevronLeft size={16} color="#6B4254" />
             <Text style={styles.secondaryBtnText}>Back to Conditions</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -756,52 +827,11 @@ const ObAssessment = ({ navigation, route }: any) => {
             <CheckCircle2 color="#FFF" size={20} style={{ marginLeft: 6 }} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec_results")}>
+            <ChevronLeft size={16} color="#6B4254" />
             <Text style={styles.secondaryBtnText}>Back to MEC Rules</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
-
-      {/* ── OPTION SELECTOR MODAL ────────────────────────────────────────── */}
-      <Modal
-        animationType="slide"
-        transparent
-        visible={selectorVisible}
-        onRequestClose={() => setSelectorVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.selectorContent}>
-            <View style={styles.selectorHeader}>
-              <Text style={styles.selectorTitle}>
-                {activeSelectorField?.label || "Select Option"}
-              </Text>
-              <TouchableOpacity onPress={() => setSelectorVisible(false)}>
-                <X size={24} color="#1E293B" />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={activeSelectorField?.options || []}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.methodItem}
-                  onPress={() => {
-                    if (activeSelectorField) {
-                      updateVal(item, activeSelectorField.id);
-                      setSelectorVisible(false);
-                    }
-                  }}
-                >
-                  <Text style={styles.methodText}>{item}</Text>
-                  {activeSelectorField && formData[activeSelectorField.id] === item && (
-                    <CheckCircle2 size={18} color="#E45A92" />
-                  )}
-                </TouchableOpacity>
-              )}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -813,63 +843,113 @@ export default ObAssessment;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FB",
+    backgroundColor: "#FDF7FA",
+  },
+  stepperWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 6,
+    backgroundColor: "#FFF8FC",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F8DDE9",
+  },
+  stepItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  stepDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3E8EF",
+    borderWidth: 1,
+    borderColor: "#E4CFDB",
+  },
+  stepDotDone: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  stepDotActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  stepDotText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#8A7A83",
+  },
+  stepDotTextActive: {
+    color: "#FFFFFF",
+  },
+  stepLabel: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#8A7A83",
+  },
+  stepLabelActive: {
+    color: colors.primary,
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 28,
   },
   screenTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#101828",
-    marginBottom: 6,
+    color: colors.text.primary,
+    marginBottom: 4,
   },
   screenSubtitle: {
-    fontSize: 13,
-    color: "#64748B",
-    marginBottom: 20,
-    lineHeight: 18,
+    fontSize: 14.5,
+    color: colors.text.secondary,
+    marginBottom: 13,
+    lineHeight: 20,
   },
   cardSection: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 15,
+    padding: 18,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#64748B",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: "#F3DCE8",
+    ...shadows.sm,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.08,
   },
   fieldGroup: {
-    marginBottom: 18,
+    marginBottom: 14,
   },
   inputLabel: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#475467",
+    color: colors.text.primary,
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: "#F8FAFC",
-    padding: 14,
-    borderRadius: 12,
+    backgroundColor: "#FFFCFE",
+    paddingHorizontal: 14,
+    height: 52,
+    borderRadius: 14,
     fontSize: 15,
-    color: "#1E293B",
+    color: colors.text.primary,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#EFD8E5",
   },
   dropdownButton: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 14,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 52,
+    backgroundColor: "#FFFCFE",
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#EFD8E5",
   },
   dropdownTextSelected: {
     fontSize: 15,
@@ -882,23 +962,56 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     flex: 1,
   },
-  primaryBtn: {
-    backgroundColor: "#E45A92",
+  dropdownPanel: {
+    marginTop: 8,
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    height: 50,
+    borderWidth: 1,
+    borderColor: "#EFD8E5",
+    overflow: "hidden",
+  },
+  dropdownOption: {
+    minHeight: 46,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F6E8EF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+  },
+  dropdownOptionSelected: {
+    backgroundColor: "#FFF5FA",
+  },
+  dropdownOptionText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#334155",
+    fontWeight: "500",
+    marginRight: 10,
+  },
+  dropdownOptionTextSelected: {
+    color: colors.primary,
+    fontWeight: "700",
+  },
+  primaryBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    height: 54,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#E45A92",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.28,
+    shadowRadius: 7,
+    elevation: 4,
   },
   primaryBtnText: {
     color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 17,
+    fontWeight: "800",
     marginRight: 6,
   },
   arrow: {
@@ -907,13 +1020,20 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   secondaryBtn: {
-    paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#FFF8FC",
+    borderWidth: 1,
+    borderColor: "#EFD8E5",
   },
   secondaryBtnText: {
-    color: "#64748B",
+    color: "#6B4254",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   // Preferences
   prefRow: {
@@ -927,7 +1047,7 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
   },
   prefRowSelected: {
-    borderColor: "#E45A92",
+    borderColor: colors.primary,
     backgroundColor: "#FDF2F8",
   },
   prefIcon: {
@@ -940,7 +1060,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   prefIconSelected: {
-    backgroundColor: "#E45A92",
+    backgroundColor: colors.primary,
   },
   prefLabel: {
     fontSize: 14,
@@ -967,8 +1087,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   prefCheckSelected: {
-    backgroundColor: "#E45A92",
-    borderColor: "#E45A92",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   // MEC results
   conditionSummary: {
@@ -1002,9 +1122,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
+    backgroundColor: "#F8F1F5",
+    borderWidth: 1,
+    borderColor: "#EFD8E5",
   },
   mecCatBadgeText: {
-    color: "#FFF",
+    color: "#6B4254",
     fontWeight: "bold",
     fontSize: 14,
   },
@@ -1023,6 +1146,24 @@ const styles = StyleSheet.create({
   },
   mecMethodItem: {
     padding: 14,
+  },
+  mecMethodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  mecMethodImageWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 3,
+    borderColor: "#EBD5E1",
+    backgroundColor: "#FFF",
+  },
+  mecMethodImage: {
+    width: "100%",
+    height: "100%",
   },
   mecMethodItemBorder: {
     borderBottomWidth: 1,
@@ -1063,50 +1204,5 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 11,
     fontWeight: "bold",
-  },
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  selectorContent: {
-    backgroundColor: "#FFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    height: "80%",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  selectorHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-  },
-  selectorTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
-  },
-  methodItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    marginBottom: 5,
-    backgroundColor: "#F8FAFC",
-  },
-  methodText: {
-    fontSize: 16,
-    color: "#334155",
-    fontWeight: "500",
   },
 });
