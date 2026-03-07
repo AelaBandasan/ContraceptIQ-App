@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu } from 'lucide-react-native';
+import { ChevronLeft, Menu } from 'lucide-react-native';
 import { colors } from '../theme';
 
 interface ObHeaderProps {
@@ -10,18 +10,33 @@ interface ObHeaderProps {
     subtitle?: string;
     date?: string;
     showMenu?: boolean;
+    showBack?: boolean;
+    onBackPress?: () => void;
 }
 
 const ObHeader: React.FC<ObHeaderProps> = ({
     title,
     subtitle,
-    showMenu = true
+    showMenu = false,
+    showBack = false,
+    onBackPress,
 }) => {
     const navigation = useNavigation<any>();
     const insets = useSafeAreaInsets();
 
     const openDrawer = () => {
         navigation.dispatch(DrawerActions.openDrawer());
+    };
+
+    const goBack = () => {
+        if (onBackPress) {
+            onBackPress();
+            return;
+        }
+
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        }
     };
 
     return (
@@ -39,7 +54,19 @@ const ObHeader: React.FC<ObHeaderProps> = ({
                         </View>
                     </TouchableOpacity>
                 )}
-                <View style={styles.headerTitleContainer}>
+                {showBack && (
+                    <TouchableOpacity
+                        style={styles.menuBtn}
+                        onPress={goBack}
+                    >
+                        <View
+                            style={styles.menuBtnSolid}
+                        >
+                            <ChevronLeft color="#FFF" size={24} />
+                        </View>
+                    </TouchableOpacity>
+                )}
+                <View style={[styles.headerTitleContainer, !showMenu && !showBack && styles.headerTitleContainerNoMenu]}>
                     <Text style={styles.headerTitle}>{title}</Text>
                     {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
                 </View>
@@ -52,7 +79,7 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: colors.primary,
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 15,
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomLeftRadius: 32,
@@ -84,6 +111,9 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 16,
     },
+    headerTitleContainerNoMenu: {
+        marginLeft: 0,
+    },
     headerTitle: {
         fontSize: 22,
         fontWeight: '800',
@@ -91,7 +121,7 @@ const styles = StyleSheet.create({
         letterSpacing: -0.5,
     },
     headerSubtitle: {
-        fontSize: 12,
+        fontSize: 14,
         color: 'rgba(255, 255, 255, 0.85)',
         fontWeight: '500',
         marginTop: 2,
