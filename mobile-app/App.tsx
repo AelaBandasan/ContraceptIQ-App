@@ -8,15 +8,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootStack from './src/routes/RootStack';
 import { navigationRef } from './src/navigation/NavigationService';
 import { AssessmentProvider } from './src/context/AssessmentContext';
-import { initMecData } from './src/services/mecDataService';
 import { preloadModels } from './src/services/onDeviceRiskService';
 
 export default function App() {
   useEffect(() => {
-    // Load MEC data from cache/Firestore in the background.
-    // Falls back to bundled data silently if unavailable.
-    initMecData();
-    // Pre-load ONNX models so the first assessment doesn't stall.
+    // Pre-load ONNX v4 models so the first assessment doesn't stall.
     // Runs in background — failure is silent, models load on demand instead.
     preloadModels();
   }, []);

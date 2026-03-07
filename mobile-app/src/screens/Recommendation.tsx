@@ -1,7 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated as RNAnimated, PanResponder, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
@@ -116,11 +115,10 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
     2: '#FFEB3B',
     3: '#FF9800',
     4: '#F44336',
-    5: '#bbb', // Default gray
+    5: '#bbb',
   };
 
   const recommendations: Record<number, Record<string, number>> = {
-    // Using 0 as fallback if nothing selected, or handle check before modal
     0: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 2, injectables: 2 },
     1: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 1, injectables: 1 },
     2: { pills: 1, patch: 1, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
@@ -129,13 +127,49 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const getColor = (method: string) => {
-    // Default to index 0 logic if no age selected, or handle specifically
     const index = selectedAgeIndex ?? 0;
     const code = recommendations[index][method];
     return colorMap[code] || "#ccc";
   };
 
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dy) > 20,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100) {
+          RNAnimated.timing(translateY, {
+            toValue: 500,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            translateY.setValue(500);
+            setModalVisible(false);
+          });
+        } else {
+          RNAnimated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
+  useEffect(() => {
+    if (modalVisible) {
+      RNAnimated.timing(translateY, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [modalVisible]);
 
   const togglePreference = (key: string) => {
     const isSelected = selectedPrefs.includes(key);
@@ -157,22 +191,17 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
 
-    // Calculate MEC categories based on age
     const numericAge = ageRanges[selectedAgeIndex].numericAge;
     const mecResults = calculateMEC({ age: numericAge });
 
-    // Navigate to ViewRecommendation with MEC results
     (navigation as any).navigate('ViewRecommendation', {
       ageLabel: ageRanges[selectedAgeIndex].fullLabel,
       ageValue: ageRanges[selectedAgeIndex].value,
       prefs: selectedPrefs,
       mecResults,
-      isDoctorAssessment // Pass flag to next screen
+      isDoctorAssessment
     });
   };
-
-  // Auto-reset removed to fix selection issues. 
-  // State now persists during the session but resets on app relaunch.
 
   const selectedAgeLabel = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '';
 
@@ -491,7 +520,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 8,
-    width: '30%', // Grid-like for 3 items
+    width: '30%',
     minWidth: 100,
     borderRadius: 20,
     backgroundColor: '#F8FAFC',
@@ -506,9 +535,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
-  },
-  ageChipIcon: {
-    marginRight: 6,
   },
   ageChipLabel: {
     fontSize: 15,

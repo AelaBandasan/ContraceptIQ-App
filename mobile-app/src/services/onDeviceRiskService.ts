@@ -1,32 +1,31 @@
 /**
- * On-Device Discontinuation Risk Assessment Service
+ * On-Device Discontinuation Risk Assessment Service (v4)
  *
- * Runs the hybrid XGBoost + Decision Tree model locally using ONNX Runtime.
+ * Runs the hybrid XGBoost + Decision Tree v4 model locally using ONNX Runtime.
  * Enables offline risk assessment without requiring the Flask backend.
  *
  * Architecture:
  *   1. Load ONNX models from bundled assets (lazy, singleton)
- *   2. Encode input features (form data → Float32Array)
- *   3. Run XGBoost → get probability
- *   4. Apply hybrid upgrade rule with Decision Tree
+ *   2. Encode 9 input features via encodeFeaturesV4 (string + float32 per-column tensors)
+ *   3. Run XGBoost → get P(discontinue)
+ *   4. Apply hybrid upgrade rule with Decision Tree (threshold=0.25, conf_margin=0.05)
  *   5. Return RiskAssessmentResponse (same interface as API)
  */
 
 import { InferenceSession, Tensor } from 'onnxruntime-react-native';
-import { Platform } from 'react-native';
 import { Asset } from 'expo-asset';
-import { encodeFeatures, validateFeatures } from '../utils/featureEncoder';
+import { encodeFeaturesV4, validateFeaturesV4 } from '../utils/featureEncoder';
 import { createModuleLogger } from '../utils/loggerUtils';
 import type { RiskAssessmentResponse } from './discontinuationRiskService';
 
 // ============================================================================
-// CONFIGURATION (matches hybrid_v3_config.json)
+// CONFIGURATION (matches hybrid_v4_config.json)
 // ============================================================================
 
 const HYBRID_CONFIG = {
-    threshold_v3: 0.15,
-    conf_margin_v3: 0.2,
-    model_version: 'v3-offline',
+    threshold: 0.25,
+    conf_margin: 0.05,
+    model_version: 'v4-offline',
 };
 
 // ============================================================================
@@ -40,7 +39,7 @@ let loadingPromise: Promise<void> | null = null;
 
 /**
  * Load ONNX models from bundled assets.
- * This is called lazily on first prediction and cached as singleton.
+ * Lazy singleton — safe to call multiple times.
  */
 async function loadModels(): Promise<void> {
     const logger = createModuleLogger('OnDeviceRiskService');
@@ -50,13 +49,11 @@ async function loadModels(): Promise<void> {
 
     loadingPromise = (async () => {
         try {
-            logger.info('Loading ONNX models from assets...');
+            logger.info('Loading ONNX v4 models from assets...');
 
-            // Load model assets
             const xgbAsset = Asset.fromModule(require('../../assets/models/xgb_high_recall.onnx'));
             const dtAsset = Asset.fromModule(require('../../assets/models/dt_high_recall.onnx'));
 
-            // Download assets to local filesystem (Expo handles this)
             await xgbAsset.downloadAsync();
             await dtAsset.downloadAsync();
 
@@ -64,7 +61,6 @@ async function loadModels(): Promise<void> {
                 throw new Error('Failed to download model assets to local storage');
             }
 
-            // Create ONNX inference sessions
             xgbSession = await InferenceSession.create(xgbAsset.localUri, {
                 executionProviders: ['cpu'],
             });
@@ -74,7 +70,7 @@ async function loadModels(): Promise<void> {
             });
 
             modelsLoaded = true;
-            logger.info('ONNX models loaded successfully');
+            logger.info('ONNX v4 models loaded successfully');
         } catch (error) {
             logger.error('Failed to load ONNX models', undefined, { error });
             modelsLoaded = false;
@@ -93,22 +89,16 @@ async function loadModels(): Promise<void> {
 
 /**
  * Extract class-1 probability from ONNX output tensor.
- * Handles different output formats (2D array, map, etc.)
  */
 function extractProbability(probOutput: Tensor): number {
     const data = probOutput.data as Float32Array | number[];
 
-    // If the output has shape [1, 2], the class-1 prob is at index 1
     if (probOutput.dims.length === 2 && probOutput.dims[1] === 2) {
         return Number(data[1]);
     }
-
-    // If the output is a flat array of 2 values
     if (data.length === 2) {
         return Number(data[1]);
     }
-
-    // Single value output (probability of class 1 directly)
     return Number(data[0]);
 }
 
@@ -116,83 +106,95 @@ function extractProbability(probOutput: Tensor): number {
  * Extract prediction label from ONNX output tensor.
  */
 function extractPrediction(predOutput: Tensor): number {
-    const data = predOutput.data;
-    return Number(data[0]);
+    return Number(predOutput.data[0]);
 }
 
 /**
- * Assess discontinuation risk using on-device ONNX models.
+ * Build the per-column ONNX feed dict for a v4 inference session.
+ * XGBoost and Decision Tree share the same 9 named inputs.
+ */
+function buildFeed(features: ReturnType<typeof encodeFeaturesV4>): Record<string, Tensor> {
+    return {
+        PATTERN_USE:              new Tensor('string',  [features.PATTERN_USE],              [1, 1]),
+        HUSBAND_AGE:              new Tensor('string',  [features.HUSBAND_AGE],              [1, 1]),
+        AGE:                      new Tensor('float32', new Float32Array([features.AGE]),     [1, 1]),
+        ETHNICITY:                new Tensor('string',  [features.ETHNICITY],                [1, 1]),
+        HOUSEHOLD_HEAD_SEX:       new Tensor('string',  [features.HOUSEHOLD_HEAD_SEX],       [1, 1]),
+        CONTRACEPTIVE_METHOD:     new Tensor('string',  [features.CONTRACEPTIVE_METHOD],     [1, 1]),
+        SMOKE_CIGAR:              new Tensor('string',  [features.SMOKE_CIGAR],              [1, 1]),
+        DESIRE_FOR_MORE_CHILDREN: new Tensor('string',  [features.DESIRE_FOR_MORE_CHILDREN], [1, 1]),
+        PARITY:                   new Tensor('float32', new Float32Array([features.PARITY]),  [1, 1]),
+    };
+}
+
+/**
+ * Assess discontinuation risk using on-device ONNX v4 models.
  *
- * Implements the same hybrid prediction logic as the Flask backend:
- * 1. XGBoost predicts probability P(y=1)
- * 2. Base prediction: HIGH if P >= 0.15
- * 3. If low-confidence (|P - 0.15| < 0.2) AND DT predicts 1 → upgrade to HIGH
- * 4. Never downgrade a positive prediction
+ * Hybrid logic (mirrors Flask backend):
+ *   1. XGBoost → P(y=1)
+ *   2. HIGH if P >= 0.25
+ *   3. Low-confidence band: |P - 0.25| < 0.05
+ *   4. If low-confidence AND Decision Tree predicts 1 → upgrade to HIGH
  *
- * @param formData Raw form data from GuestAssessment or ObAssessment
- * @param clinicalData Optional clinical data (from doctor assessment)
- * @returns Same RiskAssessmentResponse interface as the Flask API
+ * @param formData Raw form data (display strings) OR numeric-coded data from mapFormDataToApi
  */
 export async function assessOffline(
     formData: Record<string, any>,
-    clinicalData?: Record<string, any>,
 ): Promise<RiskAssessmentResponse> {
     const logger = createModuleLogger('OnDeviceRiskService');
 
-    // Step 1: Ensure models are loaded
     await loadModels();
 
     if (!xgbSession || !dtSession) {
         throw new Error('ONNX models not loaded');
     }
 
-    // Step 2: Validate and encode features
-    const missing = validateFeatures(formData);
+    const missing = validateFeaturesV4(formData);
     if (missing.length > 0) {
-        logger.warn('Some features missing, using defaults', { missing });
+        logger.warn('Some v4 features missing, using defaults', { missing });
     }
 
-    const inputs = encodeFeatures(formData, clinicalData);
-    logger.debug('Features encoded', { featureCount: Object.keys(inputs).length });
+    const features = encodeFeaturesV4(formData);
+    logger.debug('V4 features encoded', { features });
 
-    // Step 4: XGBoost inference
-    const xgbResults = await xgbSession.run(inputs);
+    const feed = buildFeed(features);
 
-    // With ZipMap disabled, output is a direct tensor named 'probabilities'
-    const probTensor = xgbResults['probabilities'] || Object.values(xgbResults)[1] || Object.values(xgbResults)[0];
-    const xgbProbability = extractProbability(probTensor);
+    // XGBoost inference
+    const xgbResults = await xgbSession.run(feed);
+    const xgbOutputNames = xgbSession.outputNames;
 
-    // Step 5: Base prediction from XGBoost
-    const xgbPred = xgbProbability >= HYBRID_CONFIG.threshold_v3 ? 1 : 0;
+    let xgbProbability: number;
+    if (xgbOutputNames.length >= 2) {
+        xgbProbability = extractProbability(xgbResults[xgbOutputNames[1]]);
+    } else {
+        xgbProbability = extractProbability(xgbResults[xgbOutputNames[0]]);
+    }
 
-    // Step 6: Decision Tree inference (only needed if low-confidence)
-    const isLowConfidence =
-        Math.abs(xgbProbability - HYBRID_CONFIG.threshold_v3) < HYBRID_CONFIG.conf_margin_v3;
+    // Base prediction
+    const xgbPred = xgbProbability >= HYBRID_CONFIG.threshold ? 1 : 0;
 
-    let dtPred = 0;
+    // Hybrid upgrade via Decision Tree
+    const isLowConfidence = Math.abs(xgbProbability - HYBRID_CONFIG.threshold) < HYBRID_CONFIG.conf_margin;
     let upgradedByDt = false;
     let hybridPred = xgbPred;
 
     if (isLowConfidence) {
-        const dtResults = await dtSession.run(inputs);
-        const labelTensor = dtResults['label'] || Object.values(dtResults)[0];
-        dtPred = extractPrediction(labelTensor);
+        const dtResults = await dtSession.run(feed);
+        const dtPred = extractPrediction(dtResults[dtSession.outputNames[0]]);
 
-        // Upgrade-only rule: if low-confidence AND DT predicts 1, upgrade to 1
         if (dtPred === 1 && xgbPred === 0) {
             hybridPred = 1;
             upgradedByDt = true;
         }
     }
 
-    // Step 7: Build response
     const riskLevel = hybridPred === 1 ? 'HIGH' : 'LOW';
     const recommendation =
         riskLevel === 'HIGH'
             ? 'Schedule follow-up counseling session'
             : 'Continue monitoring contraceptive use';
 
-    logger.info('On-device assessment complete', {
+    logger.info('On-device v4 assessment complete', {
         riskLevel,
         xgbProbability: xgbProbability.toFixed(4),
         upgradedByDt,
@@ -207,8 +209,8 @@ export async function assessOffline(
         upgraded_by_dt: upgradedByDt,
         metadata: {
             model_version: HYBRID_CONFIG.model_version,
-            threshold: HYBRID_CONFIG.threshold_v3,
-            confidence_margin: HYBRID_CONFIG.conf_margin_v3,
+            threshold: HYBRID_CONFIG.threshold,
+            confidence_margin: HYBRID_CONFIG.conf_margin,
         },
     };
 }
@@ -221,7 +223,7 @@ export function isModelReady(): boolean {
 }
 
 /**
- * Pre-load models (call during app startup for faster first prediction).
+ * Pre-load models at app startup for faster first prediction.
  */
 export async function preloadModels(): Promise<boolean> {
     try {

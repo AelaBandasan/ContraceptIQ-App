@@ -255,36 +255,11 @@ const GUEST_STEPS = [
 ];
 
 const DOCTOR_STEPS = [
-  {
-    id: "MONTH_USE_CURRENT_METHOD",
-    label: "Month of Use Current Method",
-    type: "select",
-    options: Array.from({ length: 13 }, (_, i) => i.toString()),
-  },
-  {
-    id: "PATTERN_USE",
-    label: "Pattern of Use",
-    type: "select",
-    options: ["Regular", "Irregular", "Not Sure"],
-  },
-  {
-    id: "TOLD_ABT_SIDE_EFFECTS",
-    label: "Told about Side effects?",
-    type: "select",
-    options: ["Yes by Health Worker", "Yes by research/friends", "No"],
-  },
-  {
-    id: "LAST_SOURCE_TYPE",
-    label: "Last Source Type",
-    type: "select",
-    options: [
-      "Government health facility",
-      "Private Clinic/Hospital",
-      "Pharmacy",
-      "NGO",
-      "Online/Telehealth",
-    ],
-  },
+    { id: 'CONTRACEPTIVE_METHOD', label: "Contraceptive Method", type: 'select', options: ['None', 'Pills', 'Condom', 'Copper IUD', 'Intrauterine Device (IUD)', 'Implant', 'Patch', 'Injectable', 'Withdrawal'] },
+    { id: 'MONTH_USE_CURRENT_METHOD', label: "Month of Use Current Method", type: 'select', options: Array.from({ length: 13 }, (_, i) => i.toString()) },
+    { id: 'PATTERN_USE', label: "Pattern of Use", type: 'select', options: ['Current user', 'Recent user (stopped within 12 months)', 'Past user (stopped >12 months ago)'] },
+    { id: 'TOLD_ABT_SIDE_EFFECTS', label: "Told about Side effects?", type: 'select', options: ['Yes by Health Worker', 'Yes by research/friends', 'No'] },
+    { id: 'LAST_SOURCE_TYPE', label: 'Last Source Type', type: 'select', options: ['Government health facility', 'Private Clinic/Hospital', 'Pharmacy', 'NGO', 'Online/Telehealth'] },
 ];
 
 // Method names mapped to their API index (1-based, matching the old CONTRACEPTIVE_METHOD options order)

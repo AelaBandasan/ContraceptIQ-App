@@ -133,7 +133,6 @@ class DiscontinuationRiskService {
   private client: AxiosInstance;
   private readonly API_BASE_URL: string;
   private readonly API_TIMEOUT: number = 5000; // 5 seconds — fail fast so ONNX fallback triggers quickly
-  private readonly MAX_RETRIES: number = 3;
 
   constructor(baseURL?: string) {
     // Get API URL from environment variable or use default
@@ -291,216 +290,28 @@ class DiscontinuationRiskService {
   }
 
   /**
-   * Assess discontinuation risk for a user.
+   * Assess discontinuation risk using the on-device ONNX v4 model.
+   * Always runs locally — no Flask server required.
    */
   async assessDiscontinuationRisk(
     data: UserAssessmentData,
-    retryCount: number = 0
   ): Promise<RiskAssessmentResponse> {
     const logger = createModuleLogger('DiscontinuationRiskService');
     try {
-      // Check network connectivity first
-      const online = await isOnline();
-      if (!online) {
-        logger.info(
-          'Device offline — falling back to on-device ML inference',
-          { offline: true }
-        );
-        try {
-          const offlineResult = await assessOffline(data as Record<string, any>);
-          logger.info('On-device assessment completed', {
-            riskLevel: offlineResult.risk_level,
-            confidence: offlineResult.confidence,
-            source: 'on-device',
-          });
-          return offlineResult;
-        } catch (offlineError) {
-          logger.error('On-device assessment failed, cannot proceed offline', undefined, { error: offlineError });
-          throw createAppError(new Error('Device is offline and on-device model unavailable'), 'assessDiscontinuationRisk');
-        }
-      }
-
-      // Validate input data before sending
-      this.validateInputData(data);
-      logger.debug('Input validation passed', { featureCount: Object.keys(data).length });
-
-      // Make API request with retry logic
-      const response = await this.client.post<RiskAssessmentResponse>(
-        '/api/v1/discontinuation-risk',
-        data
+      logger.info('Running on-device v4 assessment');
+      const result = await assessOffline(data as Record<string, any>);
+      logger.info('On-device assessment completed', {
+        riskLevel: result.risk_level,
+        confidence: result.confidence,
+      });
+      return result;
+    } catch (error: any) {
+      logger.error('On-device assessment failed', undefined, { error });
+      throw createAppError(
+        new Error(`On-device model failed: ${error?.message || 'Unknown error'}`),
+        'assessDiscontinuationRisk'
       );
-
-      logger.info(
-        'Assessment completed successfully',
-        { riskLevel: response.data.risk_level, confidence: response.data.confidence }
-      );
-
-      return response.data;
-    } catch (error) {
-      // Handle offline errors
-      if (error instanceof Error && 'type' in error) {
-        if ((error as any).type === 'OfflineError') {
-          logger.error(
-            'Device offline - cannot perform assessment',
-            undefined,
-            { error }
-          );
-          throw error;
-        }
-      }
-
-      // Handle axios errors
-      if (axios.isAxiosError(error)) {
-        const apiError = error.response?.data as ApiError | undefined;
-
-        // Validation errors (400) - don't retry, permanent issue
-        if (error.response?.status === 400) {
-          const validationError = createAppError(error, 'assessDiscontinuationRisk');
-          logger.error(
-            'Validation failed',
-            undefined,
-            {
-              error: validationError,
-              details: apiError?.error,
-              validationErrors: apiError?.validation_errors, // Log specific field errors
-              missingFeatures: apiError?.missing_features   // Log missing features
-            }
-          );
-          throw validationError;
-        }
-
-        // Service unavailable (503) - models not loaded
-        if (error.response?.status === 503) {
-          const serviceError = createAppError(error, 'assessDiscontinuationRisk');
-          logger.error(
-            'Service unavailable (models not loaded)',
-            undefined,
-            { error: serviceError }
-          );
-
-          // Retry on service unavailable
-          if (retryCount < this.MAX_RETRIES) {
-            logger.info(
-              `Retrying after service unavailable (${retryCount + 1}/${this.MAX_RETRIES})`,
-              { retryCount: retryCount + 1 }
-            );
-            await this.delay(1000 * (retryCount + 1));
-            return this.assessDiscontinuationRisk(data, retryCount + 1);
-          }
-          throw serviceError;
-        }
-
-        // Network errors — server unreachable, fall back to on-device ONNX immediately
-        if (
-          error.code &&
-          ['ECONNABORTED', 'ECONNREFUSED', 'ETIMEDOUT', 'ERR_NETWORK', 'ERR_CONNECTION_REFUSED'].includes(error.code) ||
-          error.message?.includes('Network Error') ||
-          error.message?.includes('network failure')
-        ) {
-          logger.warn(
-            `Network error — falling back to on-device ML (${error.code || 'unknown'})`,
-            { code: error.code, message: error.message }
-          );
-          try {
-            const offlineResult = await assessOffline(data as Record<string, any>);
-            logger.info('On-device assessment completed upon network failure', {
-              riskLevel: offlineResult.risk_level,
-              source: 'on-device',
-            });
-            return offlineResult;
-          } catch (offlineError: any) {
-            logger.error('On-device assessment failed after network error', undefined, { error: offlineError });
-            throw createAppError(
-              new Error(`Server unreachable and on-device model failed: ${offlineError.message || 'Unknown error'}`),
-              'assessDiscontinuationRisk'
-            );
-          }
-        }
-
-        // Other HTTP errors
-        const appError = createAppError(error, 'assessDiscontinuationRisk');
-        logger.error(
-          'Assessment failed after retries',
-          undefined,
-          { error: appError, retries: retryCount, status: error.response?.status }
-        );
-        throw appError;
-      }
-
-      // Non-axios errors
-      const appError = createAppError(error, 'assessDiscontinuationRisk');
-      logger.error(
-        'Assessment failed with unexpected error',
-        undefined,
-        { error: appError, retries: retryCount }
-      );
-      throw appError;
     }
-  }
-
-  /**
-   * Validate input data before sending to API.
-   */
-  private validateInputData(data: Partial<UserAssessmentData>): void {
-    const logger = createModuleLogger('DiscontinuationRiskService');
-    const requiredKeys: (keyof UserAssessmentData)[] = [
-      'AGE',
-      'REGION',
-      'EDUC_LEVEL',
-      'RELIGION',
-      'ETHNICITY',
-      'MARITAL_STATUS',
-      'RESIDING_WITH_PARTNER',
-      'HOUSEHOLD_HEAD_SEX',
-      'OCCUPATION',
-      'HUSBANDS_EDUC',
-      'HUSBAND_AGE',
-      'PARTNER_EDUC',
-      'SMOKE_CIGAR',
-      'PARITY',
-      'DESIRE_FOR_MORE_CHILDREN',
-      'WANT_LAST_CHILD',
-      'WANT_LAST_PREGNANCY',
-      'CONTRACEPTIVE_METHOD',
-      'MONTH_USE_CURRENT_METHOD',
-      'PATTERN_USE',
-      'TOLD_ABT_SIDE_EFFECTS',
-      'LAST_SOURCE_TYPE',
-      'LAST_METHOD_DISCONTINUED',
-      'REASON_DISCONTINUED',
-      'HSBND_DESIRE_FOR_MORE_CHILDREN',
-    ];
-
-    // Check for missing features
-    const missingFeatures = requiredKeys.filter((key) => !(key in data));
-    if (missingFeatures.length > 0) {
-      const validationError = createAppError(
-        new Error(`Missing required features: ${missingFeatures.join(', ')}`),
-        'validateInputData'
-      );
-      logger.error(
-        'Validation failed - missing features',
-        undefined,
-        { error: validationError, missingFeatures, count: missingFeatures.length }
-      );
-      throw validationError;
-    }
-
-    // Validate AGE range
-    if (typeof data.AGE === 'number' && (data.AGE < 15 || data.AGE > 55)) {
-      const validationError = createAppError(
-        new Error('AGE must be between 15 and 55'),
-        'validateInputData'
-      );
-      logger.error(
-        'Validation failed - invalid age',
-        undefined,
-        { error: validationError, age: data.AGE }
-      );
-      throw validationError;
-    }
-
-    logger.debug('Input validation successful', { featureCount: Object.keys(data).length });
   }
 
   /**
@@ -516,13 +327,6 @@ class DiscontinuationRiskService {
     });
 
     return Promise.reject(error);
-  }
-
-  /**
-   * Utility function to delay execution (for retry backoff).
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

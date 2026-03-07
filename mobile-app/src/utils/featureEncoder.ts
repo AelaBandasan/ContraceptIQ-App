@@ -1,261 +1,202 @@
 /**
  * Feature Encoder — maps human-readable form values to numeric codes
- * 
- * This module translates the string selections from the guest assessment 
- * form into numeric values that the ML model expects.
- * 
- * Encoding maps are derived from the training data preprocessing pipeline.
- * All features are converted to numbers before being passed to the ONNX model.
+ *
+ * v4 (9-feature reduced_C model): encodeFeaturesV4()
+ *   Returns per-column named string/float values for the ONNX per-column input format.
+ *   ETHNICITY, HOUSEHOLD_HEAD_SEX, CONTRACEPTIVE_METHOD, SMOKE_CIGAR,
+ *   DESIRE_FOR_MORE_CHILDREN, PATTERN_USE → string tensors (numeric codes as strings).
+ *   AGE, PARITY → float32 tensors.
+ *   HUSBAND_AGE → string tensor (numeric value as string, treated as categorical in training).
  */
 
 // ============================================================================
-// ENCODING MAPS
+// V4 ENCODING MAPS
+// Maps display strings AND OB numeric codes (from mapFormDataToApi) → v4 training codes.
 // ============================================================================
 
 /**
- * Region encoding: maps region display name → numeric code
+ * PATTERN_USE: how the patient currently uses contraception.
+ * v4 training: 1=Current user, 2=Recent user (stopped <12 months), 3=Past user (stopped >12 months)
+ * OB form options: 'Current user', 'Recent user (stopped within 12 months)', 'Past user (stopped >12 months ago)'
+ * OB numeric fallback (1=Current, 2=Recent, 3=Past — same 1-based index, passthrough safe)
  */
-export const REGION_MAP: Record<string, number> = {
-    'NCR': 1,
-    'CAR': 2,
-    'Region I – Ilocos': 3,
-    'Region II – Cagayan Valley': 4,
-    'Region III – Central Luzon': 5,
-    'Region IV-A – CALABARZON': 6,
-    'Region IV-B – MIMAROPA': 7,
-    'Region V – Bicol': 8,
-    'Region VI – Western Visayas': 9,
-    'Region VII – Central Visayas': 10,
-    'Region VIII – Eastern Visayas': 11,
-    'Region IX – Zamboanga Peninsula': 12,
-    'Region X – Northern Mindanao': 13,
-    'Region XI – Davao Region': 14,
-    'Region XII – SOCCSKSARGEN': 15,
-    'Region XIII – Caraga': 16,
-    'BARMM': 17,
+export const PATTERN_USE_V4: Record<string, string> = {
+    'Current user': '1',
+    'Recent user (stopped within 12 months)': '2',
+    'Past user (stopped >12 months ago)': '3',
+    '1': '1', '2': '2', '3': '3',
 };
 
 /**
- * Education level encoding
+ * ETHNICITY
+ * v4 training: 1=Tagalog, 2=Ilocano, 3=Bisaya/Cebuano, 4=Hiligaynon/Ilonggo,
+ *              5=Bikol/Bicol, 6=Waray, 7=Kapampangan, 8=Pangasinan,
+ *              9=Other Filipinos, 10=Other ethnicity
+ * OB numeric fallback: getIndex on ['Tagalog', 'Cebuano', 'Ilocano'] → 1, 2, 3
+ *   OB 1=Tagalog→v4 '1', OB 2=Cebuano→v4 '3', OB 3=Ilocano→v4 '2'
  */
-export const EDUC_LEVEL_MAP: Record<string, number> = {
-    'No formal education': 0,
-    'Primary': 1,
-    'Secondary': 2,
-    'Senior High School': 3,
-    'Vocational/Technical': 4,
-    'College Undergraduate': 5,
-    'College Graduate': 6,
+export const ETHNICITY_V4: Record<string, string> = {
+    'Tagalog': '1',
+    'Ilocano': '2',
+    'Cebuano': '3', 'Bisaya/Cebuano': '3',
+    'Hiligaynon/Ilonggo': '4',
+    'Bikol/Bicol': '5',
+    'Waray': '6',
+    'Kapampangan': '7',
+    'Pangasinan': '8',
+    'Other Filipinos': '9',
+    'Other ethnicity': '10',
+    // OB numeric codes
+    '1': '1', '2': '3', '3': '2',
 };
 
 /**
- * Religion encoding
+ * HOUSEHOLD_HEAD_SEX
+ * v4 training: 1=Male, 2=Female
+ * OB numeric fallback: getIndex on ['Male', 'Female', 'Shared/Both', 'Others'] → 1,2,3,4
  */
-export const RELIGION_MAP: Record<string, number> = {
-    'Roman Catholic': 1,
-    'Christian': 2,
-    'Muslim': 3,
-    'Iglesia ni Cristo': 4,
-    'No Religion': 5,
-    'Other Religion': 6,
-    'Prefer not to say': 7,
+export const HOUSEHOLD_HEAD_SEX_V4: Record<string, string> = {
+    'Male': '1', 'Female': '2', 'Shared/Both': '1', 'Others': '1',
+    '1': '1', '2': '2', '3': '1', '4': '1',
 };
 
 /**
- * Ethnicity encoding
+ * CONTRACEPTIVE_METHOD
+ * v4 training: 1=Pill, 2=IUD, 3=Injectable, 4=Implant, 5=Female sterilisation,
+ *              6=Male sterilisation, 7=Condom, 8=NFP/Periodic abstinence, 9=SDM,
+ *              10=LAM, 11=Other modern, 12=Other traditional
+ * OB numeric fallback: getIndex on ['None','Pills','Condom','Copper IUD','Intrauterine Device (IUD)',
+ *                                    'Implant','Patch','Injectable','Withdrawal']
+ *   → 1=None, 2=Pills, 3=Condom, 4=Copper IUD, 5=IUD, 6=Implant, 7=Patch, 8=Injectable, 9=Withdrawal
  */
-export const ETHNICITY_MAP: Record<string, number> = {
-    'Tagalog': 1,
-    'Cebuano': 2,
-    'Ilocano': 3,
+export const CONTRACEPTIVE_METHOD_V4: Record<string, string> = {
+    // Display strings
+    'Pill': '1', 'Pills': '1',
+    'IUD': '2', 'Copper IUD': '2', 'Intrauterine Device (IUD)': '2',
+    'Injectable': '3',
+    'Implant': '4',
+    'Female sterilisation': '5',
+    'Male sterilisation': '6',
+    'Condom': '7',
+    'NFP/Periodic abstinence': '8',
+    'SDM': '9',
+    'LAM': '10',
+    'Patch': '11', 'Other modern': '11', 'None': '11',
+    'Withdrawal': '12', 'Other traditional': '12',
+    // OB numeric codes
+    '1': '11',  // OB None → Other modern
+    '2': '1',   // OB Pills → Pill
+    '3': '7',   // OB Condom → Condom
+    '4': '2',   // OB Copper IUD → IUD
+    '5': '2',   // OB IUD → IUD
+    '6': '4',   // OB Implant → Implant
+    '7': '11',  // OB Patch → Other modern
+    '8': '3',   // OB Injectable → Injectable
+    '9': '12',  // OB Withdrawal → Other traditional
 };
 
 /**
- * Marital status encoding
+ * SMOKE_CIGAR
+ * v4 training: 0=No, 1=Yes (binary)
  */
-export const MARITAL_STATUS_MAP: Record<string, number> = {
-    'Single': 0,
-    'Married': 1,
-    'Living with partner': 2,
-    'Separated': 3,
-    'Divorced': 4,
-    'Widowed': 5,
+export const SMOKE_CIGAR_V4: Record<string, string> = {
+    'Never': '0', 'No': '0', 'Former smoker': '0',
+    'Occasional smoker': '1', 'Current daily': '1', 'Yes': '1',
+    '0': '0', '1': '1',
 };
 
 /**
- * Yes/No encoding
+ * DESIRE_FOR_MORE_CHILDREN
+ * v4 training: 1=Wants more children, 2=Wants no more children,
+ *              3=Undecided/ambivalent, 4=Sterilised, 9=Not applicable
  */
-export const YES_NO_MAP: Record<string, number> = {
-    'Yes': 1,
-    'No': 0,
-};
-
-/**
- * Household head sex encoding
- */
-export const HOUSEHOLD_HEAD_SEX_MAP: Record<string, number> = {
-    'Male': 1,
-    'Female': 2,
-    'Shared/Both': 3,
-    'Others': 4,
-};
-
-/**
- * Occupation encoding
- */
-export const OCCUPATION_MAP: Record<string, number> = {
-    'Unemployed': 0,
-    'Student': 1,
-    'Farmer': 2,
-    'Others': 3,
-};
-
-/**
- * Smoking habits encoding
- */
-export const SMOKE_CIGAR_MAP: Record<string, number> = {
-    'Never': 0,
-    'Former smoker': 1,
-    'Occasional smoker': 2,
-    'Current daily': 3,
-};
-
-/**
- * Desire for more children / want child encoding
- */
-export const DESIRE_CHILDREN_MAP: Record<string, number> = {
-    'Yes': 1,
-    'No': 0,
-    'Not Sure': 2,
-};
-
-/**
- * Last method discontinued encoding
- */
-export const LAST_METHOD_MAP: Record<string, number> = {
-    'None': 0,
-    'Pills': 1,
-    'Condom': 2,
-    'Copper IUD': 3,
-    'Intrauterine Device (IUD)': 4,
-    'Implant': 5,
-    'Patch': 6,
-    'Injectable': 7,
-    'Withdrawal': 8,
-};
-
-/**
- * Reason for discontinuation encoding
- */
-export const REASON_DISCONTINUED_MAP: Record<string, number> = {
-    'None / Not Applicable': 0,
-    'Side effects': 1,
-    'Health concerns': 2,
-    'Desire to become pregnant': 3,
+export const DESIRE_FOR_MORE_CHILDREN_V4: Record<string, string> = {
+    'Wants more children': '1', 'Yes': '1',
+    'Wants no more children': '2', 'No': '2',
+    'Undecided/ambivalent': '3', 'Not Sure': '3',
+    'Sterilised (self or partner)': '4',
+    'Not applicable': '9',
+    '1': '1', '2': '2', '3': '3', '4': '4', '9': '9',
 };
 
 // ============================================================================
-// HELPER FUNCTIONS
+// V4 FEATURE INTERFACE
 // ============================================================================
 
-/**
- * Safely encode a value using a lookup map.
- * Returns the numeric code, or a fallback value if not found.
- */
-function encodeValue(value: string | number | undefined, map: Record<string, number>, fallback: number = 0): number {
-    if (value === undefined || value === null || value === '') return fallback;
-    if (typeof value === 'number') return value;
-    return map[value] ?? fallback;
+export interface V4Features {
+    /** string tensor — numeric code '1'/'2'/'3' */
+    PATTERN_USE: string;
+    /** string tensor — raw number as string, e.g. '30' */
+    HUSBAND_AGE: string;
+    /** float32 */
+    AGE: number;
+    /** string tensor — numeric code '1'–'10' */
+    ETHNICITY: string;
+    /** string tensor — '1' (Male) or '2' (Female) */
+    HOUSEHOLD_HEAD_SEX: string;
+    /** string tensor — numeric code '1'–'12' */
+    CONTRACEPTIVE_METHOD: string;
+    /** string tensor — '0' (No) or '1' (Yes) */
+    SMOKE_CIGAR: string;
+    /** string tensor — numeric code '1'/'2'/'3'/'4'/'9' */
+    DESIRE_FOR_MORE_CHILDREN: string;
+    /** float32 */
+    PARITY: number;
 }
 
-/**
- * Parse a numeric value from form data (may be stored as string).
- */
-function parseNumeric(value: string | number | undefined, fallback: number = 0): number {
-    if (value === undefined || value === null || value === '') return fallback;
-    if (typeof value === 'number') return value;
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? fallback : parsed;
-}
-
-import { Tensor } from 'onnxruntime-react-native';
+// ============================================================================
+// V4 ENCODER
+// ============================================================================
 
 /**
- * Encode raw form data into a dictionary of ONNX Tensors.
- * 
- * @param formData - Raw form data from GuestAssessment (string values)
- * @param clinicalData - Optional clinical data added by the OB doctor
- * @returns Record of explicitly typed ONNX Tensors for each feature column
+ * Encode raw form data into V4Features for the 9-feature ONNX model.
+ *
+ * Accepts both:
+ *  - Human-readable display strings (from GuestAssessment formData)
+ *  - Numeric codes (from ObAssessment's mapFormDataToApi, passed via assessOffline)
+ *
+ * Missing features fall back to sensible defaults derived from the training data.
  */
-export function encodeFeatures(formData: Record<string, any>, clinicalData?: Record<string, any>): Record<string, Tensor> {
-    const merged = { ...formData, ...clinicalData };
-
-    // Helper functions for type conversion
-    const ensureString = (val: any) => val === undefined || val === null ? "Missing" : String(val);
-    const ensureFloat = (val: any) => {
-        if (val === undefined || val === null || val === '') return 0.0;
-        const parsed = parseFloat(String(val));
-        return isNaN(parsed) ? 0.0 : parsed;
+export function encodeFeaturesV4(formData: Record<string, any>): V4Features {
+    const strLookup = (
+        key: string,
+        map: Record<string, string>,
+        fallback: string,
+    ): string => {
+        const val = formData[key];
+        if (val === undefined || val === null || val === '') return fallback;
+        const s = String(val);
+        return map[s] ?? fallback;
     };
 
-    // Construct the ONNX input map. 
-    // Types correspond to how the Scikit-learn Pipeline was constructed.
-    // ALL variables are now purely Numerical Floats to bypass React Native JSI String Tensor memory limitations
-    const inputs: Record<string, Tensor> = {
-        'REGION': new Tensor('float32', new Float32Array([ensureFloat(merged.REGION)]), [1, 1]),
-        'EDUC_LEVEL': new Tensor('float32', new Float32Array([ensureFloat(merged.EDUC_LEVEL)]), [1, 1]),
-        'RELIGION': new Tensor('float32', new Float32Array([ensureFloat(merged.RELIGION)]), [1, 1]),
-        'ETHNICITY': new Tensor('float32', new Float32Array([ensureFloat(merged.ETHNICITY)]), [1, 1]),
-        'MARITAL_STATUS': new Tensor('float32', new Float32Array([ensureFloat(merged.MARITAL_STATUS)]), [1, 1]),
-        'HOUSEHOLD_HEAD_SEX': new Tensor('float32', new Float32Array([ensureFloat(merged.HOUSEHOLD_HEAD_SEX)]), [1, 1]),
-        'OCCUPATION': new Tensor('float32', new Float32Array([ensureFloat(merged.OCCUPATION)]), [1, 1]),
-        'HUSBANDS_EDUC': new Tensor('float32', new Float32Array([ensureFloat(merged.HUSBAND_EDUC_LEVEL || merged.HUSBANDS_EDUC)]), [1, 1]),
-        'PARTNER_EDUC': new Tensor('float32', new Float32Array([ensureFloat(merged.PARTNER_EDUC)]), [1, 1]),
-        'SMOKE_CIGAR': new Tensor('float32', new Float32Array([ensureFloat(merged.SMOKE_CIGAR)]), [1, 1]),
-        'DESIRE_FOR_MORE_CHILDREN': new Tensor('float32', new Float32Array([ensureFloat(merged.DESIRE_FOR_MORE_CHILDREN)]), [1, 1]),
-        'WANT_LAST_CHILD': new Tensor('float32', new Float32Array([ensureFloat(merged.WANT_LAST_CHILD)]), [1, 1]),
-        'WANT_LAST_PREGNANCY': new Tensor('float32', new Float32Array([ensureFloat(merged.WANT_LAST_PREGNANCY)]), [1, 1]),
-        'CONTRACEPTIVE_METHOD': new Tensor('float32', new Float32Array([ensureFloat(merged.CONTRACEPTIVE_METHOD)]), [1, 1]),
-        'CURRENT_USE_TYPE': new Tensor('float32', new Float32Array([ensureFloat(merged.CURRENT_USE_TYPE)]), [1, 1]),
-        'LAST_SOURCE_TYPE': new Tensor('float32', new Float32Array([ensureFloat(merged.LAST_SOURCE_TYPE)]), [1, 1]),
-        'LAST_METHOD_DISCONTINUED': new Tensor('float32', new Float32Array([ensureFloat(merged.LAST_METHOD_DISCONTINUED)]), [1, 1]),
-        'REASON_DISCONTINUED': new Tensor('float32', new Float32Array([ensureFloat(merged.REASON_DISCONTINUED)]), [1, 1]),
-        'PATTERN_USE': new Tensor('float32', new Float32Array([ensureFloat(merged.PATTERN_USE)]), [1, 1]),
-        'TOLD_ABT_SIDE_EFFECTS': new Tensor('float32', new Float32Array([ensureFloat(merged.TOLD_ABT_SIDE_EFFECTS)]), [1, 1]),
-        'HSBND_DESIRE_FOR_MORE_CHILDREN': new Tensor('float32', new Float32Array([ensureFloat(merged.HSBND_DESIRE_FOR_MORE_CHILDREN)]), [1, 1]),
-        'RESIDING_WITH_PARTNER': new Tensor('float32', new Float32Array([ensureFloat(merged.RESIDING_WITH_PARTNER)]), [1, 1]),
-        'MONTH_USE_CURRENT_METHOD': new Tensor('float32', new Float32Array([ensureFloat(merged.MONTH_USE_CURRENT_METHOD)]), [1, 1]),
-        'EDUC': new Tensor('float32', new Float32Array([ensureFloat(merged.EDUC || 0)]), [1, 1]),
-        'AGE_GRP': new Tensor('float32', new Float32Array([ensureFloat(merged.AGE_GRP || 0)]), [1, 1]),
-        'HUSBAND_AGE': new Tensor('float32', new Float32Array([ensureFloat(merged.HUSBAND_AGE)]), [1, 1]),
-        'AGE': new Tensor('float32', new Float32Array([ensureFloat(merged.AGE)]), [1, 1]),
-        'PARITY': new Tensor('float32', new Float32Array([ensureFloat(merged.PARITY)]), [1, 1]),
+    const numVal = (key: string, fallback: number): number => {
+        const val = formData[key];
+        if (val === undefined || val === null || val === '') return fallback;
+        const n = parseFloat(String(val));
+        return isNaN(n) ? fallback : n;
     };
 
-    // Required feature placeholder for 'CASEID' based on training schema
-    inputs['CASEID'] = new Tensor('float32', new Float32Array([ensureFloat(merged.CASEID || -1)]), [1, 1]);
-
-    return inputs;
+    return {
+        // PATTERN_USE: default '1' (current user) if not provided (guest path)
+        PATTERN_USE: strLookup('PATTERN_USE', PATTERN_USE_V4, '1'),
+        // HUSBAND_AGE is continuous but treated as categorical string in ONNX
+        HUSBAND_AGE: String(Math.round(numVal('HUSBAND_AGE', 30))),
+        AGE: numVal('AGE', 25),
+        ETHNICITY: strLookup('ETHNICITY', ETHNICITY_V4, '1'),
+        HOUSEHOLD_HEAD_SEX: strLookup('HOUSEHOLD_HEAD_SEX', HOUSEHOLD_HEAD_SEX_V4, '1'),
+        // CONTRACEPTIVE_METHOD: default '1' (Pill) if not provided (guest path)
+        CONTRACEPTIVE_METHOD: strLookup('CONTRACEPTIVE_METHOD', CONTRACEPTIVE_METHOD_V4, '1'),
+        SMOKE_CIGAR: strLookup('SMOKE_CIGAR', SMOKE_CIGAR_V4, '0'),
+        DESIRE_FOR_MORE_CHILDREN: strLookup('DESIRE_FOR_MORE_CHILDREN', DESIRE_FOR_MORE_CHILDREN_V4, '1'),
+        PARITY: numVal('PARITY', 0),
+    };
 }
 
 /**
- * Validate that all required features can be encoded.
- * Returns a list of missing or un-encodable feature names.
+ * Validate that the minimum required v4 features are present.
+ * Returns array of missing field names (empty = all good).
  */
-export function validateFeatures(formData: Record<string, any>): string[] {
-    const missing: string[] = [];
-
-    // Check guest assessment required fields
-    const requiredGuest = [
-        'AGE', 'REGION', 'EDUC_LEVEL', 'RELIGION', 'ETHNICITY',
-        'MARITAL_STATUS', 'SMOKE_CIGAR', 'PARITY',
-    ];
-
-    for (const key of requiredGuest) {
-        if (formData[key] === undefined || formData[key] === null || formData[key] === '') {
-            missing.push(key);
-        }
-    }
-
-    return missing;
+export function validateFeaturesV4(formData: Record<string, any>): string[] {
+    const required = ['AGE', 'ETHNICITY', 'HOUSEHOLD_HEAD_SEX', 'SMOKE_CIGAR', 'DESIRE_FOR_MORE_CHILDREN', 'PARITY'];
+    return required.filter(key => formData[key] === undefined || formData[key] === null || formData[key] === '');
 }
