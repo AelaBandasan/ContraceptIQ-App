@@ -536,6 +536,8 @@ const ObAssessment = ({ navigation, route }: any) => {
       <ObHeader
         title="Patient Assessment"
         subtitle={formData?.NAME || "New Patient"}
+        showBack
+        onBackPress={() => navigation.navigate('ObHome')}
       />
 
       {/* ── SCREEN 1: FORM (9 V4 features) ─────────────────────────────── */}

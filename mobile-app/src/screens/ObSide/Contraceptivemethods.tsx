@@ -107,25 +107,21 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
   return (
     <View style={styles.safeArea}>
       {!isDoctorAssessment && (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <TouchableOpacity
-            onPress={() => (navigation as any).toggleDrawer()}
-            style={styles.menuButton}
-          >
-            <View
-              style={styles.menuButtonSolid}
-            >
-              <Ionicons name="menu" size={24} color="#FFF" />
-            </View>
-          </TouchableOpacity>
-
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
           <View style={styles.headerTitleContainer}>
             <Text style={styles.screenTitle}>Contraceptive Methods</Text>
           </View>
         </View>
       )}
 
-      {isDoctorAssessment && <ObHeader title="Methods" subtitle="Contraceptives" />}
+      {isDoctorAssessment && (
+        <ObHeader
+          title="Methods"
+          subtitle="Contraceptives"
+          showBack
+          onBackPress={() => navigation.navigate('ObHome')}
+        />
+      )}
 
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
@@ -196,20 +192,8 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  menuButtonSolid: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   headerTitleContainer: {
-    marginLeft: 15,
+    marginLeft: 0,
   },
   // headerAppTitle: { // Removed as per instruction
   //   fontSize: 20,

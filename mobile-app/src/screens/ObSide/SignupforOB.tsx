@@ -17,7 +17,6 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-nat
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Easing,
-  FadeInDown,
   FadeInUp,
   useAnimatedStyle,
   useSharedValue,
@@ -145,14 +144,14 @@ const SignupforOB = ({ navigation }: any) => {
           style={styles.keyboardContainer}
         >
           <View style={styles.container}>
-            <Animated.View entering={FadeInDown.duration(700)} style={styles.headerSection}>
+            <View style={styles.headerSection}>
               <Animated.View style={[styles.logoContainer, animatedLogoStyle]}>
                 <Image source={Logo} style={styles.logo} resizeMode="contain" />
               </Animated.View>
               <Text style={styles.title}>ContraceptIQ</Text>
               <Text style={styles.welcomeText}>Create OB Professional Account</Text>
               <Text style={styles.subtext}>Your expertise, now powered by guided risk insights.</Text>
-            </Animated.View>
+            </View>
 
             <Animated.View entering={FadeInUp.delay(120).duration(700)} style={styles.formSection}>
               <View style={styles.inputContainer}>

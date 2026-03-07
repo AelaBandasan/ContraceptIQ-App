@@ -15,6 +15,7 @@ import { ChevronDown, ChevronUp, Info } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import ObHeader from '../components/ObHeader';
 import { colors } from '../theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -206,9 +207,10 @@ const FaqItemComponent = ({
   );
 };
 
-const ContraFAQs = ({ navigation }: any) => {
+const ContraFAQs = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const [openId, setOpenId] = useState<number | null>(null);
+  const isDoctorAssessment = route?.name === 'ObEducation' || Boolean(route?.params?.isDoctorAssessment);
 
   const handleToggle = (id: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -217,16 +219,25 @@ const ContraFAQs = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
-        <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-          <View style={styles.menuButtonSolid}>
-            <Ionicons name="menu" size={24} color="#FFF" />
+      {isDoctorAssessment ? (
+        <ObHeader
+          title="FAQs"
+          subtitle="Patient education"
+          showBack
+          onBackPress={() => navigation.navigate('ObHome')}
+        />
+      ) : (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
+          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
+            <View style={styles.menuButtonSolid}>
+              <Ionicons name="menu" size={24} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
+            <Text style={styles.headerText}>FAQs</Text>
           </View>
-        </TouchableOpacity>
-        <View style={styles.titleContainer}>
-          <Text style={styles.headerText}>FAQs</Text>
         </View>
-      </View>
+      )}
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

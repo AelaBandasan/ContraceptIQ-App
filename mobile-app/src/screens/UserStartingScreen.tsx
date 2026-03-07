@@ -3,10 +3,7 @@ import React, { useEffect } from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
-    FadeInDown,
     FadeInUp,
-    FadeIn,
-    ZoomIn,
     useSharedValue,
     useAnimatedStyle,
     withSpring,
@@ -111,26 +108,17 @@ const UserStartingScreen = ({ navigation }: any) => {
                 <View style={styles.container}>
                     <View style={styles.brandingSection}>
                         {/* Logo Section */}
-                        <Animated.View
-                            entering={ZoomIn.duration(1000).springify()}
-                            style={[styles.logoContainer, animatedLogoStyle]}
-                        >
+                        <Animated.View style={[styles.logoContainer, animatedLogoStyle]}>
                             <Image source={Logo} style={styles.logo} />
                         </Animated.View>
 
                         {/* Title and Tagline grouped below Logo */}
                         <View style={styles.textContainer}>
-                            <Animated.Text
-                                entering={FadeInDown.delay(400).duration(1000)}
-                                style={styles.title}
-                            >
+                            <Animated.Text style={styles.title}>
                                 ContraceptIQ
                             </Animated.Text>
 
-                            <Animated.View
-                                entering={FadeInDown.delay(700).duration(1000)}
-                                style={styles.subtitleContainer}
-                            >
+                            <Animated.View style={styles.subtitleContainer}>
                                 <Text style={styles.subtitle}>
                                     Where Data Meets{"\n"}
                                     <Text style={styles.subtitleHighlight}>Reproductive Health</Text>
