@@ -7,11 +7,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
-    Plus, Clock, X, CheckCircle, BarChart2, AlertTriangle,
-    ChevronDown, ChevronUp, Palette, Info, ArrowRight,
+    Plus, Clock, X, BarChart2, AlertTriangle,
+    ChevronDown, ChevronUp, Palette, Info, ArrowRight, Book,
     Search, Filter, Users, Baby, Cigarette, User as UserIcon,
     PlayCircle, Eye, Calendar, MapPin, Hash, CheckCircle2,
-    Activity, ChevronRight, Clipboard, Trash2
+    Activity, ChevronRight, Clipboard, Trash2, HelpCircle
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
 import { claimGuest, fetchDoctorQueue, ConsultationRecord } from '../../services/doctorService';
@@ -42,8 +42,15 @@ const DoctorDashboardScreen = ({ route }: any) => {
     const [inputCode, setInputCode] = useState('');
     const [claiming, setClaiming] = useState(false);
 
-    // Dummy Stats
-    const stats = { today: 3, week: 18, highRisk: 2 };
+    // Computed stats from real queue data (no risk scores exist yet — OB runs the model)
+    const now = Date.now();
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const statsFromQueue = {
+        total: queue.length,
+        pending: queue.filter(q => q.status === 'waiting').length,
+        arrivedToday: queue.filter(q => new Date(q.createdAt) >= todayStart).length,
+        waitingOver1h: queue.filter(q => (now - new Date(q.createdAt).getTime()) > 3600000).length,
+    };
 
     // Dummy Date
     const today = new Date().toLocaleDateString('en-US', {
@@ -235,14 +242,14 @@ const DoctorDashboardScreen = ({ route }: any) => {
                             {item.patientData?.STATUS !== 'completed' && (
                                 <TouchableOpacity
                                     style={[styles.miniActionBtn, { backgroundColor: '#F1F5F9' }]}
-                                    onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code })}
+                                    onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code, patientData: item.patientData, isDoctorAssessment: true })}
                                 >
                                     <PlayCircle size={16} color="#475569" />
                                 </TouchableOpacity>
                             )}
                             <TouchableOpacity
                                 style={[styles.miniActionBtn, { backgroundColor: riskColor + '15' }]}
-                                onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code })}
+                                onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code, patientData: item.patientData, isDoctorAssessment: true })}
                             >
                                 <Eye size={16} color={riskColor} />
                             </TouchableOpacity>
@@ -276,45 +283,84 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     <View style={[styles.iconBox, { backgroundColor: '#BCF0DA' }]}>
                                         <Plus color="#059669" size={24} />
                                     </View>
-                                    <Text style={styles.actionTitle}>New Assessment</Text>
-                                    <Text style={styles.actionSub}>Start a new evaluation flow</Text>
-                                    <ArrowRight color="#059669" size={16} style={styles.arrowIcon} />
+                                    <View>
+                                        <Text style={styles.actionTitle}>New Assessment</Text>
+                                        <Text style={styles.actionSub}>Start a new evaluation</Text>
+                                    </View>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, { backgroundColor: '#FFDBEB' }]}
-                                    onPress={() => navigation.navigate('ObRecommendations')}
+                                    style={[styles.actionCard, { backgroundColor: '#E0E7FF' }]}
+                                    onPress={() => navigation.navigate('ObMethods', { isDoctorAssessment: true })}
                                 >
-                                    <View style={[styles.iconBox, { backgroundColor: '#FCE7F3' }]}>
-                                        <CheckCircle color="#E45A92" size={24} />
+                                    <View style={[styles.iconBox, { backgroundColor: '#DBEAFE' }]}>
+                                        <Book color="#4F46E5" size={24} />
                                     </View>
-                                    <Text style={styles.actionTitle}>Recommendations</Text>
-                                    <Text style={styles.actionSub}>Review latest results</Text>
-                                    <ArrowRight color="#E45A92" size={16} style={styles.arrowIcon} />
+                                    <View>
+                                        <Text style={styles.actionTitle}>Methods Guide</Text>
+                                        <Text style={styles.actionSub}>Browse contraceptives</Text>
+                                    </View>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.actionCard, { backgroundColor: '#FEF08A' }]}
+                                    onPress={() => navigation.navigate('ObEducation')}
+                                >
+                                    <View style={[styles.iconBox, { backgroundColor: '#FEF9C3' }]}>
+                                        <HelpCircle color="#CA8A04" size={24} />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.actionTitle}>Patient FAQs</Text>
+                                        <Text style={styles.actionSub}>Education resources</Text>
+                                    </View>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.actionCard, { backgroundColor: '#FECACA' }]}
+                                    onPress={() => navigation.navigate('ObEmergency')}
+                                >
+                                    <View style={[styles.iconBox, { backgroundColor: '#FEE2E2' }]}>
+                                        <AlertTriangle color="#DC2626" size={24} />
+                                    </View>
+                                    <View>
+                                        <Text style={styles.actionTitle}>Emergency</Text>
+                                        <Text style={styles.actionSub}>Action guidelines</Text>
+                                    </View>
                                 </TouchableOpacity>
                             </View>
                         </View>
 
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Activity Summary</Text>
-                            <View style={styles.statsRow}>
-                                <View style={styles.statCard}>
-                                    <BarChart2 size={18} color="#64748B" />
-                                    <Text style={styles.statValue}>{stats.today}</Text>
-                                    <Text style={styles.statLabel}>Today</Text>
-                                </View>
-                                <View style={styles.statCard}>
-                                    <Clock size={12} color="#64748B" />
-                                    <Text style={styles.statValue}>{stats.week}</Text>
-                                    <Text style={styles.statLabel}>This Week</Text>
-                                </View>
-                                <View style={styles.statCard}>
-                                    <AlertTriangle size={18} color="#EF4444" />
-                                    <View style={styles.row}>
-                                        <Text style={styles.statValue}>{stats.highRisk}</Text>
-                                        <View style={styles.redDot} />
+
+                            <View style={styles.activityCard}>
+                                {/* Left: big total */}
+                                <View style={styles.activityLeft}>
+                                    <Text style={styles.activityBigNum}>{statsFromQueue.total}</Text>
+                                    <Text style={styles.activityBigLabel}>In Queue</Text>
+                                    <View style={styles.activityPendingBadge}>
+                                        <Clock size={11} color="#E45A92" />
+                                        <Text style={styles.activityPendingText}>
+                                            {statsFromQueue.pending} awaiting
+                                        </Text>
                                     </View>
-                                    <Text style={[styles.statLabel, { color: '#EF4444' }]}>High-Risk</Text>
+                                </View>
+
+                                <View style={styles.activityDivider} />
+
+                                {/* Right: queue time breakdown */}
+                                <View style={styles.activityRight}>
+                                    {[
+                                        { label: 'Arrived today', value: statsFromQueue.arrivedToday, color: '#10B981' },
+                                        { label: 'Waiting > 1 hr', value: statsFromQueue.waitingOver1h, color: '#F59E0B' },
+                                        { label: 'Unassessed', value: statsFromQueue.pending, color: '#64748B' },
+                                    ].map(({ label, value, color }) => (
+                                        <View key={label} style={styles.queueStatRow}>
+                                            <View style={[styles.queueStatDot, { backgroundColor: color }]} />
+                                            <Text style={styles.queueStatLabel}>{label}</Text>
+                                            <Text style={[styles.queueStatValue, { color }]}>{value}</Text>
+                                        </View>
+                                    ))}
                                 </View>
                             </View>
                         </View>
@@ -484,57 +530,52 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
                         {selectedPatient && (
                             <View style={styles.sheetContent}>
+                                {/* Patient Name + Code */}
                                 <View style={styles.rowBetween}>
-                                    <Text style={styles.sheetTitle}>{selectedPatient.patientData?.NAME}</Text>
-                                    <View style={[styles.riskBadge, { backgroundColor: getRiskColor(selectedPatient.patientData?.RISK_LEVEL) }]}>
-                                        <Text style={styles.riskBadgeText}>{selectedPatient.patientData?.RISK_LEVEL} Risk</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.sheetTitle}>{selectedPatient.patientData?.NAME || 'Patient'}</Text>
+                                        <View style={styles.row}>
+                                            <MapPin size={13} color="#94A3B8" />
+                                            <Text style={styles.summarySub}>{selectedPatient.patientData?.REGION || '—'}</Text>
+                                            <View style={styles.dividerDot} />
+                                            <Calendar size={13} color="#94A3B8" />
+                                            <Text style={styles.summarySub}>{new Date(selectedPatient.createdAt).toLocaleDateString()}</Text>
+                                        </View>
+                                    </View>
+                                    <View style={styles.codeChip}>
+                                        <Text style={styles.codeChipText}>{selectedPatient.code}</Text>
                                     </View>
                                 </View>
 
-                                <View style={styles.summaryRow}>
-                                    <MapPin size={14} color="#94A3B8" />
-                                    <Text style={styles.summarySub}>{selectedPatient.patientData?.REGION}</Text>
-                                    <View style={styles.dividerDot} />
-                                    <Calendar size={14} color="#94A3B8" />
-                                    <Text style={styles.summarySub}>{new Date(selectedPatient.createdAt).toLocaleDateString()}</Text>
+                                {/* Quick snapshot chips */}
+                                <View style={styles.snapshotRow}>
+                                    {[
+                                        { label: selectedPatient.patientData?.AGE ? `Age ${selectedPatient.patientData.AGE}` : '—' },
+                                        { label: selectedPatient.patientData?.SMOKING === 'Yes' || (selectedPatient.patientData?.SMOKE_CIGAR && selectedPatient.patientData?.SMOKE_CIGAR !== 'Never') ? 'Smoker' : 'Non-Smoker' },
+                                        { label: `Parity: ${selectedPatient.patientData?.PARITY ?? 0}` },
+                                        { label: selectedPatient.patientData?.MARITAL_STATUS || '' },
+                                    ].filter(c => c.label).map((chip, i) => (
+                                        <View key={i} style={styles.snapChip}>
+                                            <Text style={styles.snapChipText}>{chip.label}</Text>
+                                        </View>
+                                    ))}
                                 </View>
 
-                                <View style={styles.detailSection}>
-                                    <Text style={styles.detailHeading}>Risk Summary</Text>
-                                    <Text style={styles.detailBody}>
-                                        Based on patient profile (Age: {selectedPatient.patientData?.AGE}, Parity: {selectedPatient.patientData?.PARITY}),
-                                        the overall risk level is {selectedPatient.patientData?.RISK_LEVEL}.
-                                        {selectedPatient.patientData?.RISK_LEVEL === 'High' ? ' Immediate referral or thorough clinical review is strictly advised.' : ' Standard contraceptive protocols can be considered with caution.'}
-                                    </Text>
-                                </View>
-
-                                <View style={styles.detailSection}>
-                                    <Text style={styles.detailHeading}>Top Recommended Method</Text>
-                                    <View style={styles.recChipBig}>
-                                        <CheckCircle size={20} color="#10B981" />
-                                        <Text style={styles.recChipText}>{selectedPatient.patientData?.RECOMMENDED}</Text>
-                                    </View>
-                                </View>
 
                                 <TouchableOpacity
                                     style={styles.fullResultsBtn}
                                     onPress={() => {
                                         setPreviewVisible(false);
                                         if (selectedPatient) {
-                                            const ageValue = parseInt(selectedPatient.patientData?.AGE || '25');
-                                            const smokingStatus = selectedPatient.patientData?.SMOKING === 'Yes' ? 'current_daily' : 'never';
-                                            const mecResults = calculateMEC({ age: ageValue, smokingStatus });
-
-                                            navigation.navigate('ViewRecommendation', {
-                                                ageLabel: selectedPatient.patientData?.AGE_GROUP,
-                                                ageValue: ageValue,
-                                                prefs: selectedPatient.patientData?.prefs || [],
-                                                mecResults
+                                            navigation.navigate('ObAssessment', {
+                                                consultationId: selectedPatient.code,
+                                                patientData: selectedPatient.patientData,
+                                                isDoctorAssessment: true
                                             });
                                         }
                                     }}
                                 >
-                                    <Text style={styles.fullResultsBtnText}>Open Full Results</Text>
+                                    <Text style={styles.fullResultsBtnText}>Begin Assessment</Text>
                                     <ArrowRight size={20} color="#FFF" />
                                 </TouchableOpacity>
                             </View>
@@ -542,6 +583,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
         </View>
     );
 };
@@ -556,12 +598,11 @@ const styles = StyleSheet.create({
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     rowBetweenNoMargin: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     row: { flexDirection: 'row', alignItems: 'center' },
-    actionGrid: { flexDirection: 'row', gap: 12 },
-    actionCard: { flex: 1, borderRadius: 24, padding: 20, height: 160, justifyContent: 'space-between', position: 'relative', overflow: 'hidden' },
-    iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-    actionTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginTop: 12 },
-    actionSub: { fontSize: 12, color: '#64748B', marginTop: 4, fontWeight: '500' },
-    arrowIcon: { position: 'absolute', bottom: 20, right: 20 },
+    actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
+    actionCard: { width: '48%', borderRadius: 20, padding: 16, height: 140, justifyContent: 'space-between' },
+    iconBox: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+    actionTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginTop: 12, lineHeight: 20 },
+    actionSub: { fontSize: 11, color: '#475569', marginTop: 4, fontWeight: '500' },
     statsRow: { flexDirection: 'row', gap: 12 },
     statCard: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#F1F5F9' },
     statValue: { fontSize: 20, fontWeight: 'bold', color: '#1E293B', marginVertical: 4 },
@@ -644,5 +685,38 @@ const styles = StyleSheet.create({
     codeInput: { backgroundColor: '#F1F5F9', borderRadius: 12, padding: 16, fontSize: 24, fontWeight: 'bold', textAlign: 'center', letterSpacing: 4, color: '#1E293B', marginBottom: 20 },
     claimBtn: { backgroundColor: '#E45A92', borderRadius: 16, padding: 16, alignItems: 'center' },
     claimBtnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-    emptyText: { color: '#94A3B8', fontSize: 13 }
+    emptyText: { color: '#94A3B8', fontSize: 13 },
+    // Intake snapshot (preview modal)
+    codeChip: { backgroundColor: '#F1F5F9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+    codeChipText: { fontSize: 12, fontWeight: '700', color: '#64748B', letterSpacing: 1 },
+    snapshotRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14, marginBottom: 20 },
+    snapChip: { backgroundColor: '#F8FAFC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+    snapChipText: { fontSize: 12, color: '#475569', fontWeight: '600' },
+    intakeGrid: { borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#F1F5F9', marginTop: 8 },
+    intakeRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 9, paddingHorizontal: 14 },
+    intakeLabel: { fontSize: 13, color: '#94A3B8', fontWeight: '500', flex: 1 },
+    intakeVal: { fontSize: 13, color: '#1E293B', fontWeight: '600', flex: 1, textAlign: 'right' },
+    // Activity Summary
+    activityCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#F1F5F9', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+    activityLeft: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    activityBigNum: { fontSize: 42, fontWeight: '800', color: '#1E293B', lineHeight: 46 },
+    activityBigLabel: { fontSize: 12, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
+    activityPendingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFF0F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
+    activityPendingText: { fontSize: 11, color: '#E45A92', fontWeight: '700' },
+    activityDivider: { width: 1, backgroundColor: '#F1F5F9', marginHorizontal: 18 },
+    activityRight: { flex: 2, justifyContent: 'center' },
+    activityBreakdownTitle: { fontSize: 12, fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 },
+    riskBar: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 10 },
+    riskBarSeg: { height: '100%' },
+    riskLegend: { flexDirection: 'row', gap: 12 },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendText: { fontSize: 12, color: '#64748B', fontWeight: '600' },
+    highRiskAlert: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF2F2', borderRadius: 12, padding: 12, marginTop: 10, borderWidth: 1, borderColor: '#FECACA' },
+    highRiskAlertText: { fontSize: 13, color: '#EF4444', fontWeight: '600', flex: 1 },
+    // Queue stat rows
+    queueStatRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+    queueStatDot: { width: 8, height: 8, borderRadius: 4 },
+    queueStatLabel: { flex: 1, fontSize: 13, color: '#64748B', fontWeight: '500' },
+    queueStatValue: { fontSize: 14, fontWeight: '800' },
 });

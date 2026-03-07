@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
-import { LogOut, User, ChevronRight, Settings } from 'lucide-react-native';
+import { LogOut, User, ChevronRight, Settings, Palette, HelpCircle, AlertTriangle, Info, MessageSquare, BookOpen } from 'lucide-react-native';
 import ObHeader from '../../components/ObHeader';
 
 const ProfileScreen = ({ navigation }: any) => {
@@ -28,39 +28,63 @@ const ProfileScreen = ({ navigation }: any) => {
         <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
             <ObHeader title="My Profile" subtitle={doctorName} />
 
-            {/* Profile Card */}
-            <View style={styles.profileCard}>
-                <View style={styles.avatar}>
-                    <Text style={{ fontSize: 32 }}>👩‍⚕️</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}>
+                {/* Profile Card */}
+                <View style={styles.profileCard}>
+                    <View style={styles.avatar}>
+                        <Text style={{ fontSize: 32 }}>👩‍⚕️</Text>
+                    </View>
+                    <Text style={styles.name}>{doctorName}</Text>
+                    <Text style={styles.role}>Obstetrician - ContraceptIQ</Text>
+                    <Text style={styles.email}>{email}</Text>
                 </View>
-                <Text style={styles.name}>{doctorName}</Text>
-                <Text style={styles.role}>Obstetrician - ContraceptIQ</Text>
-                <Text style={styles.email}>{email}</Text>
-            </View>
 
-            {/* Settings List */}
-            <View style={styles.section}>
-                <TouchableOpacity style={styles.row}>
-                    <View style={styles.rowIcon}>
-                        <Settings size={20} color="#64748B" />
+                {/* Settings List */}
+                <View style={{ marginTop: 20 }}>
+                    <View style={styles.section}>
+                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObAbout')}>
+                            <View style={styles.rowIcon}>
+                                <Info size={20} color="#64748B" />
+                            </View>
+                            <Text style={styles.rowText}>About Us</Text>
+                            <ChevronRight size={20} color="#CBD5E1" />
+                        </TouchableOpacity>
+
+                        <View style={styles.divider} />
+
+                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObFeedback')}>
+                            <View style={styles.rowIcon}>
+                                <MessageSquare size={20} color="#64748B" />
+                            </View>
+                            <Text style={styles.rowText}>Send Feedback</Text>
+                            <ChevronRight size={20} color="#CBD5E1" />
+                        </TouchableOpacity>
+
+                        <View style={styles.divider} />
+
+                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObSettings')}>
+                            <View style={styles.rowIcon}>
+                                <Settings size={20} color="#64748B" />
+                            </View>
+                            <Text style={styles.rowText}>Account Settings</Text>
+                            <ChevronRight size={20} color="#CBD5E1" />
+                        </TouchableOpacity>
+
+                        <View style={styles.divider} />
+
+                        <TouchableOpacity style={styles.row} onPress={handleLogout}>
+                            <View style={[styles.rowIcon, { backgroundColor: '#FEE2E2' }]}>
+                                <LogOut size={20} color="#EF4444" />
+                            </View>
+                            <Text style={[styles.rowText, { color: '#EF4444' }]}>Log Out</Text>
+                        </TouchableOpacity>
                     </View>
-                    <Text style={styles.rowText}>Account Settings</Text>
-                    <ChevronRight size={20} color="#CBD5E1" />
-                </TouchableOpacity>
 
-                <View style={styles.divider} />
-
-                <TouchableOpacity style={styles.row} onPress={handleLogout}>
-                    <View style={[styles.rowIcon, { backgroundColor: '#FEE2E2' }]}>
-                        <LogOut size={20} color="#EF4444" />
+                    <View style={styles.versionContainer}>
+                        <Text style={styles.versionText}>Version 1.0.0</Text>
                     </View>
-                    <Text style={[styles.rowText, { color: '#EF4444' }]}>Log Out</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.versionContainer}>
-                <Text style={styles.versionText}>Version 1.0.0</Text>
-            </View>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };

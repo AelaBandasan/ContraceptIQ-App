@@ -24,47 +24,115 @@ export interface MECInput {
     age: number;
     smokingStatus?: 'never' | 'former' | 'occasional' | 'current_daily';
     cigarettesPerDay?: number;
+    // Doctor-only: WHO medical condition toggles
+    hypertension?: boolean;
+    migrainesWithAura?: boolean;
+    breastCancer?: boolean;
+    dvtPeHistory?: boolean;
+    diabetesWithComplications?: boolean;
+    postpartumUnder6Weeks?: boolean;
 }
 
 /**
+ * WHO Medical Condition definitions for the doctor checklist UI.
+ */
+export interface MECCondition {
+    id: keyof Pick<MECInput, 'hypertension' | 'migrainesWithAura' | 'breastCancer' | 'dvtPeHistory' | 'diabetesWithComplications' | 'postpartumUnder6Weeks'>;
+    label: string;
+    description: string;
+}
+
+export const MEC_CONDITIONS: MECCondition[] = [
+    { id: 'hypertension', label: 'Hypertension', description: 'Blood pressure ≥140/90 mmHg' },
+    { id: 'migrainesWithAura', label: 'Migraines with Aura', description: 'Recurrent headaches with visual/sensory aura' },
+    { id: 'breastCancer', label: 'Current Breast Cancer', description: 'Active or recent breast cancer diagnosis' },
+    { id: 'dvtPeHistory', label: 'DVT / PE History', description: 'Deep vein thrombosis or pulmonary embolism' },
+    { id: 'diabetesWithComplications', label: 'Diabetes with Complications', description: 'Nephropathy, retinopathy, neuropathy, or vascular disease' },
+    { id: 'postpartumUnder6Weeks', label: 'Postpartum (< 6 weeks)', description: 'Delivered within the last 6 weeks' },
+];
+
+/**
  * Calculate MEC categories for all contraceptive methods based on patient data.
- * 
- * @param input - Patient characteristics (age, smoking status)
+ * Guest flow: only age + smoking are used (all conditions default false).
+ * Doctor flow: toggles medical conditions for WHO-accurate overrides.
+ *
+ * @param input - Patient characteristics
  * @returns Object mapping method names to their MEC category (1-4)
  */
 export function calculateMEC(input: MECInput): MECResult {
-    const { age, smokingStatus = 'never', cigarettesPerDay = 0 } = input;
+    const {
+        age,
+        smokingStatus = 'never',
+        cigarettesPerDay = 0,
+        hypertension = false,
+        migrainesWithAura = false,
+        breastCancer = false,
+        dvtPeHistory = false,
+        diabetesWithComplications = false,
+        postpartumUnder6Weeks = false,
+    } = input;
 
     // ========== BASE CATEGORIES BY AGE ==========
 
-    // Cu-IUD & LNG-IUD: Category 2 for adolescents (nulliparity concern), else 1
-    const cuIUD: MECCategory = age < 18 ? 2 : 1;
-    const lngIUD: MECCategory = age < 18 ? 2 : 1;
-
-    // Implant: Generally safe for all ages
-    const implant: MECCategory = 1;
-
-    // DMPA (Injectable): Category 2 for <18 and ≥40 (bone density concerns)
-    const dmpa: MECCategory = (age < 18 || age >= 40) ? 2 : 1;
-
-    // POP (Progestin-Only Pills): Safe for all ages
-    const pop: MECCategory = 1;
-
-    // ========== CHC (Combined Hormonal) - Age + Smoking ==========
-
+    let cuIUD: MECCategory = age < 18 ? 2 : 1;
+    let lngIUD: MECCategory = age < 18 ? 2 : 1;
+    let implant: MECCategory = 1;
+    let dmpa: MECCategory = (age < 18 || age >= 40) ? 2 : 1;
+    let pop: MECCategory = 1;
     let chc: MECCategory = age >= 40 ? 2 : 1;
 
-    // Apply smoking rules (cardiovascular risk)
+    // ========== CHC - Smoking Rules ==========
     const isCurrentSmoker = smokingStatus === 'current_daily' || smokingStatus === 'occasional';
-
     if (isCurrentSmoker) {
         if (age < 35) {
-            // Smoker under 35: Category 2
-            chc = 2;
+            chc = Math.max(chc, 2) as MECCategory;
         } else {
-            // Smoker 35+: Category 3 if <15 cig/day, Category 4 if ≥15 cig/day
             chc = cigarettesPerDay >= 15 ? 4 : 3;
         }
+    }
+
+    // ========== MEDICAL CONDITION OVERRIDES (WHO 5th Ed.) ==========
+
+    // Hypertension: CHC → 3, DMPA → 2, POP → 2
+    if (hypertension) {
+        chc = Math.max(chc, 3) as MECCategory;
+        dmpa = Math.max(dmpa, 2) as MECCategory;
+        pop = Math.max(pop, 2) as MECCategory;
+    }
+
+    // Migraines with Aura: CHC → 4, POP → 2
+    if (migrainesWithAura) {
+        chc = 4;
+        pop = Math.max(pop, 2) as MECCategory;
+    }
+
+    // Current Breast Cancer: All hormonal → 4, Cu-IUD stays 1
+    if (breastCancer) {
+        chc = 4;
+        pop = 4;
+        dmpa = 4;
+        implant = 4;
+        lngIUD = 4;
+        // Cu-IUD unaffected (non-hormonal)
+    }
+
+    // DVT/PE History: CHC → 4, POP → 2, DMPA → 3
+    if (dvtPeHistory) {
+        chc = 4;
+        pop = Math.max(pop, 2) as MECCategory;
+        dmpa = Math.max(dmpa, 3) as MECCategory;
+    }
+
+    // Diabetes with vascular complications: CHC → 3-4, DMPA → 3
+    if (diabetesWithComplications) {
+        chc = Math.max(chc, 3) as MECCategory;
+        dmpa = Math.max(dmpa, 3) as MECCategory;
+    }
+
+    // Postpartum < 6 weeks: CHC → 4, DMPA → 3 (if breastfeeding)
+    if (postpartumUnder6Weeks) {
+        chc = 4;
+        dmpa = Math.max(dmpa, 3) as MECCategory;
     }
 
     return {
@@ -148,4 +216,67 @@ export function calculateMatchScore(methodId: string, userPrefs: string[]): numb
     });
 
     return Math.round((matches / userPrefs.length) * 100);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WHO MEC Tool — Full condition-based calculation (OB side only)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { getBaseByAge, combineConditions, type MethodCategories } from '../data/whoMecData';
+
+export type { MethodCategories };
+
+export interface WhoMecToolInput {
+    age: number;
+    conditionIds: string[];   // up to 3 condition IDs from WHO_MEC_CONDITIONS
+    preferences: string[];    // any of the 7 preference keys
+}
+
+export interface WhoMecMethodResult {
+    id: string;
+    name: string;
+    mecCategory: MECCategory;
+    matchScore: number;
+}
+
+export interface WhoMecToolOutput {
+    mecCategories: MethodCategories;
+    methods: WhoMecMethodResult[];
+    recommended: WhoMecMethodResult[];
+    notRecommended: WhoMecMethodResult[];
+}
+
+/**
+ * Full WHO MEC Tool calculation for the OB side.
+ * Takes age, up to 3 conditions, and any number of preferences.
+ * Returns categorised methods sorted by safety then preference match.
+ */
+export function calculateWhoMecTool(input: WhoMecToolInput): WhoMecToolOutput {
+    const { age, conditionIds, preferences } = input;
+
+    // 1. Get base categories by age
+    const baseCategories = getBaseByAge(age);
+
+    // 2. Apply selected conditions (max rule)
+    const mecCategories = combineConditions(baseCategories, conditionIds);
+
+    // 3. Score each method against preferences
+    const methods: WhoMecMethodResult[] = METHOD_ATTRIBUTES.map(attr => ({
+        id: attr.id,
+        name: attr.name,
+        mecCategory: mecCategories[attr.id as keyof MethodCategories],
+        matchScore: calculateMatchScore(attr.id, preferences),
+    }));
+
+    // 4. Sort: lowest MEC category first (safest), then highest match score
+    methods.sort((a, b) => {
+        if (a.mecCategory !== b.mecCategory) return a.mecCategory - b.mecCategory;
+        return b.matchScore - a.matchScore;
+    });
+
+    // 5. Split into recommended (cat 1-2) and not recommended (cat 3-4)
+    const recommended = methods.filter(m => m.mecCategory <= 2);
+    const notRecommended = methods.filter(m => m.mecCategory > 2);
+
+    return { mecCategories, methods, recommended, notRecommended };
 }

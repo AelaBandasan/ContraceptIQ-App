@@ -1,0 +1,7 @@
+{
+    "model_type": "DT + XGBoost Hybrid (Upgrade-only)",
+    "xgb_threshold": 0.2,
+    "confidence_margin": 0.15,
+    "rule": "If XGB is low-confidence and DT predicts 1, upgrade to 1",
+    "target": "HIGH_RISK_DISCONTINUE"
+}

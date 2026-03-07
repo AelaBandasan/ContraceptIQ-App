@@ -4,9 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
-import ObHeader from '../components/ObHeader';
-import { colors, shadows } from '../theme';
+import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../../types/navigation';
+import ObHeader from '../../components/ObHeader';
+import { colors, shadows } from '../../theme';
 
 type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'> | DrawerScreenProps<'Contraceptive Methods'>;
 
@@ -38,7 +38,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       perfectEffectiveness: '>99%',
       icon: 'pill',
       iconFamily: 'MaterialCommunityIcons',
-      illustration: require('../../assets/image/sq_chcpills.png'),
+      illustration: require('../../../assets/image/sq_chcpills.png'),
       color: '#4A90E2',
     },
     {
@@ -50,7 +50,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       perfectEffectiveness: '>99%',
       icon: 'pill',
       iconFamily: 'MaterialCommunityIcons',
-      illustration: require('../../assets/image/sq_poppills.png'),
+      illustration: require('../../../assets/image/sq_poppills.png'),
       color: '#E45A92',
     },
     {
@@ -62,7 +62,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       perfectEffectiveness: '>99%',
       icon: 'ellipsis-horizontal-circle',
       iconFamily: 'Ionicons',
-      illustration: require('../../assets/image/sq_lngetg.png'),
+      illustration: require('../../../assets/image/sq_lngetg.png'),
       color: '#2E8B57',
     },
     {
@@ -74,7 +74,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       perfectEffectiveness: '>99%',
       icon: 'git-commit-outline',
       iconFamily: 'Ionicons',
-      illustration: require('../../assets/image/sq_cuiud.png'),
+      illustration: require('../../../assets/image/sq_cuiud.png'),
       color: '#D4AF37',
     },
     {
@@ -86,7 +86,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       perfectEffectiveness: '>99%',
       icon: 'shield-checkmark-outline',
       iconFamily: 'Ionicons',
-      illustration: require('../../assets/image/sq_lngiud.png'),
+      illustration: require('../../../assets/image/sq_lngiud.png'),
       color: '#8E44AD',
     },
     {
@@ -98,7 +98,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       perfectEffectiveness: '>99%',
       icon: 'flask-outline',
       iconFamily: 'Ionicons',
-      illustration: require('../../assets/image/sq_dmpainj.png'),
+      illustration: require('../../../assets/image/sq_dmpainj.png'),
       color: '#EC6F5F',
     },
   ];

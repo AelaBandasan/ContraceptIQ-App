@@ -1,284 +1,263 @@
 /**
- * Feature Encoder — maps human-readable form values to numeric codes
- * 
- * This module translates the string selections from the guest assessment 
- * form into numeric values that the ML model expects.
- * 
- * Encoding maps are derived from the training data preprocessing pipeline.
- * All features are converted to numbers before being passed to the ONNX model.
+ * Feature Encoder — builds the 133-dim float32 OHE vector for v4 ONNX inference.
+ *
+ * The flat ONNX models (xgb_high_recall.onnx / dt_high_recall.onnx) accept a
+ * single FloatTensorType input named "float_input" of shape [1, 133].
+ *
+ * Layout (matches ColumnTransformer output order):
+ *   [  0–  4]  OHE(PATTERN_USE)            5 cats
+ *   [  5– 50]  OHE(HUSBAND_AGE)           46 cats
+ *   [ 51– 96]  OHE(ETHNICITY)             46 cats
+ *   [ 97–100]  OHE(HOUSEHOLD_HEAD_SEX)     4 cats
+ *   [101–116]  OHE(CONTRACEPTIVE_METHOD)  16 cats
+ *   [117–120]  OHE(SMOKE_CIGAR)            4 cats
+ *   [121–130]  OHE(DESIRE_FOR_MORE_CHILDREN) 10 cats
+ *   [131]      AGE        (float32)
+ *   [132]      PARITY     (float32)
+ *
+ * Unknown categories encode as all-zeros (sklearn handle_unknown='ignore').
  */
 
 // ============================================================================
-// ENCODING MAPS
+// OHE SCHEMA — exact categories from the fitted OneHotEncoder (sorted)
+// Any value not in a category list → all-zero block (unknown → ignore)
 // ============================================================================
 
-/**
- * Region encoding: maps region display name → numeric code
- */
-export const REGION_MAP: Record<string, number> = {
-    'NCR': 1,
-    'CAR': 2,
-    'Region I – Ilocos': 3,
-    'Region II – Cagayan Valley': 4,
-    'Region III – Central Luzon': 5,
-    'Region IV-A – CALABARZON': 6,
-    'Region IV-B – MIMAROPA': 7,
-    'Region V – Bicol': 8,
-    'Region VI – Western Visayas': 9,
-    'Region VII – Central Visayas': 10,
-    'Region VIII – Eastern Visayas': 11,
-    'Region IX – Zamboanga Peninsula': 12,
-    'Region X – Northern Mindanao': 13,
-    'Region XI – Davao Region': 14,
-    'Region XII – SOCCSKSARGEN': 15,
-    'Region XIII – Caraga': 16,
-    'BARMM': 17,
-};
+interface OheCol { feat: string; cats: string[] }
+interface NumCol { feat: string; isNum: true }
+type SchemaEntry = OheCol | NumCol;
 
-/**
- * Education level encoding
- */
-export const EDUC_LEVEL_MAP: Record<string, number> = {
-    'No formal education': 0,
-    'Primary': 1,
-    'Secondary': 2,
-    'Senior High School': 3,
-    'Vocational/Technical': 4,
-    'College Undergraduate': 5,
-    'College Graduate': 6,
-};
-
-/**
- * Religion encoding
- */
-export const RELIGION_MAP: Record<string, number> = {
-    'Roman Catholic': 1,
-    'Christian': 2,
-    'Muslim': 3,
-    'Iglesia ni Cristo': 4,
-    'No Religion': 5,
-    'Other Religion': 6,
-    'Prefer not to say': 7,
-};
-
-/**
- * Ethnicity encoding
- */
-export const ETHNICITY_MAP: Record<string, number> = {
-    'Tagalog': 1,
-    'Cebuano': 2,
-    'Ilocano': 3,
-};
-
-/**
- * Marital status encoding
- */
-export const MARITAL_STATUS_MAP: Record<string, number> = {
-    'Single': 0,
-    'Married': 1,
-    'Living with partner': 2,
-    'Separated': 3,
-    'Divorced': 4,
-    'Widowed': 5,
-};
-
-/**
- * Yes/No encoding
- */
-export const YES_NO_MAP: Record<string, number> = {
-    'Yes': 1,
-    'No': 0,
-};
-
-/**
- * Household head sex encoding
- */
-export const HOUSEHOLD_HEAD_SEX_MAP: Record<string, number> = {
-    'Male': 1,
-    'Female': 2,
-    'Shared/Both': 3,
-    'Others': 4,
-};
-
-/**
- * Occupation encoding
- */
-export const OCCUPATION_MAP: Record<string, number> = {
-    'Unemployed': 0,
-    'Student': 1,
-    'Farmer': 2,
-    'Others': 3,
-};
-
-/**
- * Smoking habits encoding
- */
-export const SMOKE_CIGAR_MAP: Record<string, number> = {
-    'Never': 0,
-    'Former smoker': 1,
-    'Occasional smoker': 2,
-    'Current daily': 3,
-};
-
-/**
- * Desire for more children / want child encoding
- */
-export const DESIRE_CHILDREN_MAP: Record<string, number> = {
-    'Yes': 1,
-    'No': 0,
-    'Not Sure': 2,
-};
-
-/**
- * Last method discontinued encoding
- */
-export const LAST_METHOD_MAP: Record<string, number> = {
-    'None': 0,
-    'Pills': 1,
-    'Condom': 2,
-    'Copper IUD': 3,
-    'Intrauterine Device (IUD)': 4,
-    'Implant': 5,
-    'Patch': 6,
-    'Injectable': 7,
-    'Withdrawal': 8,
-};
-
-/**
- * Reason for discontinuation encoding
- */
-export const REASON_DISCONTINUED_MAP: Record<string, number> = {
-    'None / Not Applicable': 0,
-    'Side effects': 1,
-    'Health concerns': 2,
-    'Desire to become pregnant': 3,
-};
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Safely encode a value using a lookup map.
- * Returns the numeric code, or a fallback value if not found.
- */
-function encodeValue(value: string | number | undefined, map: Record<string, number>, fallback: number = 0): number {
-    if (value === undefined || value === null || value === '') return fallback;
-    if (typeof value === 'number') return value;
-    return map[value] ?? fallback;
-}
-
-/**
- * Parse a numeric value from form data (may be stored as string).
- */
-function parseNumeric(value: string | number | undefined, fallback: number = 0): number {
-    if (value === undefined || value === null || value === '') return fallback;
-    if (typeof value === 'number') return value;
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? fallback : parsed;
-}
-
-// ============================================================================
-// MAIN ENCODER
-// ============================================================================
-
-/**
- * The 26 features expected by the ML model, in the correct order.
- */
-export const FEATURE_ORDER: string[] = [
-    'AGE',
-    'REGION',
-    'EDUC_LEVEL',
-    'RELIGION',
-    'ETHNICITY',
-    'MARITAL_STATUS',
-    'RESIDING_WITH_PARTNER',
-    'HOUSEHOLD_HEAD_SEX',
-    'OCCUPATION',
-    'HUSBANDS_EDUC',
-    'HUSBAND_AGE',
-    'PARTNER_EDUC',
-    'SMOKE_CIGAR',
-    'PARITY',
-    'DESIRE_FOR_MORE_CHILDREN',
-    'WANT_LAST_CHILD',
-    'WANT_LAST_PREGNANCY',
-    'CONTRACEPTIVE_METHOD',
-    'MONTH_USE_CURRENT_METHOD',
-    'PATTERN_USE',
-    'TOLD_ABT_SIDE_EFFECTS',
-    'LAST_SOURCE_TYPE',
-    'LAST_METHOD_DISCONTINUED',
-    'REASON_DISCONTINUED',
-    'HSBND_DESIRE_FOR_MORE_CHILDREN',
+const OHE_SCHEMA: SchemaEntry[] = [
+    { feat: "PATTERN_USE",              cats: ["1", "Consistent", "Intermittent", "New user", "Stopped recently"] },
+    { feat: "HUSBAND_AGE",              cats: ["  ", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "58", "59", "63", "66"] },
+    { feat: "ETHNICITY",                cats: ["1", "10", "11", "2", "23", "26", "27", "3", "33", "35", "4", "43", "48", "49", "5", "50", "52", "53", "55", "58", "6", "62", "63", "64", "67", "68", "69", "7", "71", "73", "77", "8", "80", "82", "84", "85", "86", "87", "88", "9", "96", "Bicolano", "Bisaya", "Ilocano", "Others", "Tagalog"] },
+    { feat: "HOUSEHOLD_HEAD_SEX",       cats: ["1", "2", "Female", "Male"] },
+    { feat: "CONTRACEPTIVE_METHOD",     cats: ["1", "11", "13", "16", "18", "2", "3", "5", "6", "7", "Condom", "IUD", "Implants", "Injectables", "Pills", "Withdrawal"] },
+    { feat: "SMOKE_CIGAR",              cats: ["0", "1", "No", "Yes"] },
+    { feat: "DESIRE_FOR_MORE_CHILDREN", cats: ["1", "2", "3", "4", "5", "6", "7", "No", "Undecided", "Yes"] },
+    { feat: "AGE",    isNum: true },
+    { feat: "PARITY", isNum: true },
 ];
 
-/**
- * Encode raw form data into a Float32Array of 26 numeric features.
- * 
- * @param formData - Raw form data from GuestAssessment (string values)
- * @param clinicalData - Optional clinical data added by the OB doctor
- * @returns Float32Array of 26 encoded features ready for model input
- */
-export function encodeFeatures(formData: Record<string, any>, clinicalData?: Record<string, any>): Float32Array {
-    const merged = { ...formData, ...clinicalData };
+// Total OHE output length (must equal 133)
+const N_OHE_FEATURES = OHE_SCHEMA.reduce((acc, e) => acc + ("isNum" in e ? 1 : e.cats.length), 0);
 
-    const encoded: number[] = [
-        // Demographic features (13)
-        parseNumeric(merged.AGE, 25),
-        encodeValue(merged.REGION, REGION_MAP, 1),
-        encodeValue(merged.EDUC_LEVEL, EDUC_LEVEL_MAP, 2),
-        encodeValue(merged.RELIGION, RELIGION_MAP, 1),
-        encodeValue(merged.ETHNICITY, ETHNICITY_MAP, 1),
-        encodeValue(merged.MARITAL_STATUS, MARITAL_STATUS_MAP, 0),
-        encodeValue(merged.RESIDING_WITH_PARTNER, YES_NO_MAP, 0),
-        encodeValue(merged.HOUSEHOLD_HEAD_SEX, HOUSEHOLD_HEAD_SEX_MAP, 1),
-        encodeValue(merged.OCCUPATION, OCCUPATION_MAP, 0),
-        encodeValue(merged.HUSBAND_EDUC_LEVEL || merged.HUSBANDS_EDUC, EDUC_LEVEL_MAP, 2),
-        parseNumeric(merged.HUSBAND_AGE, 30),
-        encodeValue(merged.PARTNER_EDUC, EDUC_LEVEL_MAP, 2),
-        encodeValue(merged.SMOKE_CIGAR, SMOKE_CIGAR_MAP, 0),
+// ============================================================================
+// DISPLAY → TRAINING CATEGORY MAPS
+// Maps form display strings to the exact string values the model was trained on.
+// ============================================================================
 
-        // Fertility features (4)
-        parseNumeric(merged.PARITY, 0),
-        encodeValue(merged.DESIRE_FOR_MORE_CHILDREN, DESIRE_CHILDREN_MAP, 0),
-        encodeValue(merged.WANT_LAST_CHILD, DESIRE_CHILDREN_MAP, 0),
-        encodeValue(merged.WANT_LAST_PREGNANCY, DESIRE_CHILDREN_MAP, 0),
+/** PATTERN_USE: how the patient currently uses contraception */
+const PATTERN_USE_MAP: Record<string, string> = {
+    "Current user":                          "Consistent",
+    "Recent user (stopped within 12 months)": "Stopped recently",
+    "Past user (stopped >12 months ago)":    "Intermittent",
+    // numeric fallback codes from legacy encoder
+    "1": "Consistent",
+    "2": "Stopped recently",
+    "3": "Intermittent",
+};
 
-        // Method/History features (9)
-        // These are typically provided by the OB doctor in Phase 2 of the assessment.
-        // Use defaults (0) if not available for guest-only assessments.
-        parseNumeric(merged.CONTRACEPTIVE_METHOD, 0),
-        parseNumeric(merged.MONTH_USE_CURRENT_METHOD, 0),
-        parseNumeric(merged.PATTERN_USE, 0),
-        parseNumeric(merged.TOLD_ABT_SIDE_EFFECTS, 0),
-        parseNumeric(merged.LAST_SOURCE_TYPE, 0),
-        encodeValue(merged.LAST_METHOD_DISCONTINUED, LAST_METHOD_MAP, 0),
-        encodeValue(merged.REASON_DISCONTINUED, REASON_DISCONTINUED_MAP, 0),
-        encodeValue(merged.HSBND_DESIRE_FOR_MORE_CHILDREN, DESIRE_CHILDREN_MAP, 0),
-    ];
+/** ETHNICITY */
+const ETHNICITY_MAP: Record<string, string> = {
+    "Tagalog":              "Tagalog",
+    "Ilocano":              "Ilocano",
+    "Cebuano":              "Bisaya",
+    "Bisaya/Cebuano":       "Bisaya",
+    "Bisaya":               "Bisaya",
+    "Hiligaynon/Ilonggo":  "Others",
+    "Bikol/Bicol":          "Bicolano",
+    "Bicolano":             "Bicolano",
+    "Waray":               "Others",
+    "Kapampangan":          "Others",
+    "Pangasinan":           "Others",
+    "Other Filipinos":      "Others",
+    "Other ethnicity":      "Others",
+    // numeric legacy codes
+    "1": "Tagalog",
+    "2": "Bisaya",
+    "3": "Ilocano",
+};
 
-    return new Float32Array(encoded);
+/** HOUSEHOLD_HEAD_SEX */
+const HOUSEHOLD_HEAD_SEX_MAP: Record<string, string> = {
+    "Male":         "Male",
+    "Female":       "Female",
+    "Shared/Both":  "Male",   // map to majority class
+    "Others":       "Male",
+    "1": "Male",
+    "2": "Female",
+    "3": "Male",
+    "4": "Male",
+};
+
+/** CONTRACEPTIVE_METHOD */
+const CONTRACEPTIVE_METHOD_MAP: Record<string, string> = {
+    "Pills":                        "Pills",
+    "Pill":                         "Pills",
+    "Copper IUD":                   "IUD",
+    "Intrauterine Device (IUD)":    "IUD",
+    "IUD":                          "IUD",
+    "Injectable":                   "Injectables",
+    "Injectables":                  "Injectables",
+    "Implant":                      "Implants",
+    "Implants":                     "Implants",
+    "Female sterilisation":         "Withdrawal", // map to closest available
+    "Male sterilisation":           "Withdrawal",
+    "Condom":                       "Condom",
+    "NFP/Periodic abstinence":      "Withdrawal",
+    "SDM":                          "Withdrawal",
+    "LAM":                          "Withdrawal",
+    "Patch":                        "Withdrawal",
+    "Other modern":                 "Withdrawal",
+    "Other traditional":            "Withdrawal",
+    "Withdrawal":                   "Withdrawal",
+    "None":                         "Withdrawal", // unknown → nearest
+    // numeric legacy codes
+    "1": "Withdrawal",   // OB None
+    "2": "Pills",
+    "3": "Condom",
+    "4": "IUD",
+    "5": "IUD",
+    "6": "Implants",
+    "7": "Withdrawal",   // Patch
+    "8": "Injectables",
+    "9": "Withdrawal",
+};
+
+/** SMOKE_CIGAR */
+const SMOKE_CIGAR_MAP: Record<string, string> = {
+    "Never":             "No",
+    "No":                "No",
+    "Former smoker":     "No",
+    "Occasional smoker": "Yes",
+    "Current daily":     "Yes",
+    "Yes":               "Yes",
+    "0": "No",
+    "1": "Yes",
+};
+
+/** DESIRE_FOR_MORE_CHILDREN */
+const DESIRE_FOR_MORE_CHILDREN_MAP: Record<string, string> = {
+    "Wants more children":           "Yes",
+    "Yes":                           "Yes",
+    "Wants no more children":        "No",
+    "No":                            "No",
+    "Undecided/ambivalent":          "Undecided",
+    "Not Sure":                      "Undecided",
+    "Sterilised (self or partner)":  "No",  // effectively wants no more
+    "Not applicable":                "No",
+    "1": "Yes",
+    "2": "No",
+    "3": "Undecided",
+    "4": "No",
+    "9": "No",
+};
+
+// ============================================================================
+// HUSBAND_AGE: round to integer string, clamp to known range
+// ============================================================================
+
+const HUSBAND_AGE_KNOWN = new Set([
+    "16","17","18","19","20","21","22","23","24","25","26","27","28","29","30",
+    "31","32","33","34","35","36","37","38","39","40","41","42","43","44","45",
+    "46","47","48","49","50","51","52","53","54","55","56","58","59","63","66",
+]);
+
+function encodeHusbandAge(raw: any): string {
+    if (raw === undefined || raw === null || raw === "") return "  "; // unknown bucket
+    const n = Math.round(parseFloat(String(raw)));
+    if (isNaN(n)) return "  ";
+    const s = String(n);
+    return HUSBAND_AGE_KNOWN.has(s) ? s : "  "; // unknown → all-zeros
 }
 
+// ============================================================================
+// MAIN ENCODER: buildOHEVector
+// ============================================================================
+
 /**
- * Validate that all required features can be encoded.
- * Returns a list of missing or un-encodable feature names.
+ * Build the 133-dim float32 OHE vector from raw form data.
+ *
+ * Accepts display strings (from ObAssessment / GuestAssessment form) or
+ * numeric codes from mapFormDataToApi.
+ *
+ * Returns a Float32Array of length 133 ready to pass to the ONNX model as
+ * Tensor('float32', vec, [1, 133]).
  */
-export function validateFeatures(formData: Record<string, any>): string[] {
-    const missing: string[] = [];
+export function buildOHEVector(formData: Record<string, any>): Float32Array {
+    const vec = new Float32Array(N_OHE_FEATURES);
+    let offset = 0;
 
-    // Check guest assessment required fields
-    const requiredGuest = [
-        'AGE', 'REGION', 'EDUC_LEVEL', 'RELIGION', 'ETHNICITY',
-        'MARITAL_STATUS', 'SMOKE_CIGAR', 'PARITY',
-    ];
+    for (const entry of OHE_SCHEMA) {
+        if ("isNum" in entry) {
+            const raw = formData[entry.feat];
+            const n = (raw === undefined || raw === null || raw === "")
+                ? 0.0
+                : parseFloat(String(raw));
+            vec[offset] = isNaN(n) ? 0.0 : n;
+            offset += 1;
+        } else {
+            const { feat, cats } = entry;
+            const raw = formData[feat];
 
-    for (const key of requiredGuest) {
-        if (formData[key] === undefined || formData[key] === null || formData[key] === '') {
-            missing.push(key);
+            // Resolve display string → training category
+            let trainingVal: string | undefined;
+
+            if (feat === "HUSBAND_AGE") {
+                trainingVal = encodeHusbandAge(raw);
+            } else {
+                const displayMap = DISPLAY_MAPS[feat];
+                const rawStr = raw === undefined || raw === null ? "" : String(raw);
+                trainingVal = displayMap ? displayMap[rawStr] : rawStr;
+            }
+
+            // One-hot encode
+            if (trainingVal !== undefined && trainingVal !== "") {
+                const idx = cats.indexOf(trainingVal);
+                if (idx >= 0) {
+                    vec[offset + idx] = 1.0;
+                }
+                // unknown → all zeros (handle_unknown='ignore')
+            }
+
+            offset += cats.length;
         }
     }
 
-    return missing;
+    return vec;
 }
+
+// Map from feature name → display-to-training map
+const DISPLAY_MAPS: Record<string, Record<string, string>> = {
+    PATTERN_USE:              PATTERN_USE_MAP,
+    ETHNICITY:                ETHNICITY_MAP,
+    HOUSEHOLD_HEAD_SEX:       HOUSEHOLD_HEAD_SEX_MAP,
+    CONTRACEPTIVE_METHOD:     CONTRACEPTIVE_METHOD_MAP,
+    SMOKE_CIGAR:              SMOKE_CIGAR_MAP,
+    DESIRE_FOR_MORE_CHILDREN: DESIRE_FOR_MORE_CHILDREN_MAP,
+};
+
+// ============================================================================
+// VALIDATION HELPER
+// ============================================================================
+
+/**
+ * Validate that minimum required v4 features are present.
+ * Returns array of missing field names (empty = all good).
+ */
+export function validateFeaturesV4(formData: Record<string, any>): string[] {
+    const required = [
+        "AGE", "ETHNICITY", "HOUSEHOLD_HEAD_SEX",
+        "SMOKE_CIGAR", "DESIRE_FOR_MORE_CHILDREN", "PARITY",
+    ];
+    return required.filter(
+        key => formData[key] === undefined || formData[key] === null || formData[key] === "",
+    );
+}
+
+// ============================================================================
+// LEGACY EXPORTS (kept for any remaining imports — now unused for inference)
+// ============================================================================
+
+export const N_FLAT_FEATURES = N_OHE_FEATURES; // 133
