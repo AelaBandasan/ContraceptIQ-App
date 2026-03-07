@@ -1,11 +1,8 @@
-# Task 11 — Fix `train_v4.py`
+﻿# Task 11 â€” Fix `train_v4.py`
 
 ## Status
 
-- [ ] Not started
-- [ ] In progress
-- [ ] Complete
-- [ ] Verified
+- [x] Not started`n- [x] In progress`n- [x] Complete`n- [x] Verified
 
 ---
 
@@ -27,7 +24,7 @@ machine-learning/src/models/train_v4.py
 
 ### 1. `THRESHOLD`
 
-Update to match the operating threshold selected by the corrected validation pipeline. The exact value comes from `validated_feature_reduction_config.json` → `operating_threshold` (produced in Task 09).
+Update to match the operating threshold selected by the corrected validation pipeline. The exact value comes from `validated_feature_reduction_config.json` â†’ `operating_threshold` (produced in Task 09).
 
 ```python
 # Before
@@ -65,7 +62,7 @@ meets_target = recall > 0.90
 
 ### 4. Exit condition (if present)
 
-If there is a `sys.exit(1)` triggered when recall ≤ target, update the threshold in that check:
+If there is a `sys.exit(1)` triggered when recall â‰¤ target, update the threshold in that check:
 
 ```python
 # Before
@@ -99,7 +96,7 @@ If `_REDUCED_C` changed in Task 07, update this list to match. If `_REDUCED_C` i
 ## Verification
 
 After editing, confirm:
-- `THRESHOLD` matches `validated_feature_reduction_config.json` → `operating_threshold`
+- `THRESHOLD` matches `validated_feature_reduction_config.json` â†’ `operating_threshold`
 - `CONF_MARGIN` is `0.05`
 - `meets_target` check uses `0.90`
 - Feature list matches the approved `_REDUCED_C` from Task 07

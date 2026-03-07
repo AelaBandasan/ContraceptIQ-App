@@ -1,11 +1,8 @@
-# Task 12 — Re-run `train_v4.py` and Verify Output
+﻿# Task 12 â€” Re-run `train_v4.py` and Verify Output
 
 ## Status
 
-- [ ] Not started
-- [ ] In progress
-- [ ] Complete
-- [ ] Verified
+- [x] Not started`n- [x] In progress`n- [x] Complete`n- [x] Verified
 
 ---
 
@@ -29,9 +26,9 @@ python train_v4.py
 ## Expected Output Files (regenerated)
 
 ```
-src/models/models_high_risk_v4/xgb_high_recall.joblib    ← regenerated
-src/models/models_high_risk_v4/dt_high_recall.joblib     ← regenerated
-src/models/models_high_risk_v4/hybrid_v4_config.json     ← regenerated
+src/models/models_high_risk_v4/xgb_high_recall.joblib    â† regenerated
+src/models/models_high_risk_v4/dt_high_recall.joblib     â† regenerated
+src/models/models_high_risk_v4/hybrid_v4_config.json     â† regenerated
 ```
 
 ---
@@ -42,7 +39,7 @@ src/models/models_high_risk_v4/hybrid_v4_config.json     ← regenerated
 |---|---|
 | `operating_threshold` | Matches value from Task 11 (from validation report) |
 | `conf_margin` | `0.05` |
-| `validation.final_test_recall` | ≥ 0.90, < 1.00 |
+| `validation.final_test_recall` | â‰¥ 0.90, < 1.00 |
 | `validation.final_test_precision` | Noticeably > 0.256 |
 | `validation.final_test_f1` | Higher than the degenerate 0.408 |
 | `meets_target` | `true` |
@@ -95,4 +92,4 @@ After completion, the following should all be true simultaneously:
 
 ## Blocks
 
-- Nothing — this is the final task in the plan
+- Nothing â€” this is the final task in the plan
