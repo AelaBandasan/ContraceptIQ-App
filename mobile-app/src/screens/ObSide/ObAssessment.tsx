@@ -117,21 +117,6 @@ const FORM_FIELDS = [
     ],
   },
   {
-    id: "CONTRACEPTIVE_METHOD",
-    label: "Current Contraceptive Method",
-    type: "select",
-    options: [
-      "Pills",
-      "Copper IUD",
-      "Intrauterine Device (IUD)",
-      "Injectable",
-      "Implant",
-      "Patch",
-      "Condom",
-      "None",
-    ],
-  },
-  {
     id: "PATTERN_USE",
     label: "Pattern of Use",
     type: "select",
@@ -169,11 +154,7 @@ const PREFERENCES = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const ObAssessment = ({ navigation, route }: any) => {
-  const hasPatientData = !!(
-    route.params?.patientData ||
-    route.params?.consultationId ||
-    route.params?.viewOnly
-  );
+  const hasPatientData = !!route.params?.record;
 
   // screen: 'form' → 'mec' → 'mec_results' → 'results'
   const [screen, setScreen] = useState(hasPatientData ? "results" : "form");
@@ -261,10 +242,6 @@ const ObAssessment = ({ navigation, route }: any) => {
     }
     if (!formData.ETHNICITY) {
       Alert.alert("Required", "Please select the patient's ethnicity.");
-      return false;
-    }
-    if (!formData.CONTRACEPTIVE_METHOD) {
-      Alert.alert("Required", "Please select a contraceptive method.");
       return false;
     }
     return true;
