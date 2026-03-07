@@ -6,12 +6,12 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import {
     CheckCircle2, AlertTriangle, ChevronDown, ChevronUp,
-    User as UserIcon, Baby, Cigarette, Calendar, MapPin,
+    User as UserIcon, Baby, Cigarette, Calendar,
     ClipboardList, Activity, Stethoscope, BookOpen,
-    Hash, Clock, Heart, MessageSquare, WifiOff,
+    Clock, Heart, MessageSquare, WifiOff,
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
-import { fetchDoctorHistory, loadHistoryCache, ConsultationRecord } from '../../services/doctorService';
+import { fetchDoctorAssessments, loadAssessmentsCache, AssessmentRecord } from '../../services/doctorService';
 import { isOnline } from '../../utils/networkUtils';
 import ObHeader from '../../components/ObHeader';
 
@@ -51,15 +51,15 @@ const formatDate = (iso?: string) => {
 };
 
 // ─── Expandable Card ────────────────────────────────────────────────────────
-const HistoryCard = ({ item }: { item: ConsultationRecord }) => {
+const HistoryCard = ({ item }: { item: AssessmentRecord }) => {
     const [expanded, setExpanded] = useState(false);
 
     const pd = item.patientData || {};
-    const riskLevel = item.riskResult?.riskLevel || pd.RISK_LEVEL || '';
+    const riskLevel = item.status === 'critical' ? 'high' : 'low';
     const riskColor = getRiskColor(riskLevel);
     const statusMeta = getStatusMeta(item.status, riskLevel);
     const StatusIcon = statusMeta.icon;
-    const smokerLabel = pd.SMOKE_CIGAR && pd.SMOKE_CIGAR !== 'Never' ? 'Smoker' : 'Non-Smoker';
+    const smokerLabel = pd.SMOKE_CIGAR && pd.SMOKE_CIGAR !== 'Never' && pd.SMOKE_CIGAR !== 'No' ? 'Smoker' : 'Non-Smoker';
     const riskResults = item.riskResults || {};
 
     const toggle = () => {
@@ -76,20 +76,16 @@ const HistoryCard = ({ item }: { item: ConsultationRecord }) => {
                 {/* ── Header Row ── */}
                 <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={styles.cardHeader}>
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.patientName}>{pd.NAME || 'Unknown Patient'}</Text>
+                        <Text style={styles.patientName}>{item.patientName || pd.NAME || 'Unknown Patient'}</Text>
                         <View style={styles.metaChips}>
                             <View style={styles.metaChip}>
-                                <Hash size={10} color="#94A3B8" />
-                                <Text style={styles.metaChipText}>{item.code}</Text>
-                            </View>
-                            <View style={styles.metaChip}>
                                 <Calendar size={10} color="#94A3B8" />
-                                <Text style={styles.metaChipText}>{formatDate(item.assessedAt || item.createdAt)}</Text>
+                                <Text style={styles.metaChipText}>{formatDate(item.createdAt)}</Text>
                             </View>
-                            {pd.REGION && (
+                            {item.pendingSync && (
                                 <View style={styles.metaChip}>
-                                    <MapPin size={10} color="#94A3B8" />
-                                    <Text style={styles.metaChipText}>{pd.REGION}</Text>
+                                    <Clock size={10} color="#F59E0B" />
+                                    <Text style={[styles.metaChipText, { color: '#F59E0B' }]}>Pending sync</Text>
                                 </View>
                             )}
                         </View>
@@ -198,51 +194,32 @@ const HistoryCard = ({ item }: { item: ConsultationRecord }) => {
                         </View>
 
                         {/* ─ Risk Results ─ */}
-                        {(Object.keys(riskResults).length > 0 || item.riskResult) && (
+                        {Object.keys(riskResults).length > 0 && (
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
                                     <Activity size={14} color="#E45A92" />
                                     <Text style={styles.sectionTitle}>Discontinuation Risk</Text>
                                 </View>
-                                {Object.keys(riskResults).length > 0
-                                    ? Object.entries(riskResults).map(([method, result]) => {
-                                        const mColor = getRiskColor(result.riskLevel);
-                                        const pct = result.probability != null
-                                            ? Math.min(result.probability * 100, 100)
-                                            : 0;
-                                        return (
-                                            <View key={method} style={styles.riskRow}>
-                                                <View style={styles.riskRowTop}>
-                                                    <Text style={styles.riskMethodName}>{method}</Text>
-                                                    <Text style={[styles.riskPct, { color: mColor }]}>{pct.toFixed(0)}%</Text>
-                                                </View>
-                                                <View style={styles.barBg}>
-                                                    <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: mColor }]} />
-                                                </View>
-                                                {result.recommendation
-                                                    ? <Text style={styles.riskNote}>{result.recommendation}</Text>
-                                                    : null}
+                                {Object.entries(riskResults).map(([method, result]) => {
+                                    const mColor = getRiskColor(result.riskLevel);
+                                    const pct = result.probability != null
+                                        ? Math.min(result.probability * 100, 100)
+                                        : 0;
+                                    return (
+                                        <View key={method} style={styles.riskRow}>
+                                            <View style={styles.riskRowTop}>
+                                                <Text style={styles.riskMethodName}>{method}</Text>
+                                                <Text style={[styles.riskPct, { color: mColor }]}>{pct.toFixed(0)}%</Text>
                                             </View>
-                                        );
-                                    })
-                                    : item.riskResult
-                                        ? (() => {
-                                            const mColor = getRiskColor(item.riskResult.riskLevel);
-                                            const pct = Math.min((item.riskResult.probability || 0) * 100, 100);
-                                            return (
-                                                <View style={styles.riskRow}>
-                                                    <View style={styles.riskRowTop}>
-                                                        <Text style={styles.riskMethodName}>{pd.RECOMMENDED || 'Overall'}</Text>
-                                                        <Text style={[styles.riskPct, { color: mColor }]}>{pct.toFixed(0)}%</Text>
-                                                    </View>
-                                                    <View style={styles.barBg}>
-                                                        <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: mColor }]} />
-                                                    </View>
-                                                </View>
-                                            );
-                                        })()
-                                        : null
-                                }
+                                            <View style={styles.barBg}>
+                                                <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: mColor }]} />
+                                            </View>
+                                            {result.recommendation
+                                                ? <Text style={styles.riskNote}>{result.recommendation}</Text>
+                                                : null}
+                                        </View>
+                                    );
+                                })}
                             </View>
                         )}
 
@@ -257,12 +234,12 @@ const HistoryCard = ({ item }: { item: ConsultationRecord }) => {
                                     {item.clinicalNotes || 'No clinical notes recorded for this encounter.'}
                                 </Text>
                             </View>
-                            {item.obName ? (
+                            {item.doctorName ? (
                                 <View style={styles.obRow}>
                                     <Stethoscope size={11} color="#94A3B8" />
-                                    <Text style={styles.obNameText}>{item.obName}</Text>
+                                    <Text style={styles.obNameText}>{item.doctorName}</Text>
                                     <Clock size={11} color="#94A3B8" />
-                                    <Text style={styles.obNameText}>{formatDate(item.assessedAt || item.createdAt)}</Text>
+                                    <Text style={styles.obNameText}>{formatDate(item.createdAt)}</Text>
                                 </View>
                             ) : null}
                         </View>
@@ -275,12 +252,12 @@ const HistoryCard = ({ item }: { item: ConsultationRecord }) => {
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
 const ObHistoryScreen = () => {
-    const [history, setHistory] = useState<ConsultationRecord[]>([]);
+    const [history, setHistory] = useState<AssessmentRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [isOffline, setIsOffline] = useState(false);
     const [cachedAt, setCachedAt] = useState<number | null>(null);
-    const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'Moderate' | 'High'>('All');
+    const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'High'>('All');
 
     const doctorUid = auth.currentUser?.uid;
 
@@ -292,28 +269,26 @@ const ObHistoryScreen = () => {
 
         if (isManualRefresh) setRefreshing(true);
 
-        // Step 1: Load cache immediately for instant display
-        try {
-            const cached = await loadHistoryCache(doctorUid);
-            if (cached) {
-                setHistory(cached.records);
-                setCachedAt(cached.cachedAt);
-                setLoading(false);
-            }
-        } catch { /* ignore cache read errors */ }
+        // Step 1: Load local cache immediately (works offline)
+        const cached = await loadAssessmentsCache(doctorUid);
+        if (cached.length > 0) {
+            setHistory(cached);
+            setCachedAt(Date.now());
+            setLoading(false);
+        }
 
-        // Step 2: Try to refresh from Firestore in background
+        // Step 2: Try Firestore refresh in background
         const online = await isOnline();
         setIsOffline(!online);
 
         if (online) {
             try {
-                const fresh = await fetchDoctorHistory(doctorUid);
+                const fresh = await fetchDoctorAssessments(doctorUid);
                 setHistory(fresh);
                 setCachedAt(Date.now());
                 setIsOffline(false);
             } catch {
-                // Firestore failed — cache is already shown
+                // Firestore failed — local cache already shown
             }
         }
 
@@ -325,8 +300,8 @@ const ObHistoryScreen = () => {
 
     const filtered = history.filter(item => {
         if (filterRisk === 'All') return true;
-        const risk = (item.riskResult?.riskLevel || item.patientData?.RISK_LEVEL || '').toLowerCase();
-        return risk === filterRisk.toLowerCase();
+        const risk = item.status === 'critical' ? 'High' : 'Low';
+        return risk === filterRisk;
     });
 
     return (
@@ -347,7 +322,7 @@ const ObHistoryScreen = () => {
             {/* Filter Chips */}
             <View style={styles.filterBar}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
-                    {(['All', 'Low', 'Moderate', 'High'] as const).map(risk => (
+                    {(['All', 'Low', 'High'] as const).map(risk => (
                         <TouchableOpacity
                             key={risk}
                             style={[styles.chip, filterRisk === risk && styles.chipActive]}
@@ -378,7 +353,7 @@ const ObHistoryScreen = () => {
             <FlatList
                 data={filtered}
                 renderItem={({ item }) => <HistoryCard item={item} />}
-                keyExtractor={item => item.code}
+                keyExtractor={item => item.id}
                 contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
                 refreshControl={
                     <RefreshControl

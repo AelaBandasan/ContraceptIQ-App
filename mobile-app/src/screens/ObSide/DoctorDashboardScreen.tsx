@@ -1,21 +1,19 @@
 import React, { useState, useCallback } from 'react';
 import {
     StyleSheet, View, Text, TouchableOpacity, FlatList,
-    RefreshControl, Modal, TextInput, Alert, ActivityIndicator,
-    ScrollView
+    RefreshControl, Modal, ScrollView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
-    Plus, Clock, X, BarChart2, AlertTriangle,
+    Plus, Clock, X, AlertTriangle,
     ChevronDown, ChevronUp, Palette, Info, ArrowRight, Book,
-    Search, Filter, Users, Baby, Cigarette, User as UserIcon,
-    PlayCircle, Eye, Calendar, MapPin, Hash, CheckCircle2,
-    Activity, ChevronRight, Clipboard, Trash2, HelpCircle
+    Baby, Cigarette, User as UserIcon,
+    Eye, Calendar, CheckCircle2,
+    Activity, ChevronRight, Clipboard, HelpCircle
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
-import { claimGuest, fetchDoctorQueue, ConsultationRecord } from '../../services/doctorService';
-import { calculateMEC } from '../../services/mecService';
+import { loadAssessmentsCache, flushSyncQueue, AssessmentRecord } from '../../services/doctorService';
 import ObHeader from '../../components/ObHeader';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 
@@ -27,29 +25,23 @@ const DoctorDashboardScreen = ({ route }: any) => {
     const insets = useSafeAreaInsets();
 
     // Core State
-    const [queue, setQueue] = useState<ConsultationRecord[]>([]);
+    const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
     const [loading, setLoading] = useState(false);
 
     // UI State
     const [mecExpanded, setMecExpanded] = useState(false);
     const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'Moderate' | 'High'>('All');
-    const [sortBy, setSortBy] = useState<'Recent' | 'Oldest' | 'High Risk'>('Recent');
-    const [selectedPatient, setSelectedPatient] = useState<ConsultationRecord | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<AssessmentRecord | null>(null);
     const [previewVisible, setPreviewVisible] = useState(false);
 
-    // Modal State
-    const [modalVisible, setModalVisible] = useState(false);
-    const [inputCode, setInputCode] = useState('');
-    const [claiming, setClaiming] = useState(false);
-
-    // Computed stats from real queue data (no risk scores exist yet — OB runs the model)
-    const now = Date.now();
+    // Computed stats from local assessment cache
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const statsFromQueue = {
-        total: queue.length,
-        pending: queue.filter(q => q.status === 'waiting').length,
-        arrivedToday: queue.filter(q => new Date(q.createdAt) >= todayStart).length,
-        waitingOver1h: queue.filter(q => (now - new Date(q.createdAt).getTime()) > 3600000).length,
+    const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 7);
+    const stats = {
+        total: assessments.length,
+        today: assessments.filter(a => new Date(a.createdAt) >= todayStart).length,
+        thisWeek: assessments.filter(a => new Date(a.createdAt) >= weekStart).length,
+        critical: assessments.filter(a => a.status === 'critical').length,
     };
 
     // Dummy Date
@@ -58,142 +50,62 @@ const DoctorDashboardScreen = ({ route }: any) => {
     });
 
     // Mock Data for Demo
-    const mockData: ConsultationRecord[] = [
-        {
-            code: "A7X99P",
-            patientData: {
-                NAME: "Elena Ramos",
-                AGE: "28",
-                AGE_GROUP: "25–29",
-                SMOKING: "No",
-                PARITY: "2",
-                RISK_LEVEL: "Low",
-                STATUS: "completed",
-                RECOMMENDED: "Implant",
-                REGION: "Metro Manila"
-            },
-            status: "waiting",
-            createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            expiresIn: 3600
-        },
-        {
-            code: "B2Z11K",
-            patientData: {
-                NAME: "Maria Clara",
-                AGE: "34",
-                AGE_GROUP: "30–34",
-                SMOKING: "Yes",
-                PARITY: "4",
-                RISK_LEVEL: "High",
-                STATUS: "high risk",
-                RECOMMENDED: "None (Referral Required)",
-                REGION: "Cebu City"
-            },
-            status: "waiting",
-            createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-            expiresIn: 3600
-        },
-        {
-            code: "C5M44L",
-            patientData: {
-                NAME: "Liza Soberano",
-                AGE: "22",
-                AGE_GROUP: "20–24",
-                SMOKING: "No",
-                PARITY: "0",
-                RISK_LEVEL: "Moderate",
-                STATUS: "in progress",
-                RECOMMENDED: "Pill",
-                REGION: "Davao"
-            },
-            status: "waiting",
-            createdAt: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-            expiresIn: 3600
-        }
-    ];
-
     const doctorUid = auth.currentUser?.uid;
     const doctorName = route?.params?.doctorName || auth.currentUser?.displayName || "Dr. Maria Santos, OB-GYN";
 
-    const loadQueue = useCallback(async () => {
+    const loadAssessments = useCallback(async () => {
         if (!doctorUid) return;
         setLoading(true);
-        const data = await fetchDoctorQueue(doctorUid);
-        setQueue(data.length > 0 ? [...data, ...mockData] : mockData);
+        const data = await loadAssessmentsCache(doctorUid);
+        setAssessments(data);
         setLoading(false);
+        // Flush any records that failed to sync previously
+        flushSyncQueue(doctorUid).catch(() => {});
     }, [doctorUid]);
 
     useFocusEffect(
         useCallback(() => {
-            loadQueue();
-        }, [loadQueue])
+            loadAssessments();
+        }, [loadAssessments])
     );
 
-    const filteredQueue = queue
-        .filter(item => filterRisk === 'All' || item.patientData?.RISK_LEVEL === filterRisk)
-        .sort((a, b) => {
-            if (sortBy === 'Recent') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            if (sortBy === 'Oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            if (sortBy === 'High Risk') {
-                const riskOrder: any = { 'High': 0, 'Moderate': 1, 'Low': 2 };
-                return riskOrder[a.patientData?.RISK_LEVEL] - riskOrder[b.patientData?.RISK_LEVEL];
-            }
-            return 0;
-        });
+    const getOverallRisk = (item: AssessmentRecord): string => {
+        const hasCritical = item.status === 'critical';
+        return hasCritical ? 'High' : 'Low';
+    };
+
+    const filteredQueue = assessments
+        .filter(item => {
+            if (filterRisk === 'All') return true;
+            return getOverallRisk(item) === filterRisk;
+        })
+        .slice(0, 10); // show latest 10 on dashboard
 
     const getRiskColor = (risk: string) => {
         switch (risk?.toLowerCase()) {
             case 'high': return '#EF4444';
-            case 'moderate': return '#F59E0B';
             case 'low': return '#10B981';
             default: return '#64748B';
         }
     };
 
-    const handleClaim = async () => {
-        if (!inputCode || inputCode.length < 6) {
-            Alert.alert("Error", "Please enter a valid 6-character code.");
-            return;
-        }
-
-        if (!doctorUid) {
-            Alert.alert("Error", "Doctor not authenticated.");
-            return;
-        }
-
-        setClaiming(true);
-        try {
-            const result = await claimGuest(inputCode, doctorUid, doctorName);
-            if (result.success) {
-                Alert.alert("Success", "Patient assessment claimed successfully.");
-                setInputCode('');
-                setModalVisible(false);
-                loadQueue();
-            } else {
-                Alert.alert("Error", result.error || "Could not claim assessment. Please check the code.");
-            }
-        } catch (error) {
-            console.error("Claim Error:", error);
-            Alert.alert("Error", "An unexpected error occurred.");
-        } finally {
-            setClaiming(false);
-        }
+    const getStatusBadge = (item: AssessmentRecord) => {
+        if (item.status === 'critical') return { label: 'HIGH RISK', color: '#FEF2F2', textColor: '#EF4444', icon: AlertTriangle };
+        return { label: 'COMPLETED', color: '#F0FDF4', textColor: '#10B981', icon: CheckCircle2 };
     };
 
-    const getStatusBadge = (status: string, risk: string) => {
-        if (risk === 'High') return { label: 'HIGH RISK', color: '#FEF2F2', textColor: '#EF4444', icon: AlertTriangle };
-        if (status === 'completed') return { label: 'COMPLETED', color: '#F0FDF4', textColor: '#10B981', icon: CheckCircle2 };
-        return { label: 'IN PROGRESS', color: '#FFFBEB', textColor: '#D97706', icon: Activity };
-    };
-
-    const renderCard = (item: ConsultationRecord) => {
-        const riskColor = getRiskColor(item.patientData?.RISK_LEVEL);
-        const status = getStatusBadge(item.patientData?.STATUS || 'in progress', item.patientData?.RISK_LEVEL);
+    const renderCard = (item: AssessmentRecord) => {
+        const risk = getOverallRisk(item);
+        const riskColor = getRiskColor(risk);
+        const status = getStatusBadge(item);
         const StatusIcon = status.icon;
+
+        const smoker = item.patientData?.SMOKE_CIGAR && item.patientData.SMOKE_CIGAR !== 'Never' && item.patientData.SMOKE_CIGAR !== 'No';
+        const topMethod = Object.keys(item.riskResults || {})[0] || '—';
 
         return (
             <TouchableOpacity
-                key={item.code}
+                key={item.id}
                 style={styles.assessmentCard}
                 onPress={() => {
                     setSelectedPatient(item);
@@ -204,9 +116,10 @@ const DoctorDashboardScreen = ({ route }: any) => {
                 <View style={styles.cardContent}>
                     <View style={styles.rowBetween}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.patientName}>{item.patientData?.NAME || "Guest Patient"}</Text>
+                            <Text style={styles.patientName}>{item.patientName || "Patient"}</Text>
                             <Text style={styles.patientSub}>
-                                Code: {item.code} • {new Date(item.createdAt).toLocaleDateString()}
+                                {new Date(item.createdAt).toLocaleDateString()}
+                                {item.pendingSync ? ' · Pending sync' : ''}
                             </Text>
                         </View>
                         <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
@@ -218,38 +131,30 @@ const DoctorDashboardScreen = ({ route }: any) => {
                     <View style={styles.summaryGrid}>
                         <View style={styles.summaryItem}>
                             <UserIcon size={14} color="#64748B" />
-                            <Text style={styles.summaryText}>{item.patientData?.AGE_GROUP || 'N/A'}</Text>
+                            <Text style={styles.summaryText}>{item.patientData?.AGE ? `Age ${item.patientData.AGE}` : '—'}</Text>
                         </View>
                         <View style={styles.summaryItem}>
                             <Cigarette size={14} color="#64748B" />
-                            <Text style={styles.summaryText}>{item.patientData?.SMOKING === 'Yes' ? 'Smoker' : 'Non-Smoker'}</Text>
+                            <Text style={styles.summaryText}>{smoker ? 'Smoker' : 'Non-Smoker'}</Text>
                         </View>
                         <View style={styles.summaryItem}>
                             <Baby size={14} color="#64748B" />
-                            <Text style={styles.summaryText}>{item.patientData?.PARITY ? `Parity: ${item.patientData.PARITY}` : 'N/A'}</Text>
+                            <Text style={styles.summaryText}>{item.patientData?.PARITY != null ? `Parity: ${item.patientData.PARITY}` : '—'}</Text>
                         </View>
                     </View>
 
                     <View style={styles.rowBetween}>
                         <View style={styles.recBox}>
-                            <Text style={styles.recTitle}>Top Recommended:</Text>
+                            <Text style={styles.recTitle}>Assessed Method:</Text>
                             <View style={styles.row}>
-                                <Text style={styles.recValue}>{item.patientData?.RECOMMENDED || 'None'}</Text>
+                                <Text style={styles.recValue}>{topMethod}</Text>
                                 <View style={[styles.riskDotMini, { backgroundColor: riskColor }]} />
                             </View>
                         </View>
                         <View style={styles.cardActions}>
-                            {item.patientData?.STATUS !== 'completed' && (
-                                <TouchableOpacity
-                                    style={[styles.miniActionBtn, { backgroundColor: '#F1F5F9' }]}
-                                    onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code, patientData: item.patientData, isDoctorAssessment: true })}
-                                >
-                                    <PlayCircle size={16} color="#475569" />
-                                </TouchableOpacity>
-                            )}
                             <TouchableOpacity
                                 style={[styles.miniActionBtn, { backgroundColor: riskColor + '15' }]}
-                                onPress={() => navigation.navigate('ObAssessment', { consultationId: item.code, patientData: item.patientData, isDoctorAssessment: true })}
+                                onPress={() => navigation.navigate('ObAssessment', { record: item, isDoctorAssessment: true })}
                             >
                                 <Eye size={16} color={riskColor} />
                             </TouchableOpacity>
@@ -278,7 +183,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                             <View style={styles.actionGrid}>
                                 <TouchableOpacity
                                     style={[styles.actionCard, { backgroundColor: '#DCFCE7' }]}
-                                    onPress={() => setModalVisible(true)}
+                                    onPress={() => navigation.navigate('ObAssessment', { isDoctorAssessment: true })}
                                 >
                                     <View style={[styles.iconBox, { backgroundColor: '#BCF0DA' }]}>
                                         <Plus color="#059669" size={24} />
@@ -334,26 +239,24 @@ const DoctorDashboardScreen = ({ route }: any) => {
                             <Text style={styles.sectionTitle}>Activity Summary</Text>
 
                             <View style={styles.activityCard}>
-                                {/* Left: big total */}
                                 <View style={styles.activityLeft}>
-                                    <Text style={styles.activityBigNum}>{statsFromQueue.total}</Text>
-                                    <Text style={styles.activityBigLabel}>In Queue</Text>
+                                    <Text style={styles.activityBigNum}>{stats.total}</Text>
+                                    <Text style={styles.activityBigLabel}>Total Records</Text>
                                     <View style={styles.activityPendingBadge}>
                                         <Clock size={11} color="#E45A92" />
                                         <Text style={styles.activityPendingText}>
-                                            {statsFromQueue.pending} awaiting
+                                            {stats.today} today
                                         </Text>
                                     </View>
                                 </View>
 
                                 <View style={styles.activityDivider} />
 
-                                {/* Right: queue time breakdown */}
                                 <View style={styles.activityRight}>
                                     {[
-                                        { label: 'Arrived today', value: statsFromQueue.arrivedToday, color: '#10B981' },
-                                        { label: 'Waiting > 1 hr', value: statsFromQueue.waitingOver1h, color: '#F59E0B' },
-                                        { label: 'Unassessed', value: statsFromQueue.pending, color: '#64748B' },
+                                        { label: 'Today', value: stats.today, color: '#10B981' },
+                                        { label: 'This week', value: stats.thisWeek, color: '#6366F1' },
+                                        { label: 'High risk', value: stats.critical, color: '#EF4444' },
                                     ].map(({ label, value, color }) => (
                                         <View key={label} style={styles.queueStatRow}>
                                             <View style={[styles.queueStatDot, { backgroundColor: color }]} />
@@ -409,7 +312,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                         <Text style={styles.emptySub}>Start a new patient assessment to see results here.</Text>
                                         <TouchableOpacity
                                             style={styles.emptyBtn}
-                                            onPress={() => setModalVisible(true)}
+                                            onPress={() => navigation.navigate('ObAssessment', { isDoctorAssessment: true })}
                                         >
                                             <Plus size={18} color="#FFF" />
                                             <Text style={styles.emptyBtnText}>Start New Assessment</Text>
@@ -462,48 +365,8 @@ const DoctorDashboardScreen = ({ route }: any) => {
                     </View>
                 }
                 contentContainerStyle={{ paddingBottom: 40 }}
-                refreshControl={<RefreshControl refreshing={loading} onRefresh={loadQueue} tintColor="#E45A92" />}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={loadAssessments} tintColor="#E45A92" />}
             />
-
-            {/* Claim Modal */}
-            <Modal
-                transparent={true}
-                animationType="fade"
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>New Assessment</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <X size={24} color="#64748B" />
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={styles.modalSub}>Enter the 6-character code provided by the patient to start evaluation.</Text>
-                        <TextInput
-                            style={styles.codeInput}
-                            placeholder="e.g. A7X99P"
-                            placeholderTextColor="#CBD5E1"
-                            value={inputCode}
-                            onChangeText={text => setInputCode(text.toUpperCase())}
-                            maxLength={6}
-                            autoCapitalize="characters"
-                        />
-                        <TouchableOpacity
-                            style={styles.claimBtn}
-                            onPress={handleClaim}
-                            disabled={claiming}
-                        >
-                            {claiming ? (
-                                <ActivityIndicator color="#FFF" />
-                            ) : (
-                                <Text style={styles.claimBtnText}>Start Consultation</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
 
             {/* Preview Modal */}
             <Modal
@@ -530,30 +393,28 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
                         {selectedPatient && (
                             <View style={styles.sheetContent}>
-                                {/* Patient Name + Code */}
                                 <View style={styles.rowBetween}>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={styles.sheetTitle}>{selectedPatient.patientData?.NAME || 'Patient'}</Text>
+                                        <Text style={styles.sheetTitle}>{selectedPatient.patientName || 'Patient'}</Text>
                                         <View style={styles.row}>
-                                            <MapPin size={13} color="#94A3B8" />
-                                            <Text style={styles.summarySub}>{selectedPatient.patientData?.REGION || '—'}</Text>
-                                            <View style={styles.dividerDot} />
                                             <Calendar size={13} color="#94A3B8" />
                                             <Text style={styles.summarySub}>{new Date(selectedPatient.createdAt).toLocaleDateString()}</Text>
+                                            {selectedPatient.pendingSync && (
+                                                <>
+                                                    <View style={styles.dividerDot} />
+                                                    <Text style={[styles.summarySub, { color: '#F59E0B' }]}>Pending sync</Text>
+                                                </>
+                                            )}
                                         </View>
-                                    </View>
-                                    <View style={styles.codeChip}>
-                                        <Text style={styles.codeChipText}>{selectedPatient.code}</Text>
                                     </View>
                                 </View>
 
-                                {/* Quick snapshot chips */}
                                 <View style={styles.snapshotRow}>
                                     {[
-                                        { label: selectedPatient.patientData?.AGE ? `Age ${selectedPatient.patientData.AGE}` : '—' },
-                                        { label: selectedPatient.patientData?.SMOKING === 'Yes' || (selectedPatient.patientData?.SMOKE_CIGAR && selectedPatient.patientData?.SMOKE_CIGAR !== 'Never') ? 'Smoker' : 'Non-Smoker' },
+                                        { label: selectedPatient.patientData?.AGE ? `Age ${selectedPatient.patientData.AGE}` : '' },
+                                        { label: (selectedPatient.patientData?.SMOKE_CIGAR && selectedPatient.patientData.SMOKE_CIGAR !== 'Never' && selectedPatient.patientData.SMOKE_CIGAR !== 'No') ? 'Smoker' : 'Non-Smoker' },
                                         { label: `Parity: ${selectedPatient.patientData?.PARITY ?? 0}` },
-                                        { label: selectedPatient.patientData?.MARITAL_STATUS || '' },
+                                        { label: selectedPatient.status === 'critical' ? 'High Risk' : 'Low Risk' },
                                     ].filter(c => c.label).map((chip, i) => (
                                         <View key={i} style={styles.snapChip}>
                                             <Text style={styles.snapChipText}>{chip.label}</Text>
@@ -561,21 +422,14 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     ))}
                                 </View>
 
-
                                 <TouchableOpacity
                                     style={styles.fullResultsBtn}
                                     onPress={() => {
                                         setPreviewVisible(false);
-                                        if (selectedPatient) {
-                                            navigation.navigate('ObAssessment', {
-                                                consultationId: selectedPatient.code,
-                                                patientData: selectedPatient.patientData,
-                                                isDoctorAssessment: true
-                                            });
-                                        }
+                                        navigation.navigate('ObAssessment', { record: selectedPatient, isDoctorAssessment: true });
                                     }}
                                 >
-                                    <Text style={styles.fullResultsBtnText}>Begin Assessment</Text>
+                                    <Text style={styles.fullResultsBtnText}>View Full Results</Text>
                                     <ArrowRight size={20} color="#FFF" />
                                 </TouchableOpacity>
                             </View>
