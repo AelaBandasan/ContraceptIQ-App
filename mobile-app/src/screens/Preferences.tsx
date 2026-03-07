@@ -39,12 +39,12 @@ const Preferences = ({ navigation }: Props) => {
 
   // Base methods for calculation
   const baseContraceptives = [
-    { name: 'Implant', mecKey: 'Implant' as const, image: require('../../assets/image/implantt.png') },
-    { name: 'DMPA (Injectable)', mecKey: 'DMPA' as const, image: require('../../assets/image/injectables.png') },
-    { name: 'CHC (Patch/Pills/Ring)', mecKey: 'CHC' as const, image: require('../../assets/image/patchh.png') },
-    { name: 'Cu-IUD (Copper)', mecKey: 'Cu-IUD' as const, image: require('../../assets/image/copperiud.png') },
-    { name: 'POP (Progestin-Only Pills)', mecKey: 'POP' as const, image: require('../../assets/image/pillss.png') },
-    { name: 'LNG-IUD (Hormonal)', mecKey: 'LNG-IUD' as const, image: require('../../assets/image/leviud.png') },
+    { name: 'Implant', mecKey: 'Implant' as const, image: require('../../assets/image/sq_lngetg.png') },
+    { name: 'DMPA (Injectable)', mecKey: 'DMPA' as const, image: require('../../assets/image/sq_dmpainj.png') },
+    { name: 'CHC (Patch/Pills/Ring)', mecKey: 'CHC' as const, image: require('../../assets/image/sq_chcpatch1.png') },
+    { name: 'Cu-IUD (Copper)', mecKey: 'Cu-IUD' as const, image: require('../../assets/image/sq_cuiud.png') },
+    { name: 'POP (Progestin-Only Pills)', mecKey: 'POP' as const, image: require('../../assets/image/sq_chcpills.png') },
+    { name: 'LNG-IUD (Hormonal)', mecKey: 'LNG-IUD' as const, image: require('../../assets/image/sq_lngiud.png') },
   ];
 
   // Calculate recommendations
