@@ -1,12 +1,15 @@
-import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput, Platform, Pressable, ActivityIndicator } from 'react-native'
+import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput, Platform, Pressable, ActivityIndicator, Alert } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from 'lucide-react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../config/firebaseConfig';
 
 const COLORS = {
-    primary: '#E45A92',
-    primaryDark: '#D3347A',
+    primary: '#D81B60',
+    primaryDark: '#AD1457',
     textPrimary: '#0F172A',
     border: '#E2E8F0',
     white: '#FFFFFF',
@@ -21,12 +24,35 @@ const SignupforOB = ({ navigation }: any) => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSignup = () => {
+    const handleSignup = async () => {
+        if (!fullName || !email || !password) {
+            Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
+
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            // Create user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Save user details to Firestore
+            await setDoc(doc(db, 'users', user.uid), {
+                uid: user.uid,
+                fullName,
+                email,
+                role: 'OB',
+                createdAt: new Date().toISOString(),
+            });
+
+            Alert.alert('Success', 'Account created successfully!');
             // navigation.navigate('SuccessScreen'); // Placeholder for success
-        }, 2000);
+        } catch (error: any) {
+            console.error(error);
+            Alert.alert('Registration Failed', error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -114,11 +140,8 @@ const SignupforOB = ({ navigation }: any) => {
                         onPress={handleSignup}
                         disabled={isLoading}
                     >
-                        <LinearGradient
-                            colors={['#d3347a', '#e83c91']}
-                            style={styles.buttonGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
+                        <View
+                            style={[styles.buttonGradient, { backgroundColor: COLORS.primary }]}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color="#FFFFFF" />
@@ -128,7 +151,7 @@ const SignupforOB = ({ navigation }: any) => {
                                     <ArrowRight size={20} color="#FFFFFF" />
                                 </>
                             )}
-                        </LinearGradient>
+                        </View>
                     </Pressable>
 
                     <View style={styles.registerSection}>
@@ -247,7 +270,7 @@ const styles = StyleSheet.create({
     },
     registerLink: {
         fontSize: 14,
-        color: '#E45A92',
+        color: COLORS.primary,
         fontWeight: '700',
     },
 });

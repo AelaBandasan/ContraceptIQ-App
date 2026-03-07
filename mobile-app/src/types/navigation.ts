@@ -1,6 +1,7 @@
+import type { CompositeNavigationProp, CompositeScreenProps, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import type { CompositeNavigationProp } from '@react-navigation/native';
 
 // Root Stack Navigator - handles authentication and main flows
 export type RootStackParamList = {
@@ -8,27 +9,120 @@ export type RootStackParamList = {
   LoginforOB: undefined;
   SignupforOB: undefined;
   MainDrawer: undefined;
-  Recommendation: undefined;
-  Preferences: undefined;
-  ViewRecommendation: undefined;
-  ObRecom: undefined;
-  ObPref: undefined;
-  ObViewRecom: undefined;
+
+  ObDrawer: { doctorName?: string };
+  AssessmentResultScreen: {
+    riskResult: any;
+    patientData: any;
+  };
+  ConsultationCodeScreen: {
+    patientData: any;
+    riskResult?: any;
+  };
+  GuestAssessment: {
+    preFilledData?: {
+      AGE: string;
+      prefs: string[];
+    };
+  };
+  ObAssessment: {
+    patientData: any;
+    mec_recommendations?: any;
+    consultationId?: string;
+    doctorName?: string;
+    isDoctorAssessment?: boolean;
+  };
+  MethodDetail: {
+    methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
+  };
+  PregnancyPlanning: undefined;
 };
 
 // Drawer Navigator - main app navigation for authenticated users
 export type DrawerParamList = {
+  MainTabs: undefined;
   Home: undefined;
-  "What's Right for Me?": undefined;
+  'Find Method': undefined;
   'Contraceptive Methods': undefined;
-  'Did You Know?': undefined;
+  Preferences: undefined;
+  Recommendation: undefined;
+  ColorMapping: undefined;
+  ViewRecommendation: {
+    ageLabel?: string;
+    ageValue?: number;
+    prefs?: string[];
+    mecResults?: {
+      'Cu-IUD': 1 | 2 | 3 | 4;
+      'LNG-IUD': 1 | 2 | 3 | 4;
+      'Implant': 1 | 2 | 3 | 4;
+      'DMPA': 1 | 2 | 3 | 4;
+      'CHC': 1 | 2 | 3 | 4;
+      'POP': 1 | 2 | 3 | 4;
+    };
+    isDoctorAssessment?: boolean;
+  };
+  'Emergency Contraception': undefined;
   'Contraceptive FAQs': undefined;
   'About Us': undefined;
+  PrivacyDisclaimer: undefined;
+  LearnHub: undefined;
+  LearnHubDetail: {
+    item: {
+      id: string;
+      title: string;
+      subtitle: string;
+      icon: any;
+      color: string;
+    };
+  };
+  WhatIsContraception: undefined;
+};
+
+// User Tab Navigator - main app navigation for authenticated users
+export type UserTabParamList = {
+  Home: undefined;
+  'Find Method': undefined;
+  'Contraceptive Methods': undefined;
+  Preferences: undefined;
+};
+
+// OB Drawer Navigator
+export type ObDrawerParamList = {
+  ObMainTabs: undefined; // The OB Bottom Tab Navigator
+  ObHistory: undefined;
+  ObMethods: undefined; // Direct link if needed, though it's in tabs too
+  ObMecGuide: undefined;
+  ObEducation: undefined;
+  ObEmergency: undefined;
+  ObAbout: undefined;
+  ObFeedback: undefined;
+  ObSettings: undefined;
+  ObAssessment: undefined; // Kept for backward compatibility if needed
+};
+
+// OB Tab Navigator
+export type ObTabParamList = {
+  ObHome: undefined;
+  ObAssessment: { isDoctorAssessment: boolean };
+  ObHistory: undefined;
+  ObRecommendations: { isDoctorAssessment?: boolean };
+  ObMethods: { isDoctorAssessment?: boolean };
+  ObProfile: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack
 export type RootStackNavigationProp<T extends keyof RootStackParamList> =
   NativeStackNavigationProp<RootStackParamList, T>;
+
+// Navigation prop types for screens in the User Tabs
+export type UserTabScreenNavigationProp<T extends keyof UserTabParamList> =
+  CompositeNavigationProp<
+    BottomTabNavigationProp<UserTabParamList, T>,
+    CompositeNavigationProp<
+      DrawerNavigationProp<DrawerParamList>,
+      NativeStackNavigationProp<RootStackParamList>
+    >
+  >;
 
 // Navigation prop types for screens in the Drawer
 export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
@@ -40,8 +134,33 @@ export type DrawerScreenNavigationProp<T extends keyof DrawerParamList> =
 // Screen props for type-safe screen components
 export type RootStackScreenProps<T extends keyof RootStackParamList> = {
   navigation: RootStackNavigationProp<T>;
+  route: RouteProp<RootStackParamList, T>;
+};
+
+export type UserTabScreenProps<T extends keyof UserTabParamList> = {
+  navigation: UserTabScreenNavigationProp<T>;
+  route: RouteProp<UserTabParamList, T>;
 };
 
 export type DrawerScreenProps<T extends keyof DrawerParamList> = {
   navigation: DrawerScreenNavigationProp<T>;
+  route: RouteProp<DrawerParamList, T>;
 };
+
+// Navigation prop types for screens in the OB Drawer
+export type ObDrawerScreenNavigationProp<T extends keyof ObDrawerParamList> =
+  CompositeNavigationProp<
+    DrawerNavigationProp<ObDrawerParamList, T>,
+    NativeStackNavigationProp<RootStackParamList>
+  >;
+
+export type ObDrawerScreenProps<T extends keyof ObDrawerParamList> = {
+  navigation: ObDrawerScreenNavigationProp<T>;
+  route: RouteProp<ObDrawerParamList, T>;
+};
+
+// Screen props for OB Tabs
+export type ObTabScreenProps<T extends keyof ObTabParamList> = CompositeScreenProps<
+  BottomTabScreenProps<ObTabParamList, T>,
+  ObDrawerScreenProps<'ObMainTabs'>
+>;

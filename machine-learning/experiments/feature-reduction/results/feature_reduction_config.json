@@ -1,0 +1,23 @@
+{
+  "feature_set_name": "reduced_C",
+  "n_features": 10,
+  "features": [
+    "REGION",
+    "CONTRACEPTIVE_METHOD",
+    "RELIGION",
+    "HUSBAND_AGE",
+    "PARITY",
+    "AGE",
+    "REASON_DISCONTINUED",
+    "HUSBANDS_EDUC",
+    "MARITAL_STATUS",
+    "PATTERN_USE"
+  ],
+  "best_threshold": 0.1,
+  "conf_margin": 0.2,
+  "recall": 0.97561,
+  "precision": 0.254777,
+  "f1": 0.40404,
+  "roc_auc": 0.917358,
+  "meets_target": true
+}

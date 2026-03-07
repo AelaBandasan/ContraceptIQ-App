@@ -1,0 +1,85 @@
+======================================================================
+  DERIVED FEATURE SETS — ContraceptIQ Discontinuation Risk
+======================================================================
+  Generated        : 2026-03-06T17:53:16+00:00
+  Source           : train.pkl (inner 20% of X_train)
+  Inner split      : StratifiedShuffleSplit 80/20 of X_train only
+  Importance method: permutation_importance (roc_auc, n_repeats=20)
+  Random state     : 42
+  X_train shape    : (2243, 25)
+  Inner fit rows   : 1794
+  Inner val rows   : 449
+  Excluded features: ['REGION']
+  Exclusion reason : REGION is a perfect class separator due to dataset construction artifact (all class 1 cases from NCR only). Including it would make the model a geography classifier, not a clinical one.
+
+======================================================================
+  SECTION 1 — FULL RANKED IMPORTANCE TABLE
+======================================================================
+  Rank  Feature                           Mean Importance       Std
+  ----  -------                           ---------------       ---
+    1     PATTERN_USE                            0.184126   0.023613
+    2     HUSBAND_AGE                            0.007652   0.002598
+    3     AGE                                    0.003744   0.003528
+    4     ETHNICITY                              0.003649   0.000880
+    5     HOUSEHOLD_HEAD_SEX                     0.003506   0.001719
+    6     CONTRACEPTIVE_METHOD                   0.002500   0.001768
+    7     SMOKE_CIGAR                            0.002484   0.002909
+    8     DESIRE_FOR_MORE_CHILDREN               0.002381   0.000695
+    9     PARITY                                 0.002307   0.001179
+    10    RELIGION                               0.001901   0.001705
+    11    WANT_LAST_PREGNANCY                    0.000956   0.000544
+    12    RESIDING_WITH_PARTNER                  0.000456   0.000800
+    13    HSBND_DESIRE_FOR_MORE_CHILDREN         0.000452   0.000756
+    14    LAST_METHOD_DISCONTINUED               0.000201   0.001570
+  * 15    LAST_SOURCE_TYPE                       0.000000   0.000000
+  * 16    TOLD_ABT_SIDE_EFFECTS                  0.000000   0.000000
+  * 17    REASON_DISCONTINUED                   -0.000218   0.001122
+  * 18    MARITAL_STATUS                        -0.000673   0.000871
+  * 19    HUSBANDS_EDUC                         -0.001872   0.001616
+  * 20    PARTNER_EDUC                          -0.001929   0.001807
+  * 21    OCCUPATION                            -0.002011   0.001949
+  * 22    WANT_LAST_CHILD                       -0.002085   0.000711
+  * 23    EDUC_LEVEL                            -0.002968   0.001415
+  * 24    MONTH_USE_CURRENT_METHOD              -0.007365   0.004491
+
+  (* = zero or negative importance — excluded from _REDUCED_B and _REDUCED_C)
+
+======================================================================
+  SECTION 2 — RECOMMENDED _REDUCED_B (strictly positive importance)
+======================================================================
+  Features (N=14):
+    - PATTERN_USE
+    - HUSBAND_AGE
+    - AGE
+    - ETHNICITY
+    - HOUSEHOLD_HEAD_SEX
+    - CONTRACEPTIVE_METHOD
+    - SMOKE_CIGAR
+    - DESIRE_FOR_MORE_CHILDREN
+    - PARITY
+    - RELIGION
+    - WANT_LAST_PREGNANCY
+    - RESIDING_WITH_PARTNER
+    - HSBND_DESIRE_FOR_MORE_CHILDREN
+    - LAST_METHOD_DISCONTINUED
+
+======================================================================
+  SECTION 3 — RECOMMENDED _REDUCED_C (elbow / cumulative >= 80%)
+======================================================================
+  Features (N=9, min=9, max=12):
+    - PATTERN_USE                     cumulative=85.1%
+    - HUSBAND_AGE                     cumulative=88.7%
+    - AGE                             cumulative=90.4%
+    - ETHNICITY                       cumulative=92.1%
+    - HOUSEHOLD_HEAD_SEX              cumulative=93.7%
+    - CONTRACEPTIVE_METHOD            cumulative=94.9%
+    - SMOKE_CIGAR                     cumulative=96.0%
+    - DESIRE_FOR_MORE_CHILDREN        cumulative=97.1%
+    - PARITY                          cumulative=98.2%
+
+======================================================================
+  NOTE: This script is READ-ONLY.
+  It does NOT modify any config.py file.
+  After reviewing this output, manually update _REDUCED_B and
+  _REDUCED_C in both config files as described in Task 07.
+======================================================================

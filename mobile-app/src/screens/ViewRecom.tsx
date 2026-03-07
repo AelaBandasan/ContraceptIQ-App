@@ -1,123 +1,303 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { openDrawer } from '../navigation/NavigationService';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getMECColor, getMECLabel, MECCategory, calculateMatchScore, calculateMEC } from '../services/mecService';
+import { colors, shadows } from '../theme';
+import { useAssessment } from '../context/AssessmentContext';
+import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 
-type Props = {
-  navigation: DrawerNavigationProp<any, any>;
+const prefLabels: Record<string, string> = {
+  effectiveness: "Effectiveness",
+  sti: "STI Prevention",
+  nonhormonal: "Non-hormonal",
+  regular: "Regular Bleeding",
+  privacy: "Privacy",
+  client: "Client controlled",
+  longterm: "Long-term protection",
 };
 
-const ViewRecom: React.FC<Props> = ({ navigation }) => {
-  const contraceptives = [
+type Props = DrawerScreenProps<'ViewRecommendation'>;
+
+const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
+  const { assessmentResult, setAssessmentResult, selectedAgeIndex, selectedPrefs: contextPrefs } = useAssessment();
+  const { ageLabel, ageValue, prefs, mecResults, isDoctorAssessment } = route.params || {};
+
+  // For Guest mode, we might not have route.params if navigated from side menu
+  const finalPrefs = prefs || contextPrefs || [];
+  const finalAgeValue = ageValue ?? (selectedAgeIndex !== null ? selectedAgeIndex : 2); // Default to index 2 (20-39)
+
+  const ageNumericValues = [16, 18, 30, 42, 50];
+  const currentNumericAge = ageNumericValues[finalAgeValue] || 30;
+
+  const finalMecResults = useMemo(() => {
+    if (mecResults) return mecResults;
+    return calculateMEC({ age: currentNumericAge });
+  }, [mecResults, currentNumericAge]);
+
+  // Define contraceptives with their MEC key mapping
+  const baseContraceptives = [
     {
-      name: 'Implant',
-      image: require('../../assets/image/implantt.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#FF6B6B',
+      name: 'LNG - ETG ( Implant)',
+      mecKey: 'Implant' as const,
+      image: require('../../assets/image/sq_lngetg.png'),
+      description: 'Long-acting, highly effective',
     },
     {
-      name: 'Injectables',
-      image: require('../../assets/image/injectables.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#16A085',
+      name: 'DMPA (Injectable)',
+      mecKey: 'DMPA' as const,
+      image: require('../../assets/image/sq_dmpainj.png'),
+      description: 'Injection every 3 months',
     },
     {
-      name: 'Patch',
-      image: require('../../assets/image/patchh.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#FFB84D',
+      name: 'CHC (Patch/Pills/Ring)',
+      mecKey: 'CHC' as const,
+      image: require('../../assets/image/sq_chcpills.png'),
+      description: 'Combined hormonal methods',
     },
     {
-      name: 'Cu-IUD',
-      image: require('../../assets/image/copperiud.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#4A90E2',
+      name: 'Cu-IUD (Copper-IUD)',
+      mecKey: 'Cu-IUD' as const,
+      image: require('../../assets/image/sq_cuiud.png'),
+      description: 'Non-hormonal, long-acting',
     },
     {
-      name: 'Pills',
-      image: require('../../assets/image/pillss.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#58D68D',
+      name: 'POP (Progestin-Only Pills)',
+      mecKey: 'POP' as const,
+      image: require('../../assets/image/sq_poppills.png'),
+      description: 'Daily progestin pill',
     },
     {
-      name: 'Hormonal IUD',
-      image: require('../../assets/image/leviud.png'),
-      preferences: 'preference 1, preference 2, preference 3',
-      color: '#A569BD',
+      name: 'LNG-IUD (Hormonal - IUD)',
+      mecKey: 'LNG-IUD' as const,
+      image: require('../../assets/image/sq_lngiud.png'),
+      description: 'Hormonal IUD, long-acting',
     },
   ];
 
-  const [selected, setSelected] = useState(contraceptives[3]);
+  // Sort by MEC category (safest first) and add color
+  // Sort by MEC category (safest first) AND Preference Match (highest first)
+  const contraceptives = useMemo(() => {
+    if (!mecResults) {
+      return baseContraceptives.map(c => ({
+        ...c,
+        mecCategory: 1 as MECCategory,
+        color: getMECColor(1),
+        matchScore: calculateMatchScore(c.mecKey, prefs || [])
+      })).sort((a, b) => b.matchScore - a.matchScore);
+    }
+
+    return baseContraceptives
+      .map(c => ({
+        ...c,
+        mecCategory: mecResults[c.mecKey] as MECCategory,
+        color: getMECColor(mecResults[c.mecKey]),
+        matchScore: calculateMatchScore(c.mecKey, prefs || [])
+      }))
+      .sort((a, b) => {
+        // 1. Primary Sort: Safety (MEC Category Ascending: 1 is best)
+        if (a.mecCategory !== b.mecCategory) {
+          return a.mecCategory - b.mecCategory;
+        }
+        // 2. Secondary Sort: Preference Match (Score Descending: 100% is best)
+        return b.matchScore - a.matchScore;
+      });
+  }, [mecResults, prefs]);
+
+  const [selected, setSelected] = useState(contraceptives[0]);
+
+  useEffect(() => {
+    const stillExists = contraceptives.some((c) => c.name === selected?.name);
+    if (!stillExists && contraceptives.length > 0) {
+      setSelected(contraceptives[0]);
+    }
+  }, [contraceptives, selected]);
+
+  const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
 
   const nextMethod = () => {
-    const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
     if (currentIndex < contraceptives.length - 1) setSelected(contraceptives[currentIndex + 1]);
   };
 
   const prevMethod = () => {
-    const currentIndex = contraceptives.findIndex((c) => c.name === selected.name);
     if (currentIndex > 0) setSelected(contraceptives[currentIndex - 1]);
   };
 
+  const handleSave = () => {
+    // Save the selection to context
+    setAssessmentResult({
+      riskLevel: "LOW", // Default for guest recommendation
+      confidence: 1,
+      recommendation: `Recommended method: ${selected.name}`,
+      contraceptiveMethod: selected.name,
+      timestamp: new Date().toISOString(),
+    });
+
+    Alert.alert(
+      "Result Saved",
+      "Your recommendation has been saved to your preferences.",
+      [{ text: "OK", onPress: () => navigation.navigate("Preferences") }]
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
+          <View
+            style={styles.menuButtonSolid}
+          >
+            <Ionicons name="chevron-back" size={24} color="#FFF" />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerText}>Recommended for You</Text>
+        </View>
+
+        <TouchableOpacity onPress={() => (navigation as any).navigate('ColorMapping')} style={styles.infoButton}>
+          <View
+            style={styles.menuButtonSolid}
+          >
+            <Ionicons name="information-circle-outline" size={24} color="#FFF" />
+          </View>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 90 }}
+        contentContainerStyle={{ paddingTop: 20, paddingBottom: 90 }}
       >
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-            <Ionicons name="menu" size={35} color={'#000'} />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Recommendations</Text>
-          <View style={{ width: 35 }} />
-        </View>
-
-        <View style={styles.mainCircleWrapper}>
-          <TouchableOpacity onPress={prevMethod} style={styles.sideButton}>
-            <Ionicons name="chevron-back" size={28} color="#555" />
-          </TouchableOpacity>
-
-          <View style={[styles.mainCircle, { borderColor: selected.color }]}>
-            <Image source={selected.image} style={styles.mainImage} />
+        <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.heroCard}>
+          <LinearGradient
+            colors={['#FFFFFF', '#FFF7FB']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.recommendationShell}
+          >
+          <View style={styles.recommendationHeader}>
+            <Text style={styles.recommendationLabel}>Recommended Card</Text>
+            <View style={[styles.recommendationPill, { borderColor: selected.color }]}> 
+              <Text style={[styles.recommendationPillText, { color: selected.color }]}>MEC Based</Text>
+            </View>
           </View>
 
-          <TouchableOpacity onPress={nextMethod} style={styles.sideButton}>
-            <Ionicons name="chevron-forward" size={28} color="#555" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.deviceInfo}>
-          <Text style={styles.deviceName}>{selected.name}</Text>
-          <Text style={styles.preferencesText}>
-            <Text style={{ fontStyle: 'italic' }}>{selected.preferences}</Text>
-          </Text>
-        </View>
-
-        <TouchableOpacity style={styles.addNotesButton}>
-          <Ionicons name="create-outline" size={26} color="#fff" />
-        </TouchableOpacity>
-
-        <View style={styles.listContainer}>
-          {contraceptives.map((item, index) => (
+          <View style={styles.mainCircleWrapper}>
             <TouchableOpacity
-              key={index}
-              style={[
-                styles.listItem,
-                selected.name === item.name && styles.listItemSelected,
-              ]}
-              onPress={() => setSelected(item)}
+              onPress={prevMethod}
+              style={[styles.sideButton, currentIndex === 0 && styles.sideButtonDisabled]}
+              disabled={currentIndex === 0}
             >
-              <Image source={item.image} style={styles.listImage} />
-              <Text style={styles.listText}>{item.name}</Text>
+              <Ionicons name="chevron-back" size={24} color={currentIndex === 0 ? '#94A3B8' : '#475569'} />
             </TouchableOpacity>
+
+            <View style={[styles.mainCircleHalo, { backgroundColor: `${selected.color}22` }]}>
+            <View style={[styles.mainCircle, { borderColor: selected.color, shadowColor: selected.color }]}> 
+              <Image source={selected.image} style={styles.mainImage} />
+            </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={nextMethod}
+              style={[styles.sideButton, currentIndex === contraceptives.length - 1 && styles.sideButtonDisabled]}
+              disabled={currentIndex === contraceptives.length - 1}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={currentIndex === contraceptives.length - 1 ? '#94A3B8' : '#475569'}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.deviceInfo}>
+            <Text style={styles.deviceName}>{selected.name}</Text>
+          </View>
+
+          {finalPrefs && finalPrefs.length > 0 && (
+            <View style={styles.prefsChipContainer}>
+              {finalPrefs.map((p) => (
+                <View key={p} style={styles.prefChip}>
+                  <Ionicons name="checkmark-circle" size={12} color={colors.primary} style={{ marginRight: 5 }} />
+                  <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.badgesRow}>
+            <View style={[styles.mecBadge, { backgroundColor: selected.color }]}> 
+              <Text style={styles.mecBadgeText}>{getMECLabel(selected.mecCategory)}</Text>
+            </View>
+            {(selected as any).matchScore > 0 && (
+              <View style={styles.matchBadge}>
+                <Ionicons name="thumbs-up" size={12} color="#fff" style={{ marginRight: 4 }} />
+                <Text style={styles.matchBadgeText}>{(selected as any).matchScore}% Match</Text>
+              </View>
+            )}
+          </View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* SAVE RESULT BUTTON / DOCTOR ACTION */}
+        {isDoctorAssessment ? (
+          <TouchableOpacity
+            style={[styles.consultButton, { backgroundColor: '#4A90E2' }]}
+            onPress={() => {
+              const preFilledData = {
+                AGE: ageValue ? ageValue.toString() : '25',
+                prefs: prefs || []
+              };
+              navigation.navigate('GuestAssessment', { preFilledData });
+            }}
+          >
+            <Text style={styles.consultButtonText}>Perform Clinical Assessment</Text>
+            <Ionicons name="medical-outline" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.consultButton, { backgroundColor: colors.success }]}
+            onPress={handleSave}
+          >
+            <Text style={styles.consultButtonText}>Save Recommendation</Text>
+            <Ionicons name="save-outline" size={24} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        )}
+
+        <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.listContainer}>
+          <View style={styles.listHeadingRow}>
+            <Text style={styles.listHeading}>All Methods</Text>
+            <View style={styles.listCountPill}>
+              <Text style={styles.listCountText}>{contraceptives.length}</Text>
+            </View>
+          </View>
+          {contraceptives.map((item, index) => (
+            <Animated.View key={item.name} entering={FadeInRight.delay(260 + index * 70).duration(360)}>
+              <TouchableOpacity
+                style={[
+                  styles.listItem,
+                  selected.name === item.name && [styles.listItemSelected, { borderColor: item.color }],
+                ]}
+                onPress={() => setSelected(item)}
+                activeOpacity={0.85}
+              >
+                <Image source={item.image} style={styles.listImage} />
+                <View style={styles.listTextWrap}>
+                  <Text style={styles.listText}>{item.name}</Text>
+                  <Text style={styles.listSubText}>{item.description}</Text>
+                </View>
+                {selected.name === item.name && (
+                  <Ionicons name="checkmark-circle" size={20} color={item.color} />
+                )}
+              </TouchableOpacity>
+            </Animated.View>
           ))}
-        </View>
+        </Animated.View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -126,50 +306,128 @@ export default ViewRecom;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FAFC',
   },
   containerOne: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FAFC',
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    marginTop: 10,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
     marginBottom: 20,
   },
+  titleContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  headerAppTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFDBEB',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   menuButton: {
-    padding: 5,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  menuButtonSolid: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 21,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  heroCard: {
+    marginHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#FCE7F3',
+    ...shadows.md,
+    overflow: 'hidden',
+  },
+  recommendationShell: {
+    padding: 18,
+  },
+  recommendationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  recommendationLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  recommendationPill: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#FFFFFFE6',
+  },
+  recommendationPillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   mainCircleWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 8,
   },
   sideButton: {
-    backgroundColor: '#D9D9D9',
-    padding: 10,
-    borderRadius: 8,
-  },
-  mainCircle: {
-    height: 160,
-    width: 160,
-    borderRadius: 80,
-    borderWidth: 15,
+    backgroundColor: '#FFFFFF',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 25,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...shadows.sm,
+  },
+  sideButtonDisabled: {
+    opacity: 0.5,
+  },
+  mainCircleHalo: {
+    height: 194,
+    width: 194,
+    borderRadius: 97,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 14,
+  },
+  mainCircle: {
+    height: 170,
+    width: 170,
+    borderRadius: 85,
+    borderWidth: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.22,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
@@ -181,16 +439,26 @@ const styles = StyleSheet.create({
   },
   deviceInfo: {
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 12,
   },
   deviceName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
   },
   preferencesText: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 3,
+    color: '#64748B',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  badgesRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
   },
   addNotesButton: {
     alignSelf: 'center',
@@ -203,14 +471,39 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   listContainer: {
-    marginTop: 30,
+    marginTop: 24,
     paddingHorizontal: 20,
+  },
+  listHeadingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  listHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginLeft: 2,
+  },
+  listCountPill: {
+    backgroundColor: '#FCE7F3',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#FBCFE8',
+  },
+  listCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 15,
     marginBottom: 12,
@@ -219,11 +512,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   listItemSelected: {
-    backgroundColor: '#E8F0FF',
+    backgroundColor: '#F8FAFF',
     borderWidth: 2,
-    borderColor: '#4A90E2',
   },
   listImage: {
     width: 50,
@@ -231,9 +525,91 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginRight: 15,
   },
+  listTextWrap: {
+    flex: 1,
+  },
   listText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  listSubText: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  consultButton: {
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 20,
+    marginTop: 18,
+    paddingVertical: 16,
+    borderRadius: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  consultButtonText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  mecBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 14,
+    alignSelf: 'center',
+  },
+  mecBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  matchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  matchBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  prefsChipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  prefChip: {
+    backgroundColor: '#FFF1F7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#FBCFE8',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  prefChipText: {
+    fontSize: 12,
+    color: '#E45A92',
+    fontWeight: '700',
+  },
+  infoButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: 44,
+    height: 44,
   },
 });

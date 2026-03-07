@@ -1,142 +1,166 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, ToastAndroid, Platform, Alert, Dimensions } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
+import React from 'react';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { RootStackScreenProps } from '../types/navigation';
-import { typography, spacing } from '../theme';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
+import { typography, spacing, colors, borderRadius, shadows } from '../theme';
+import { useAssessment } from '../context/AssessmentContext';
+import { calculateMEC, calculateMatchScore, MECCategory, getMECColor, getMECLabel } from '../services/mecService';
+import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 
-type Props = RootStackScreenProps<"Preferences">;
+const prefLabels: Record<string, string> = {
+  effectiveness: "Effectiveness",
+  sti: "STI Prevention",
+  nonhormonal: "Non-hormonal",
+  regular: "Regular Bleeding",
+  privacy: "Privacy",
+  client: "Client controlled",
+  longterm: "Long-term protection",
+};
+
+type Props = DrawerScreenProps<"Preferences">;
 
 const Preferences = ({ navigation }: Props) => {
-  const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
+  const insets = useSafeAreaInsets();
+  const { selectedAgeIndex, selectedPrefs: chosenPrefs } = useAssessment();
 
-  const preferences = [
-    {
-      key: "effectiveness",
-      label: "Effectiveness",
-      description: "Most reliable at preventing pregnancy",
-      icon: require("../../assets/image/star.png"),
-    },
-    {
-      key: "sti",
-      label: "STI Prevention",
-      description: "Protection against STIs/HIV",
-      icon: require("../../assets/image/shield.png"),
-    },
-    {
-      key: "nonhormonal",
-      label: "Non-hormonal",
-      description: "Hormone-free option",
-      icon: require("../../assets/image/forbidden.png"),
-    },
-    {
-      key: "regular",
-      label: "Regular Bleeding",
-      description: "Helps with cramps or heavy bleeding",
-      icon: require("../../assets/image/blood.png"),
-    },
-    {
-      key: "privacy",
-      label: "Privacy",
-      description: "Can be used without others knowing",
-      icon: require("../../assets/image/privacy.png"),
-    },
-    {
-      key: "client",
-      label: "Client controlled",
-      description: "Can start or stop it myself",
-      icon: require("../../assets/image/responsibility.png"),
-    },
-    {
-      key: "longterm",
-      label: "Long-term protection",
-      description: "Lasts for years with little action",
-      icon: require("../../assets/image/calendar.png"),
-    },
+  // Age ranges mapping
+  const ageRanges = [
+    { label: "< 18", value: 0, fullLabel: "Menarche to < 18 years", numericAge: 16 },
+    { label: "18-19", value: 1, fullLabel: "18 - 19 years", numericAge: 18 },
+    { label: "20-39", value: 2, fullLabel: "20 - 39 years", numericAge: 30 },
+    { label: "40-45", value: 3, fullLabel: "40 - 45 years", numericAge: 42 },
+    { label: "≥ 46", value: 4, fullLabel: "≥ 46 years", numericAge: 50 },
   ];
 
-  const showMaxAlert = () => {
-    const message = 'You can only select up to 3 characteristics.';
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    } else {
-      Alert.alert('Limit Reached', message);
-    }
-  };
+  // Base methods for calculation
+  const baseContraceptives = [
+    { name: 'Implant', mecKey: 'Implant' as const, image: require('../../assets/image/implantt.png') },
+    { name: 'DMPA (Injectable)', mecKey: 'DMPA' as const, image: require('../../assets/image/injectables.png') },
+    { name: 'CHC (Patch/Pills/Ring)', mecKey: 'CHC' as const, image: require('../../assets/image/patchh.png') },
+    { name: 'Cu-IUD (Copper)', mecKey: 'Cu-IUD' as const, image: require('../../assets/image/copperiud.png') },
+    { name: 'POP (Progestin-Only Pills)', mecKey: 'POP' as const, image: require('../../assets/image/pillss.png') },
+    { name: 'LNG-IUD (Hormonal)', mecKey: 'LNG-IUD' as const, image: require('../../assets/image/leviud.png') },
+  ];
 
-  const togglePreference = (key: string) => {
-    const isSelected = selectedPrefs.includes(key);
+  // Calculate recommendations
+  const topRecommendations = React.useMemo(() => {
+    const age = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].numericAge : 25;
+    const mecResults = calculateMEC({ age });
 
-    if (isSelected) {
-      setSelectedPrefs(selectedPrefs.filter((item) => item !== key));
-    } else {
-      if (selectedPrefs.length >= 3) {
-        showMaxAlert();
-        return;
-      }
-      setSelectedPrefs([...selectedPrefs, key]);
-    }
-  };
+    return baseContraceptives
+      .map(c => ({
+        ...c,
+        mecCategory: mecResults[c.mecKey] as MECCategory,
+        color: getMECColor(mecResults[c.mecKey]),
+        matchScore: calculateMatchScore(c.mecKey, chosenPrefs)
+      }))
+      .sort((a, b) => {
+        if (a.mecCategory !== b.mecCategory) return a.mecCategory - b.mecCategory;
+        return b.matchScore - a.matchScore;
+      })
+      .slice(0, 3); // Get top 3
+  }, [selectedAgeIndex, chosenPrefs]);
 
-  const handleViewRecommendation = () => {
-    navigation.navigate("ViewRecommendation");
+  const handleEdit = () => {
+    navigation.navigate("Recommendation");
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
+          <View style={styles.menuButtonSolid}>
+            <Ionicons name="menu" size={24} color="#FFF" />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerText}>My Preferences</Text>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.containerOne}
         showsVerticalScrollIndicator
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 20, paddingBottom: 100 }}
       >
-
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={openDrawer} style={styles.menuButton}>
-            <Ionicons name="menu" size={35} color={'#000'} />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>What's Right for Me?</Text>
-          <View style={{ width: 35 }} />
-        </View>
-
         <View style={styles.screenCont}>
-          <Text style={styles.header2}>Preferences</Text>
-          <Text style={styles.header3}>What's important to you</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.header2}>My Choices</Text>
+            <TouchableOpacity onPress={handleEdit}>
+              <Text style={styles.editText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
 
-          {preferences.map((pref) => {
-            const selected = selectedPrefs.includes(pref.key);
+          {/* Preferences Summary */}
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(800)}
+            style={styles.summaryCard}
+          >
+            <View style={styles.cardHeaderLine} />
+            <Text style={styles.summaryTitle}>Selected Preferences</Text>
+            <View style={styles.prefsChipContainer}>
+              {chosenPrefs.length > 0 ? chosenPrefs.map((p, idx) => (
+                <Animated.View
+                  key={p}
+                  entering={ZoomIn.delay(400 + (idx * 100))}
+                  style={styles.prefChip}
+                >
+                  <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
+                </Animated.View>
+              )) : <Text style={styles.emptyText}>No preferences selected.</Text>}
+            </View>
 
-            return (
+            <View style={styles.ageRow}>
+              <Ionicons name="calendar-outline" size={18} color="#666" style={{ marginRight: 8 }} />
+              <Text style={styles.ageLabel}>Age Range:</Text>
+              <Text style={styles.ageValue}>{selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].label : 'Not set'}</Text>
+            </View>
+          </Animated.View>
+
+          {/* Personalized Recommendations */}
+          <Animated.View entering={FadeInDown.delay(400).duration(800)}>
+            <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
+            <Text style={styles.header3}>Based on your preferences and age</Text>
+          </Animated.View>
+
+          {topRecommendations.map((item, index) => (
+            <Animated.View
+              key={index}
+              entering={FadeInRight.delay(600 + (index * 150)).duration(600)}
+            >
               <TouchableOpacity
-                key={pref.key}
-                activeOpacity={0.9}
-                onPress={() => togglePreference(pref.key)}
-                style={[
-                  styles.prefCont,
-                  selected && { backgroundColor: '#E6F5E9', borderColor: '#2E8B57', borderWidth: 2 },
-                ]}
+                style={styles.recomCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('ViewRecommendation', {
+                  ageLabel: selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '',
+                  prefs: chosenPrefs,
+                })}
               >
-                <View style={styles.prefHeader}>
-                  <Image source={pref.icon} style={styles.prefIcon} />
-                  <Text style={styles.prefLabel}>{pref.label}</Text>
-                  {selected && <Ionicons name="checkmark-circle" size={22} color="#2E8B57" />}
+                <View style={[styles.rankIndicator, { backgroundColor: item.color }]} />
+                <View style={styles.recomIconContainer}>
+                  <Image source={item.image} style={styles.recomIcon} />
                 </View>
-
-                {selected && (
-                  <Text style={styles.prefDescription}>{pref.description}</Text>
-                )}
+                <View style={styles.recomInfo}>
+                  <Text style={styles.recomName}>{item.name}</Text>
+                  <View style={styles.matchBadge}>
+                    <Ionicons name="sparkles" size={12} color={colors.primary} />
+                    <Text style={styles.matchText}>{item.matchScore}% Match</Text>
+                  </View>
+                </View>
+                <View style={styles.chevronContainer}>
+                  <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                </View>
               </TouchableOpacity>
-            );
-          })}
-
-          <TouchableOpacity style={styles.prefButton} onPress={handleViewRecommendation}>
-            <Text style={styles.prefRecomButton}>View Recommendation</Text>
-          </TouchableOpacity>
+            </Animated.View>
+          ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -152,79 +176,203 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 8,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   menuButton: {
-    padding: 5,
+    zIndex: 10,
+  },
+  menuButtonSolid: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flex: 1,
+    marginLeft: 15,
   },
   headerText: {
-    fontSize: 21,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFF',
   },
   screenCont: {
     paddingHorizontal: 20,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   header2: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.medium,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
   },
   header3: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#444',
-    marginTop: 5,
-    marginBottom: 15,
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    marginBottom: 16,
   },
-  prefCont: {
-    elevation: 10,
-    backgroundColor: '#FBFBFB',
-    width: '100%',
-    borderRadius: 10,
-    marginTop: 15,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 1, height: 1 },
-    alignSelf: 'center',
+  editText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 16,
   },
-  prefHeader: {
+  summaryCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cardHeaderLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: colors.primary,
+  },
+  summaryTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#999',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  prefsChipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 20,
+  },
+  prefChip: {
+    backgroundColor: '#FFF0F6',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFD9E8',
+  },
+  prefChipText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  ageRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+    paddingTop: 16,
   },
-  prefIcon: {
-    resizeMode: "contain",
-    height: 35,
-    width: 35,
+  ageLabel: {
+    fontSize: 15,
+    color: '#555',
+    fontWeight: '500',
   },
-  prefLabel: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.semibold,
-    paddingLeft: spacing.sm,
-    flex: 1,
+  ageValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+    marginLeft: 4,
   },
-  prefDescription: {
-    marginTop: 8,
+  emptyText: {
     fontSize: 15,
     fontStyle: 'italic',
-    color: '#444',
+    color: '#999',
+    marginBottom: 10,
   },
-  prefButton: {
-    marginTop: 30,
-    width: '100%',
+  recomCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
   },
-  prefRecomButton: {
-    textAlign: 'center',
+  rankIndicator: {
+    width: 6,
+    height: '100%',
+    borderRadius: 3,
+    marginRight: 16,
+  },
+  recomIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#F9F9F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  recomIcon: {
+    width: 42,
+    height: 42,
+    resizeMode: 'contain',
+  },
+  recomInfo: {
+    flex: 1,
+  },
+  recomName: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#E45A92', // Assuming this is the theme color based on earlier files
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+  matchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF0F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  matchText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  chevronContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFF0F6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
