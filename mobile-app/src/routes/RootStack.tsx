@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DrawerNavigator from './DrawerNavigator';
 import UserStartingScreen from '../screens/UserStartingScreen';
 import LoginforOB from '../screens/ObSide/LoginforOB';
-import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
 import GuestAssessment from '../screens/GuestAssessment';
 import MethodDetail from '../screens/MethodDetail';
 import SignupforOB from '../screens/ObSide/SignupforOB';
@@ -34,7 +33,6 @@ const RootStack = () => {
       {/* Doctor Flow */}
       <Stack.Screen name="ObMainTabs" component={ObTabNavigator} />
       <Stack.Screen name="ObAssessment" component={ObAssessment} />
-      <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
       <Stack.Screen name="MethodDetail" component={MethodDetail} />
       <Stack.Screen name="PregnancyPlanning" component={PregnancyPlanningScreen} />

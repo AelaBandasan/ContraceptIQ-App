@@ -42,8 +42,8 @@ import {
 import RiskAssessmentCard, {
   generateKeyFactors,
 } from "../../components/RiskAssessmentCard";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "../../config/firebaseConfig";
+import { auth } from "../../config/firebaseConfig";
+import { saveAssessment, AssessmentRecord } from "../../services/doctorService";
 import ObHeader from "../../components/ObHeader";
 import { WHO_MEC_CONDITIONS } from "../../data/whoMecData";
 import { MecTreeSelector } from "../../components/MecTreeSelector";
@@ -185,7 +185,6 @@ const ObAssessment = ({ navigation, route }: any) => {
     Record<string, RiskAssessmentResponse | null>
   >({});
   const [, setMethodEligibility] = useState<Record<string, number>>({});
-  const [mecRecommendations, setMecRecommendations] = useState<string[]>([]);
   const [mecResults, setMecResults] = useState<MECResult | null>(null);
 
   // MEC state
@@ -197,50 +196,36 @@ const ObAssessment = ({ navigation, route }: any) => {
   const [activeSelectorField, setActiveSelectorField] = useState<any>(null);
 
   // Clinical notes
-  const [clinicalNotes] = useState("");
+  const [clinicalNotes, setClinicalNotes] = useState("");
 
-  // ─── Load existing consultation ───────────────────────────────────────────
+  // ─── Load existing record (view mode) ─────────────────────────────────────
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      if (route.params?.patientData) {
-        const data = route.params.patientData;
-        setFormData(data.details || data);
-        if (data.mec_recommendations) setMecRecommendations(data.mec_recommendations);
-        if (data.method_eligibility) setMethodEligibility(data.method_eligibility);
-        setScreen("results");
-      } else if (route.params?.consultationId) {
-        try {
-          const snap = await getDoc(doc(db, "consultations", route.params.consultationId));
-          if (snap.exists()) {
-            const data = snap.data() as any;
-            const pd = data.patientData || {};
-            setFormData(pd.details || pd);
-            if (pd.mec_recommendations) setMecRecommendations(pd.mec_recommendations);
-            if (pd.method_eligibility) setMethodEligibility(pd.method_eligibility);
-            if (data.riskResults) {
-              const restored: Record<string, RiskAssessmentResponse> = {};
-              Object.entries(data.riskResults).forEach(([method, res]: [string, any]) => {
-                restored[method] = {
-                  risk_level: res.riskLevel,
-                  confidence: res.confidence,
-                  recommendation: res.recommendation,
-                  xgb_probability: res.probability,
-                  upgraded_by_dt: res.upgradedByDt || false,
-                };
-              });
-              setAllMethodResults(restored);
-            }
-          }
-        } catch {
-          Alert.alert("Error", "Failed to load patient data.");
-        }
-        setScreen("results");
-      }
-      setIsLoading(false);
-    };
-    load();
+    const record = route.params?.record as AssessmentRecord | undefined;
+    if (!record) return;
+
+    setFormData(record.patientData || {});
+    setClinicalNotes(record.clinicalNotes || "");
+
+    if (record.riskResults) {
+      const restored: Record<string, RiskAssessmentResponse> = {};
+      Object.entries(record.riskResults).forEach(([method, res]) => {
+        restored[method] = {
+          risk_level: res.riskLevel as "LOW" | "HIGH",
+          confidence: res.confidence,
+          recommendation: res.recommendation,
+          xgb_probability: res.probability,
+          upgraded_by_dt: false,
+        };
+      });
+      setAllMethodResults(restored);
+    }
+
+    if (record.mecResults) {
+      setMecResults(record.mecResults as any);
+    }
+
+    setScreen("results");
   }, [route.params]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -303,11 +288,6 @@ const ObAssessment = ({ navigation, route }: any) => {
         (key) => { eligibility[key] = mecOut.mecCategories[key]; }
       );
       setMethodEligibility(eligibility);
-      setMecRecommendations(
-        (Object.keys(mecOut.mecCategories) as Array<keyof typeof mecOut.mecCategories>)
-          .filter((key) => mecOut.mecCategories[key] <= 2)
-          .map((key) => key)
-      );
       setScreen("mec_results");
     } catch (e: any) {
       Alert.alert("MEC Calculation Failed", e.message || "Failed to calculate criteria.");
@@ -382,14 +362,27 @@ const ObAssessment = ({ navigation, route }: any) => {
 
   // ─── Save ─────────────────────────────────────────────────────────────────
 
-  const savePatientData = async (status: string) => {
+  const handleSaveAndFinish = async () => {
+    const resultCount = Object.values(allMethodResults).filter((r) => r !== null).length;
+    if (resultCount === 0) {
+      Alert.alert("No Assessment", "Please generate risk assessments first.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const consultationId = route.params?.consultationId;
-      const riskSummary: Record<string, any> = {};
+      const currentUser = auth.currentUser;
+      const doctorId = currentUser?.uid || "unknown";
+      const doctorName =
+        route.params?.doctorName ||
+        "Dr. " + (currentUser?.email?.split("@")[0] || "OB");
+
+      const hasHighRisk = Object.values(allMethodResults).some((r) => r?.risk_level === "HIGH");
+
+      const riskResults: AssessmentRecord["riskResults"] = {};
       Object.entries(allMethodResults).forEach(([method, result]) => {
         if (result) {
-          riskSummary[method] = {
+          riskResults[method] = {
             riskLevel: result.risk_level,
             probability: result.xgb_probability || 0,
             recommendation: result.recommendation,
@@ -398,39 +391,35 @@ const ObAssessment = ({ navigation, route }: any) => {
         }
       });
 
-      if (consultationId) {
-        const currentUser = auth.currentUser;
-        const obName =
-          route.params?.doctorName ||
-          "Dr. " + (currentUser?.email?.split("@")[0] || "OB");
-
-        await updateDoc(doc(db, "consultations", consultationId), {
-          patientData: { ...formData, mec_recommendations: mecRecommendations },
-          riskResults: riskSummary,
-          obId: currentUser?.uid || "unknown",
-          obName,
-          clinicalNotes: clinicalNotes || "Patient assessment completed.",
-          assessedAt: new Date().toISOString(),
-          status: status.toLowerCase(),
-        });
-        Alert.alert("Success", "Consultation record updated.");
+      const mecResultsToSave: Record<string, number> = {};
+      if (mecResults) {
+        Object.entries(mecResults).forEach(([k, v]) => { mecResultsToSave[k] = v as number; });
       }
+
+      const createdAt = new Date().toISOString();
+      const record: AssessmentRecord = {
+        id: `${doctorId}_${Date.now()}`,
+        doctorId,
+        doctorName,
+        patientName: formData.NAME || "Unknown Patient",
+        patientData: formData,
+        mecResults: mecResultsToSave,
+        mecConditionIds,
+        riskResults,
+        clinicalNotes: clinicalNotes.trim() || "",
+        status: hasHighRisk ? "critical" : "completed",
+        createdAt,
+        pendingSync: true,
+      };
+
+      await saveAssessment(record);
+      Alert.alert("Saved", "Assessment saved to your records.");
       navigation.navigate("ObMainTabs", { screen: "ObHome" });
     } catch {
-      Alert.alert("Save Failed", "Could not update consultation record.");
+      Alert.alert("Save Failed", "Could not save the assessment. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSaveAndFinish = () => {
-    const resultCount = Object.values(allMethodResults).filter((r) => r !== null).length;
-    if (resultCount === 0) {
-      Alert.alert("No Assessment", "Please generate risk assessments first.");
-      return;
-    }
-    const hasHighRisk = Object.values(allMethodResults).some((r) => r?.risk_level === "HIGH");
-    savePatientData(hasHighRisk ? "Critical" : "Completed");
   };
 
   // ─── Field renderer ───────────────────────────────────────────────────────
@@ -741,6 +730,19 @@ const ObAssessment = ({ navigation, route }: any) => {
               })}
             </>
           )}
+
+          {/* ── Clinical Notes ── */}
+          <View style={[styles.cardSection, { marginBottom: 0 }]}>
+            <Text style={styles.inputLabel}>Clinical Notes</Text>
+            <TextInput
+              style={[styles.textInput, { height: 90, textAlignVertical: "top", paddingTop: 10 }]}
+              placeholder="Add any clinical observations, referrals, or follow-up instructions…"
+              placeholderTextColor="#94A3B8"
+              value={clinicalNotes}
+              onChangeText={setClinicalNotes}
+              multiline
+            />
+          </View>
 
           <View style={{ height: 24 }} />
 

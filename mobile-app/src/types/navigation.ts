@@ -1,4 +1,5 @@
 import type { CompositeNavigationProp, CompositeScreenProps, RouteProp } from '@react-navigation/native';
+import type { AssessmentRecord } from '../services/doctorService';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -13,10 +14,6 @@ export type RootStackParamList = {
 
   ObMainTabs: { doctorName?: string };
 
-  ConsultationCodeScreen: {
-    patientData: any;
-    riskResult?: any;
-  };
   GuestAssessment: {
     preFilledData?: {
       AGE: string;
@@ -24,9 +21,8 @@ export type RootStackParamList = {
     };
   };
   ObAssessment: {
-    patientData: any;
-    mec_recommendations?: any;
-    consultationId?: string;
+    /** Pass an existing record to view results; omit for a fresh assessment */
+    record?: AssessmentRecord;
     doctorName?: string;
     isDoctorAssessment?: boolean;
   };
