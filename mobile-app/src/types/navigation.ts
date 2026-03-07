@@ -9,12 +9,10 @@ export type RootStackParamList = {
   LoginforOB: undefined;
   SignupforOB: undefined;
   MainDrawer: undefined;
+  PendingVerification: { doctorName?: string };
 
-  ObDrawer: { doctorName?: string };
-  AssessmentResultScreen: {
-    riskResult: any;
-    patientData: any;
-  };
+  ObMainTabs: { doctorName?: string };
+
   ConsultationCodeScreen: {
     patientData: any;
     riskResult?: any;
@@ -36,6 +34,11 @@ export type RootStackParamList = {
     methodId: 'chc' | 'pop' | 'implant' | 'cu-iud' | 'lng-ius' | 'dmpa';
   };
   PregnancyPlanning: undefined;
+
+  // WHO MEC Tool
+  ObWhoMecConditions: undefined;
+  ObWhoMecPreferences: { age: number; conditionIds: string[] };
+  ObWhoMecResults: { age: number; conditionIds: string[]; preferences: string[] };
 };
 
 // Drawer Navigator - main app navigation for authenticated users
@@ -86,28 +89,23 @@ export type UserTabParamList = {
   Preferences: undefined;
 };
 
-// OB Drawer Navigator
-export type ObDrawerParamList = {
-  ObMainTabs: undefined; // The OB Bottom Tab Navigator
-  ObHistory: undefined;
-  ObMethods: undefined; // Direct link if needed, though it's in tabs too
-  ObMecGuide: undefined;
-  ObEducation: undefined;
-  ObEmergency: undefined;
-  ObAbout: undefined;
-  ObFeedback: undefined;
-  ObSettings: undefined;
-  ObAssessment: undefined; // Kept for backward compatibility if needed
-};
-
 // OB Tab Navigator
 export type ObTabParamList = {
   ObHome: undefined;
   ObAssessment: { isDoctorAssessment: boolean };
   ObHistory: undefined;
-  ObRecommendations: { isDoctorAssessment?: boolean };
+
   ObMethods: { isDoctorAssessment?: boolean };
   ObProfile: undefined;
+  ObMecGuide: undefined;
+  ObFeedback: undefined;
+  ObSettings: undefined;
+  ObEducation: undefined;
+  ObEmergency: undefined;
+  ObAbout: undefined;
+
+  // WHO MEC Tool standalone tab (Preferences/Results navigate via RootStack)
+  ObWhoMecConditions: undefined;
 };
 
 // Navigation prop types for screens in the Root Stack
@@ -147,20 +145,8 @@ export type DrawerScreenProps<T extends keyof DrawerParamList> = {
   route: RouteProp<DrawerParamList, T>;
 };
 
-// Navigation prop types for screens in the OB Drawer
-export type ObDrawerScreenNavigationProp<T extends keyof ObDrawerParamList> =
-  CompositeNavigationProp<
-    DrawerNavigationProp<ObDrawerParamList, T>,
-    NativeStackNavigationProp<RootStackParamList>
-  >;
-
-export type ObDrawerScreenProps<T extends keyof ObDrawerParamList> = {
-  navigation: ObDrawerScreenNavigationProp<T>;
-  route: RouteProp<ObDrawerParamList, T>;
-};
-
 // Screen props for OB Tabs
 export type ObTabScreenProps<T extends keyof ObTabParamList> = CompositeScreenProps<
   BottomTabScreenProps<ObTabParamList, T>,
-  ObDrawerScreenProps<'ObMainTabs'>
+  RootStackScreenProps<'ObMainTabs'>
 >;

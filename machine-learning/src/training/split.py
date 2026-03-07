@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 
 # Load the full dataframe (not the train/test tuple)
 df = joblib.load(
-    "machine-learning/data/processed/discontinuation_design1_full_data_v2.pkl"
+    "data/processed/discontinuation_design1_full_data_v2.pkl"
 )
 
 TARGET = "HIGH_RISK_DISCONTINUE"
@@ -22,6 +22,14 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
+import pandas as pd
+
+# Explicitly cast categorical text to floats, replacing non-numerics with NaN
+cat_cols = X_train.select_dtypes(include=["object", "category"]).columns
+for col in cat_cols:
+    X_train[col] = pd.to_numeric(X_train[col], errors='coerce')
+    X_test[col] = pd.to_numeric(X_test[col], errors='coerce')
+
 joblib.dump(
     {
         "X_train": X_train,
@@ -29,7 +37,7 @@ joblib.dump(
         "y_train": y_train,
         "y_test": y_test
     },
-    "machine-learning/data/processed/train_test_data.pkl"
+    "data/processed/train_test_data.pkl"
 )
 
 print("✅ Fixed train/test split saved.")

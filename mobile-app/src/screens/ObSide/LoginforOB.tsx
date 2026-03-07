@@ -1,104 +1,53 @@
 import {
-  Alert,
   KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StatusBar,
   StyleSheet,
   Text,
-  TextInput,
-  View,
-  ActivityIndicator,
+  TouchableOpacity,
   Image,
+  TextInput,
+  Platform,
+  Pressable,
+  ActivityIndicator,
+  ScrollView,
+  Alert,
+  View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import Logo from "../../../assets/tempLogo.png";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  Easing,
-  FadeInDown,
-  FadeInUp,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import { Mail, Lock, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react-native";
+import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react-native";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-
-import Logo from "../../../assets/cl_tempLogo.png";
 import { auth, db } from "../../config/firebaseConfig";
-import { colors, shadows } from "../../theme";
+
+const COLORS = {
+  primary: "#D81B60",
+  primaryDark: "#AD1457",
+  textPrimary: "#0F172A",
+  border: "#E2E8F0",
+  white: "#FFFFFF",
+  placeholder: "#94A3B8",
+  error: "#EF4444",
+};
 
 const LoginforOB = ({ navigation }: any) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showDemoDetails, setShowDemoDetails] = useState(false);
 
-  const logoScale = useSharedValue(0.9);
-  const blob1Pos = useSharedValue(0);
-  const blob2Pos = useSharedValue(0);
-  const blob3Pos = useSharedValue(0);
+  const handleBackToUser = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
 
-  useEffect(() => {
-    logoScale.value = withRepeat(
-      withSequence(
-        withSpring(1.03, { damping: 10, stiffness: 20 }),
-        withSpring(0.97, { damping: 10, stiffness: 20 }),
-      ),
-      -1,
-      true,
-    );
-
-    blob1Pos.value = withRepeat(
-      withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-    blob2Pos.value = withRepeat(
-      withTiming(1, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-    blob3Pos.value = withRepeat(
-      withTiming(1, { duration: 12000, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-  }, [blob1Pos, blob2Pos, blob3Pos, logoScale]);
-
-  const animatedLogoStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: logoScale.value }],
-  }));
-
-  const blob1Style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: withSpring(blob1Pos.value * 20) },
-      { translateY: withSpring(blob1Pos.value * -30) },
-    ],
-  }));
-
-  const blob2Style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: withSpring(blob2Pos.value * -40) },
-      { translateY: withSpring(blob2Pos.value * 20) },
-    ],
-  }));
-
-  const blob3Style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: withSpring(blob3Pos.value * 30) },
-      { translateY: withSpring(blob3Pos.value * 36) },
-    ],
-  }));
-
-  const handleContinueAsGuest = () => navigation.navigate("UserStartingScreen");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "UserStartingScreen" }],
+    });
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -108,9 +57,15 @@ const LoginforOB = ({ navigation }: any) => {
 
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // 1. Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const user = userCredential.user;
 
+      // 2. Verify user exists in Firestore 'users' collection
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
@@ -120,8 +75,19 @@ const LoginforOB = ({ navigation }: any) => {
           userData.fullName ||
           "Dr. " + (userData.email ? userData.email.split("@")[0] : "User");
 
-        navigation.navigate("ObDrawer", { doctorName });
+        if (userData.verificationStatus === 'verified') {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "ObMainTabs", params: { doctorName } }]
+          });
+        } else {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "PendingVerification", params: { doctorName } }]
+          });
+        }
       } else {
+        // User is authenticated but not in our DB (e.g. deleted account or unauthorized)
         await signOut(auth);
         Alert.alert(
           "Access Denied",
@@ -129,6 +95,7 @@ const LoginforOB = ({ navigation }: any) => {
         );
       }
     } catch (error: any) {
+      console.error("Login Error:", error);
       let errorMessage = "An error occurred during sign in.";
 
       if (error.code === "auth/invalid-email") {
@@ -156,285 +123,228 @@ const LoginforOB = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar barStyle="dark-content" />
-      <LinearGradient
-        colors={["#FFFFFF", "#FFF9FB", "#FFF0F5"]}
-        style={styles.gradientBackground}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.content}
       >
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Animated.View style={[styles.blob, styles.blob1, blob1Style]} />
-          <Animated.View style={[styles.blob, styles.blob2, blob2Style]} />
-          <Animated.View style={[styles.blob, styles.blob3, blob3Style]} />
-        </View>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardContainer}
+        <Pressable style={styles.backLink} onPress={handleBackToUser}>
+          <Text style={styles.backLinkText}>Back to user login</Text>
+        </Pressable>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
-            <Animated.View entering={FadeInDown.duration(700)} style={styles.headerSection}>
-              <Animated.View style={[styles.logoContainer, animatedLogoStyle]}>
-                <Image source={Logo} style={styles.logo} resizeMode="contain" />
-              </Animated.View>
-              <Text style={styles.title}>ContraceptIQ</Text>
-              <Text style={styles.welcomeText}>OB Professional Sign In</Text>
-              <Text style={styles.subtext}>Secure access for smarter contraceptive care.</Text>
-            </Animated.View>
+          <View style={styles.logoSection}>
+            <View style={styles.logoContainer}>
+              <Image source={Logo} style={styles.logo} resizeMode="contain" />
+            </View>
+            <Text style={styles.title}>ContraceptIQ</Text>
+            <Text style={styles.welcomeText}>Create your OB Account</Text>
+            <Text style={styles.subtext}>
+              Your expertise. Smarter contraceptive care.
+            </Text>
+          </View>
 
-            <Animated.View entering={FadeInUp.delay(80).duration(650)} style={styles.demoBannerOutside}>
-              <Pressable style={styles.demoBannerTop} onPress={fillDemoCredentials}>
-                <Text style={styles.demoTitle}>Use Demo Credentials</Text>
-                <Text style={styles.demoHintInline}>Tap to auto-fill</Text>
-              </Pressable>
-              <Pressable
-                style={styles.demoToggle}
-                onPress={() => setShowDemoDetails((prev) => !prev)}
-              >
-                <Text style={styles.demoToggleText}>Show credentials</Text>
-                {showDemoDetails ? (
-                  <ChevronUp size={16} color={colors.primary} />
-                ) : (
-                  <ChevronDown size={16} color={colors.primary} />
-                )}
-              </Pressable>
-              {showDemoDetails ? (
-                <View style={styles.demoDetails}>
-                  <Text style={styles.demoText}>Email: ob@gmail.com</Text>
-                  <Text style={styles.demoText}>Password: password</Text>
-                </View>
-              ) : null}
-            </Animated.View>
+          <Pressable style={styles.demoBanner} onPress={fillDemoCredentials}>
+            <View style={styles.demoContent}>
+              <Text style={styles.demoTitle}>🎉 Demo Credentials</Text>
+              <Text style={styles.demoText}>Email: ob@gmail.com</Text>
+              <Text style={styles.demoText}>Password: password</Text>
+              <Text style={styles.demoHint}>Tap here to auto-fill</Text>
+            </View>
+          </Pressable>
 
-            <Animated.View entering={FadeInUp.delay(120).duration(700)} style={styles.formSection}>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email Address</Text>
-                <View style={styles.inputWrapper}>
-                  <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#9CA3AF"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+          <View style={styles.form}>
+            {/* Email */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
               </View>
+            </View>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#9CA3AF"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    {showPassword ? <EyeOff size={20} color="#9CA3AF" /> : <Eye size={20} color="#9CA3AF" />}
-                  </Pressable>
-                </View>
+            {/* Password */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color="#9CA3AF" />
+                  ) : (
+                    <Eye size={20} color="#9CA3AF" />
+                  )}
+                </Pressable>
               </View>
-
+              {/* Forgot Password */}
               <Pressable style={styles.forgotPassword}>
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </Pressable>
 
+              {/* Login Button */}
               <Pressable
-                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                style={[
+                  styles.loginButton,
+                  isLoading && styles.loginButtonDisabled,
+                ]}
                 onPress={handleLogin}
                 disabled={isLoading}
               >
-                <View style={styles.buttonContent}>
+                <View
+                  style={[styles.buttonGradient, { backgroundColor: COLORS.primary }]}
+                >
                   {isLoading ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.loginButtonText}>Sign In</Text>
+                    <>
+                      <Text style={styles.loginButtonText}>Sign In</Text>
+                      <ArrowRight size={20} color="#FFFFFF" />
+                    </>
                   )}
                 </View>
               </Pressable>
+            </View>
 
-              <View style={styles.registerSection}>
-                <Text style={styles.registerText}>Don't have an account? </Text>
-                <Pressable onPress={() => navigation.navigate("SignupforOB")}>
-                  <Text style={styles.registerLink}>Sign Up</Text>
-                </Pressable>
-              </View>
-
-              <Pressable style={styles.guestLink} onPress={handleContinueAsGuest}>
-                <Text style={styles.guestLinkText}>Continue as Guest</Text>
+            <View style={styles.registerSection}>
+              <Text style={styles.registerText}>Don't have an account? </Text>
+              <Pressable onPress={() => navigation.navigate("SignupforOB")}>
+                <Text style={styles.registerLink}>Sign Up</Text>
               </Pressable>
-            </Animated.View>
+            </View>
           </View>
-        </KeyboardAvoidingView>
-      </LinearGradient>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
+  backLink: {
+    marginTop: 4,
+    marginBottom: 8,
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  keyboardContainer: {
-    flex: 1,
+  backLinkText: {
+    color: COLORS.primary,
+    fontWeight: "600",
+    fontSize: 14,
+    textDecorationLine: "underline",
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 5,
-    paddingBottom: 20,
-    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
   },
-  blob: {
-    position: "absolute",
-    borderRadius: 200,
-    opacity: 0.14,
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
   },
-  blob1: {
-    top: -120,
-    left: -100,
-    width: 320,
-    height: 320,
-    backgroundColor: "#D81B60",
-  },
-  blob2: {
-    bottom: 20,
-    right: -130,
-    width: 360,
-    height: 360,
-    backgroundColor: "#FCE7F3",
-  },
-  blob3: {
-    top: 280,
-    left: -140,
-    width: 280,
-    height: 280,
-    backgroundColor: "#FDF2F8",
-  },
-  headerSection: {
+  logoSection: {
     alignItems: "center",
-    marginTop: hp("4%"),
-    marginBottom: 10,
+    marginTop: 20,
+    marginBottom: 32,
   },
   logoContainer: {
-    width: wp("48%"),
-    height: wp("48%"),
-    maxWidth: 190,
-    maxHeight: 190,
-    marginBottom: hp("0.2%"),
+    width: 120,
+    height: 120,
+    marginBottom: 16,
   },
   logo: {
     width: "100%",
     height: "100%",
   },
+  headerContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
   title: {
-    fontSize: hp("4.2%"),
-    fontWeight: "900",
-    color: "#D81B60",
-    letterSpacing: -0.8,
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#111827",
+    marginBottom: 8,
   },
   welcomeText: {
-    marginTop: 4,
-    fontSize: 19,
-    fontWeight: "700",
-    color: "#1F2937",
-    textAlign: "center",
-  },
-  subtext: {
-    marginTop: 6,
-    fontSize: 15,
-    color: "#6B7280",
-    textAlign: "center",
-  },
-  formSection: {
-    paddingHorizontal: 2,
-  },
-  demoBannerOutside: {
-    backgroundColor: "rgba(255, 247, 237, 0.95)",
-    borderWidth: 1,
-    borderColor: "#FED7AA",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 5,
-  },
-  demoBannerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  demoToggle: {
-    marginTop: 3,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  demoToggleText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  demoDetails: {
-    marginTop: 5,
-  },
-  demoHintInline: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  demoTitle: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 4,
   },
-  demoText: {
-    color: colors.primary,
+  subtext: {
     fontSize: 14,
+    color: "#6B7280",
+  },
+  demoBanner: {
+    backgroundColor: "#FFF7ED",
+    borderWidth: 1,
+    borderColor: "#FFEDD5",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  demoContent: {
+    alignItems: "center",
+  },
+  demoTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.primary,
+    marginBottom: 8,
+  },
+  demoText: {
+    fontSize: 13,
+    color: COLORS.primary,
     marginBottom: 2,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   demoHint: {
-    marginTop: 4,
-    color: colors.primary,
     fontSize: 12,
-    fontWeight: "700",
+    color: COLORS.primary,
+    marginTop: 8,
+    fontWeight: "600",
+  },
+  form: {
+    marginBottom: 24,
   },
   inputContainer: {
-    marginBottom: 10,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "600",
     color: "#374151",
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: hp("7.5%"),
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
@@ -446,59 +356,58 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: "flex-end",
-    marginTop: 2,
-    marginBottom: 10,
+    marginBottom: 24,
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: colors.primary,
-    fontWeight: "700",
+    color: COLORS.primary,
+    fontWeight: "600",
+    paddingTop: 10,
   },
   loginButton: {
-    height: hp("7.5%"),
-    borderRadius: 22,
+    borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: colors.primary,
-    ...shadows.md,
-    shadowColor: "#D81B60",
-    shadowOpacity: 0.3,
   },
   loginButtonDisabled: {
-    opacity: 0.65,
+    opacity: 0.6,
   },
-  buttonContent: {
-    flex: 1,
+  buttonGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 16,
+    gap: 8,
   },
   loginButtonText: {
-    fontSize: hp("2.3%"),
-    fontWeight: "800",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#FFFFFF",
+  },
+  signInButton: {
+    backgroundColor: COLORS.primary,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   registerSection: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 12,
+    marginBottom: 16,
   },
   registerText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6B7280",
   },
   registerLink: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: "800",
-  },
-  guestLink: {
-    alignSelf: "center",
-    marginTop: 8,
-  },
-  guestLinkText: {
-    fontSize: 15,
-    color: colors.primary,
+    fontSize: 14,
+    color: COLORS.primary,
     fontWeight: "700",
   },
 });

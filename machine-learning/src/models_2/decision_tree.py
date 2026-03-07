@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from preprocessing.preprocessor import build_preprocessor
 
 # Load split
-data = joblib.load("machine-learning/data/processed/train_test_data.pkl")
+data = joblib.load("data/processed/train_test_data.pkl")
 X_train, y_train = data["X_train"], data["y_train"]
 
 # Build the preprocessor with training data

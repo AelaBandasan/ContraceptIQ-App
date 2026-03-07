@@ -59,7 +59,7 @@ const Whatsrightforme: React.FC<Props> = ({ navigation, route }) => {
       setError(null);
       setIsModalVisible(false);
       if (isDoctorAssessment) {
-        (navigation as any).navigate("ObRecommendations");
+        (navigation as any).navigate("ObWhoMecConditions");
       } else {
         (navigation as any).navigate("Recommendation");
       }

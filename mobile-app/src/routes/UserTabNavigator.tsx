@@ -5,7 +5,7 @@ import { Home as HomeIcon, Sliders } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import Whatsrightforme from '../screens/Whatsrightforme';
-import Contraceptivemethods from '../screens/Contraceptivemethods';
+import Contraceptivemethods from '../screens/ObSide/Contraceptivemethods';
 import Preferences from '../screens/Preferences';
 import { colors, typography, shadows } from '../theme';
 import { UserTabParamList } from '../types/navigation';

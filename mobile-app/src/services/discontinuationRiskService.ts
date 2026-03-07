@@ -507,10 +507,12 @@ class DiscontinuationRiskService {
    * Handle axios errors with logging.
    */
   private handleError(error: AxiosError): Promise<never> {
-    console.error('API Error:', {
+    // Silence console.error to prevent Red Box overlays in development
+    // when using on-device fallbacks. Log as warn/debug instead.
+    console.warn("API Error (handled):", {
       status: error.response?.status,
       message: error.message,
-      data: error.response?.data,
+      code: error.code,
     });
 
     return Promise.reject(error);

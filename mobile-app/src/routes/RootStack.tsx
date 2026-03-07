@@ -7,10 +7,12 @@ import ConsultationCodeScreen from '../screens/ConsultationCodeScreen';
 import GuestAssessment from '../screens/GuestAssessment';
 import MethodDetail from '../screens/MethodDetail';
 import SignupforOB from '../screens/ObSide/SignupforOB';
-import ObDrawerNavigator from './ObDrawerNavigator';
+import PendingVerificationScreen from '../screens/ObSide/PendingVerificationScreen';
+import ObTabNavigator from './ObTabNavigator';
 import ObAssessment from '../screens/ObSide/ObAssessment';
-import AssessmentResultScreen from '../screens/ObSide/AssessmentResultScreen';
 import PregnancyPlanningScreen from '../screens/PregnancyPlanning';
+import WhoMecPreferencesScreen from '../screens/ObSide/WhoMecPreferencesScreen';
+import WhoMecResultsScreen from '../screens/ObSide/WhoMecResultsScreen';
 import { RootStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -27,15 +29,19 @@ const RootStack = () => {
 
       <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
       <Stack.Screen name="SignupforOB" component={SignupforOB} />
+      <Stack.Screen name="PendingVerification" component={PendingVerificationScreen} />
 
       {/* Doctor Flow */}
-      <Stack.Screen name="ObDrawer" component={ObDrawerNavigator} />
+      <Stack.Screen name="ObMainTabs" component={ObTabNavigator} />
       <Stack.Screen name="ObAssessment" component={ObAssessment} />
-      <Stack.Screen name="AssessmentResultScreen" component={AssessmentResultScreen} />
       <Stack.Screen name="ConsultationCodeScreen" component={ConsultationCodeScreen} />
       <Stack.Screen name="GuestAssessment" component={GuestAssessment} />
       <Stack.Screen name="MethodDetail" component={MethodDetail} />
       <Stack.Screen name="PregnancyPlanning" component={PregnancyPlanningScreen} />
+
+      {/* WHO MEC Steps */}
+      <Stack.Screen name="ObWhoMecPreferences" component={WhoMecPreferencesScreen} />
+      <Stack.Screen name="ObWhoMecResults" component={WhoMecResultsScreen} />
     </Stack.Navigator>
   );
 };

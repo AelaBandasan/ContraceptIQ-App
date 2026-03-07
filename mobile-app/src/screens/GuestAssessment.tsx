@@ -11,7 +11,7 @@ import { ActivityIndicator, Alert } from 'react-native';
 const STEPS = [
     { id: 'NAME', label: "What's your Name?", type: 'text', sub: "Let's get to know you first." },
     // Demographics
-    { id: 'AGE', label: "What's your Age?", type: 'wheel', sub: "This helps in personalizing results." },
+    { id: 'AGE', label: "What's your Age?", type: 'wheel', sub: "This helps in personalizing results.", range: [15, 60] },
     { id: 'REGION', label: "Where do you live?", type: 'select', options: ['NCR', 'CAR', 'Region I – Ilocos', 'Region II – Cagayan Valley', 'Region III – Central Luzon', 'Region IV-A – CALABARZON', 'Region IV-B – MIMAROPA', 'Region V – Bicol', 'Region VI – Western Visayas', 'Region VII – Central Visayas', 'Region VIII – Eastern Visayas', 'Region IX – Zamboanga Peninsula', 'Region X – Northern Mindanao', 'Region XI – Davao Region', 'Region XII – SOCCSKSARGEN', 'Region XIII – Caraga', 'BARMM'] },
     { id: 'EDUC_LEVEL', label: "What is the highest level of education you finished?", type: 'select', options: ['No formal education', 'Primary', 'Secondary', 'Senior High School', 'Vocational/Technical', 'College Undergraduate', 'College Graduate'] },
     { id: 'RELIGION', label: "What is your Religion?", type: 'select', options: ['Roman Catholic', 'Christian', 'Muslim', 'Iglesia ni Cristo', 'No Religion', 'Other Religion', 'Prefer not to say'] },
@@ -22,7 +22,7 @@ const STEPS = [
     { id: 'OCCUPATION', label: "Current Occupation", type: 'select', options: ['Unemployed', 'Student', 'Farmer', 'Others'] },
 
     // Partner & History
-    { id: 'HUSBAND_AGE', label: "Husband's Age", type: 'wheel' },
+    { id: 'HUSBAND_AGE', label: "Husband's Age", type: 'wheel', range: [15, 70] },
     { id: 'HUSBAND_EDUC_LEVEL', label: "Husband's Education Level", type: 'select', options: ['No formal education', 'Primary', 'Secondary', 'Senior High', 'College undergraduate', 'College graduate'] },
     { id: 'PARTNER_EDUC', label: "Partner's Education Level", type: 'select', options: ['No formal education', 'Primary', 'Secondary', 'Senior High', 'College undergraduate', 'College graduate'] },
     { id: 'HSBND_DESIRE_FOR_MORE_CHILDREN', label: "Husband's Desire for More Children", type: 'select', options: ['Yes', 'No', 'Not Sure'] },

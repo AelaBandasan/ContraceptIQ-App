@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 from src.models_2.decision_tree import get_decision_tree_high_recall
 from src.models_2.xgb_model import get_xgb_high_recall
-DATA_PATH = "machine-learning/data/processed/train_test_data.pkl"
+DATA_PATH = "data/processed/train_test_data.pkl"
 
 
 def load_data():

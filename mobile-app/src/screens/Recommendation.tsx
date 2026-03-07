@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { openDrawer } from '../navigation/NavigationService';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackScreenProps, ObTabScreenProps, DrawerScreenProps } from '../types/navigation';
+import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 import { calculateMEC } from '../services/mecService';
 import ObHeader from '../components/ObHeader';
@@ -15,7 +15,7 @@ import Animated, { FadeInDown, FadeInRight, ZoomIn, FadeIn, FadeInUp } from 'rea
 
 import { useAssessment } from '../context/AssessmentContext';
 
-type Props = ObTabScreenProps<'ObRecommendations'> | DrawerScreenProps<'Recommendation'>;
+type Props = DrawerScreenProps<'Recommendation'>;
 
 const Recommendation: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
@@ -26,6 +26,7 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
     setSelectedPrefs,
     reset
   } = useAssessment();
+  const [modalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new RNAnimated.Value(500)).current;
 
   // Check if we are in Doctor/OB mode
@@ -177,7 +178,12 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <View style={styles.safeArea}>
-      {isDoctorAssessment && <ObHeader title="Recommendations" subtitle="Results" />}
+      {isDoctorAssessment && (
+        <ObHeader
+          title="Recommendations"
+          subtitle="Results"
+        />
+      )}
 
       {!isDoctorAssessment && (
         <Animated.View
@@ -615,26 +621,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 10,
-  },
-  ageChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginBottom: 8,
-  },
-  ageChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
+
+
   ageChipText: {
     fontSize: 14,
     color: '#333',
