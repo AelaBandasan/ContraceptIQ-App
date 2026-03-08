@@ -151,10 +151,10 @@ export function calculateMEC(input: MECInput): MECResult {
  */
 export function getMECColor(category: MECCategory): string {
     switch (category) {
-        case 1: return '#22C55E'; // Green (Safe)
-        case 2: return '#EAB308'; // Yellow (Generally safe)
-        case 3: return '#F97316'; // Orange (Caution)
-        case 4: return '#EF4444'; // Red (Do not use)
+        case 1: return '#2E7D32'; // Green (Safe)
+        case 2: return '#F9A825'; // Yellow (Generally safe)
+        case 3: return '#EF6C00'; // Orange (Caution)
+        case 4: return '#D32F2F'; // Red (Do not use)
         default: return '#94A3B8';
     }
 }

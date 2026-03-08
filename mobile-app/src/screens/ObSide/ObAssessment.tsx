@@ -24,6 +24,7 @@ import {
   Leaf,
   Shield,
   ChevronLeft,
+  ChevronRight,
   ChevronDown,
   ChevronUp,
 } from "lucide-react-native";
@@ -181,9 +182,23 @@ const ObAssessment = ({ navigation, route }: any) => {
 
   // ─── Load existing record (view mode) ─────────────────────────────────────
 
+  const resetToNewAssessment = () => {
+    setFormData({});
+    setClinicalNotes("");
+    setAllMethodResults({});
+    setMecResults(null);
+    setMecConditionIds([]);
+    setMecPrefs([]);
+    setOpenDropdownFieldId(null);
+    setScreen("form");
+  };
+
   useEffect(() => {
     const record = route.params?.record as AssessmentRecord | undefined;
-    if (!record) return;
+    if (!record) {
+      resetToNewAssessment();
+      return;
+    }
 
     setFormData(record.patientData || {});
     setClinicalNotes(record.clinicalNotes || "");
@@ -226,7 +241,18 @@ const ObAssessment = ({ navigation, route }: any) => {
   };
 
   const togglePref = (key: string) =>
-    setMecPrefs((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
+    setMecPrefs((prev) => {
+      if (prev.includes(key)) {
+        return prev.filter((k) => k !== key);
+      }
+
+      if (prev.length >= 3) {
+        Alert.alert("Limit Reached", "You can select up to 3 preferences only.");
+        return prev;
+      }
+
+      return [...prev, key];
+    });
 
   // ─── Validation ───────────────────────────────────────────────────────────
 
@@ -245,6 +271,11 @@ const ObAssessment = ({ navigation, route }: any) => {
   // ─── MEC calculation ──────────────────────────────────────────────────────
 
   const generateMecResults = () => {
+    if (mecPrefs.length > 3) {
+      Alert.alert("Validation", "Please select up to 3 preferences only.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const age = parseInt(formData.AGE) || 25;
@@ -455,7 +486,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                     >
                       {option}
                     </Text>
-                    {isSelected ? <CheckCircle2 size={18} color={colors.primary} /> : null}
+                    {isSelected ? <CheckCircle2 size={20} color={colors.primary} /> : null}
                   </TouchableOpacity>
                 );
               })}
@@ -480,12 +511,12 @@ const ObAssessment = ({ navigation, route }: any) => {
     };
 
     const methodMap: Record<string, { label: string; image: any }> = {
-      CHC: { label: "Pills / Patch / Ring", image: require("../../../assets/image/sq_chcpills.png") },
-      POP: { label: "Progestogen-only Pill", image: require("../../../assets/image/sq_poppills.png") },
+      CHC: { label: "Combined Hormonal Contraceptive (CHC)", image: require("../../../assets/image/sq_chcpills.png") },
+      POP: { label: "Progestogen-only Pill (POP)", image: require("../../../assets/image/sq_poppills.png") },
       DMPA: { label: "Injectable (DMPA)", image: require("../../../assets/image/sq_dmpainj.png") },
-      Implant: { label: "Implant", image: require("../../../assets/image/sq_lngetg.png") },
-      "Cu-IUD": { label: "Copper IUD", image: require("../../../assets/image/sq_cuiud.png") },
-      "LNG-IUD": { label: "LNG-IUD (Hormonal)", image: require("../../../assets/image/sq_lngiud.png") },
+      Implant: { label: "Implant (LNG/ETG)", image: require("../../../assets/image/sq_lngetg.png") },
+      "Cu-IUD": { label: "Copper IUD (Cu-IUD)", image: require("../../../assets/image/sq_cuiud.png") },
+      "LNG-IUD": { label: "LNG-IUD (Levonorgestrel-IUD)", image: require("../../../assets/image/sq_lngiud.png") },
     };
 
     return (
@@ -509,16 +540,16 @@ const ObAssessment = ({ navigation, route }: any) => {
             }));
           if (methodsInCat.length === 0) return null;
           return (
-            <View key={cat} style={{ marginBottom: 16 }}>
+            <View key={cat} style={{ marginBottom: 8 }}>
               <View style={styles.mecCatRow}>
                 <View style={styles.mecCatBadge}>
-                  <Text style={styles.mecCatBadgeText}>Category {cat}</Text>
+                  <Text style={styles.mecCatBadgeText}>{cat}</Text>
                 </View>
                 <Text style={styles.mecCatDesc}>
-                  {cat === 1 ? "Freely use method"
-                    : cat === 2 ? "Advantages outweigh risks"
-                    : cat === 3 ? "Risks usually outweigh advantages"
-                    : "Do not use method"}
+                  {cat === 1 ? "Safe - No Restrictions"
+                    : cat === 2 ? "Generally Safe - Benefits > Risks"
+                    : cat === 3 ? "Use with Caution - Risks > Benefits"
+                    : "Not Recommended - Do Not Use"}
                 </Text>
               </View>
               <View style={styles.mecMethodCard}>
@@ -638,7 +669,7 @@ const ObAssessment = ({ navigation, route }: any) => {
               }}
             >
               <Text style={styles.primaryBtnText}>Next: MEC Assessment</Text>
-              <Text style={styles.arrow}>»</Text>
+              <ChevronRight size={18} color="#FFF" />
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -684,7 +715,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                     <Text style={styles.prefDesc}>{pref.description}</Text>
                   </View>
                   <View style={[styles.prefCheck, isSelected && styles.prefCheckSelected]}>
-                    {isSelected && <Check size={14} color="#fff" />}
+                    {isSelected && <Check size={16} color="#fff" />}
                   </View>
                 </TouchableOpacity>
               );
@@ -703,7 +734,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             ) : (
               <>
                 <Text style={styles.primaryBtnText}>Assess WHO MEC Rules</Text>
-                <Text style={styles.arrow}>»</Text>
+                <ChevronRight size={18} color="#FFF" />
               </>
             )}
           </TouchableOpacity>
@@ -739,14 +770,21 @@ const ObAssessment = ({ navigation, route }: any) => {
             ) : (
               <>
                 <Text style={styles.primaryBtnText}>Run ML Discontinuation Risk</Text>
-                <Text style={styles.arrow}>»</Text>
+                <ChevronRight size={18} color="#FFF" />
               </>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec")}>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec")}> 
             <ChevronLeft size={16} color="#6B4254" />
             <Text style={styles.secondaryBtnText}>Back to Conditions</Text>
           </TouchableOpacity>
+
+          {isLoading ? (
+            <View style={styles.mecLoadingCard}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.mecLoadingText}>Running ML discontinuation risk assessment...</Text>
+            </View>
+          ) : null}
         </ScrollView>
       )}
 
@@ -780,8 +818,16 @@ const ObAssessment = ({ navigation, route }: any) => {
                 };
                 const mecKey = nameToKey[methodName];
                 const mecCat = mecResults && mecKey ? mecResults[mecKey] : null;
+
+                const mecCardStyle = mecCat
+                  ? {
+                      borderColor: getMECColor(mecCat as MECCategory),
+                      borderWidth: 1.5,
+                    }
+                  : undefined;
+
                 return (
-                  <View key={methodName} style={{ marginBottom: 12 }}>
+                  <View key={methodName} style={{ marginBottom: 10 }}>
                     <View style={styles.methodHeader}>
                       <Text style={styles.methodName}>{methodName}</Text>
                       {mecCat && (
@@ -797,6 +843,8 @@ const ObAssessment = ({ navigation, route }: any) => {
                       contraceptiveMethod={methodName}
                       keyFactors={generateKeyFactors(formData, result.risk_level)}
                       upgradedByDt={result.upgraded_by_dt}
+                      mecCategory={mecCat as 1 | 2 | 3 | 4 | undefined}
+                      style={mecCardStyle}
                     />
                   </View>
                 );
@@ -820,7 +868,7 @@ const ObAssessment = ({ navigation, route }: any) => {
           <View style={{ height: 24 }} />
 
           <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: "#10B981", marginBottom: 12 }]}
+            style={[styles.primaryBtn, { backgroundColor: colors.primary, marginBottom: 12 }]}
             onPress={handleSaveAndFinish}
           >
             <Text style={styles.primaryBtnText}>Save & Finish</Text>
@@ -998,7 +1046,7 @@ const styles = StyleSheet.create({
   primaryBtn: {
     backgroundColor: colors.primary,
     borderRadius: 16,
-    height: 54,
+    height: 55,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1014,15 +1062,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginRight: 6,
   },
-  arrow: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "800",
-  },
   secondaryBtn: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    height: 55,
     gap: 8,
     paddingVertical: 12,
     borderRadius: 12,
@@ -1032,7 +1076,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     color: "#6B4254",
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: "700",
   },
   // Preferences
@@ -1051,8 +1095,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FDF2F8",
   },
   prefIcon: {
-    width: 40,
-    height: 40,
+    width: 45,
+    height: 45,
     borderRadius: 10,
     backgroundColor: "#F1F5F9",
     alignItems: "center",
@@ -1063,7 +1107,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   prefLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: "#1E293B",
     marginBottom: 2,
@@ -1072,7 +1116,7 @@ const styles = StyleSheet.create({
     color: "#BE185D",
   },
   prefDesc: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#94A3B8",
     lineHeight: 16,
   },
@@ -1100,7 +1144,7 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
   },
   conditionSummaryTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
     color: "#64748B",
     textTransform: "uppercase",
@@ -1108,7 +1152,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   conditionSummaryItem: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#334155",
     marginBottom: 4,
   },
@@ -1133,7 +1177,7 @@ const styles = StyleSheet.create({
   },
   mecCatDesc: {
     color: "#64748B",
-    fontSize: 12,
+    fontSize: 14,
     flex: 1,
     flexWrap: "wrap",
   },
@@ -1145,7 +1189,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   mecMethodItem: {
-    padding: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   mecMethodRow: {
     flexDirection: "row",
@@ -1153,11 +1198,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   mecMethodImageWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 90,
     overflow: "hidden",
-    borderWidth: 3,
+    borderWidth: 2.5,
     borderColor: "#EBD5E1",
     backgroundColor: "#FFF",
   },
@@ -1170,9 +1215,28 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F1F5F9",
   },
   mecMethodText: {
-    fontSize: 15,
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "600",
     color: "#334155",
+  },
+  mecLoadingCard: {
+    marginTop: 8,
+    backgroundColor: "#FFF8FC",
+    borderWidth: 1,
+    borderColor: "#F3DCE8",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  mecLoadingText: {
+    marginLeft: 10,
+    color: colors.text.secondary,
+    fontSize: 13,
+    fontWeight: "600",
   },
   // Risk results
   loadingBox: {
@@ -1180,7 +1244,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 14,
     color: "#64748B",
     fontSize: 14,
   },
@@ -1191,7 +1255,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   methodName: {
-    fontSize: 15,
+    fontSize: 16.5,
     fontWeight: "700",
     color: "#1E293B",
   },
@@ -1202,7 +1266,7 @@ const styles = StyleSheet.create({
   },
   mecBadgeText: {
     color: "#FFF",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "bold",
   },
 });
