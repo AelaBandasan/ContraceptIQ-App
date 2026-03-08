@@ -9,6 +9,7 @@
 
 import React from "react";
 import { View, Text, StyleSheet, ViewStyle } from "react-native";
+import { colors as themeColors } from "../theme";
 
 // ============================================================================
 // TYPES
@@ -21,6 +22,7 @@ export interface RiskAssessmentCardProps {
   contraceptiveMethod?: string;
   keyFactors?: string[]; // Plain-language factors explaining the result
   upgradedByDt?: boolean; // Whether Decision Tree upgraded the prediction
+  mecCategory?: 1 | 2 | 3 | 4;
   onPress?: () => void;
   style?: ViewStyle;
 }
@@ -37,13 +39,14 @@ const COLORS = {
   textSecondary: "#6B7280",
   textMuted: "#9CA3AF",
   border: "#E5E7EB",
-  success: "#22C55E",
+  success: themeColors.success,
   successBg: "#F0FDF4",
-  successBorder: "#BBF7D0",
-  error: "#EF4444",
+  successBorder: themeColors.success,
+  error: themeColors.error,
   errorBg: "#FEF2F2",
-  errorBorder: "#FECACA",
-  warning: "#F59E0B",
+  errorBorder: themeColors.error,
+  warning: themeColors.warning,
+  warningDark: themeColors.warningDark,
   warningBg: "#FFFBEB",
 };
 
@@ -60,51 +63,76 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   contraceptiveMethod,
   keyFactors = [],
   upgradedByDt,
+  mecCategory,
   onPress,
   style,
 }) => {
   const isHighRisk = riskLevel === "HIGH";
   const prob = (confidence * 100).toFixed(1);
+  const progressPercent = Math.max(0, Math.min(100, confidence * 100));
 
-  const theme = isHighRisk
-    ? { bg: COLORS.errorBg, border: COLORS.errorBorder, accent: COLORS.error, badgeBg: '#FEE2E2' }
-    : { bg: COLORS.successBg, border: COLORS.successBorder, accent: COLORS.success, badgeBg: '#DCFCE7' };
+  const riskAccent = isHighRisk ? COLORS.error : COLORS.success;
+  const mecAccent =
+    mecCategory === 1
+      ? COLORS.success
+      : mecCategory === 2
+        ? COLORS.warning
+        : mecCategory === 3
+          ? COLORS.warningDark
+          : mecCategory === 4
+            ? COLORS.error
+            : null;
+
+  const theme = {
+    bg: COLORS.background,
+    border: COLORS.border,
+    accent: mecAccent || riskAccent,
+    badgeBg: "#F8FAFC",
+  };
 
   return (
     <View
       style={[styles.container, { backgroundColor: theme.bg, borderColor: theme.border }, style]}
       onTouchEnd={onPress}
     >
-      {/* ── PART 1: STATUS BADGE ── */}
+      <View style={[styles.topAccent, { backgroundColor: theme.accent }]} />
+
+      {/* ── PART 1: STATUS + CONFIDENCE ── */}
       <View style={styles.statusRow}>
-        <View style={[styles.badge, { backgroundColor: theme.badgeBg }]}>
-          <Text style={{ fontSize: 16, marginRight: 6 }}>
-            {isHighRisk ? "⚠️" : "🟢"}
-          </Text>
-          <Text style={[styles.badgeText, { color: theme.accent }]}>
+        <View style={styles.headerRiskWrap}>
+          <Text style={styles.badgeEmoji}>{isHighRisk ? "⚠" : "✓"}</Text>
+          <Text style={[styles.headerRiskText, { color: theme.accent }]}> 
             {isHighRisk ? "High Risk" : "Low Risk"}
           </Text>
-          <Text style={[styles.badgePercent, { color: theme.accent }]}>
-            ({prob}%)
-          </Text>
         </View>
+        <Text style={styles.headerConfidenceText}>
+          Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{prob}%</Text>
+        </Text>
       </View>
 
       {/* ── PART 2: THE METRIC ── */}
       <View style={styles.metricContainer}>
-        <Text style={[styles.metricValue, { color: theme.accent }]}>
+        <Text style={[styles.metricValue, { color: theme.accent }]}> 
           {prob}%
         </Text>
         <Text style={styles.metricLabel}>
           Probability of Discontinuation
         </Text>
+        <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${progressPercent}%`, backgroundColor: theme.accent },
+            ]}
+          />
+        </View>
       </View>
 
       {/* Method (if provided) */}
       {contraceptiveMethod && (
-        <View style={styles.methodPill}>
-          <Text style={styles.methodLabel}>Method: </Text>
-          <Text style={styles.methodValue}>{contraceptiveMethod}</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Method</Text>
+          <Text style={styles.infoValue}>{contraceptiveMethod}</Text>
         </View>
       )}
 
@@ -120,6 +148,13 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
           ))}
         </View>
       )}
+
+      {recommendation ? (
+        <View style={styles.recommendationContainer}>
+          <Text style={styles.recommendationLabel}>Recommendation</Text>
+          <Text style={styles.recommendationValue}>{recommendation}</Text>
+        </View>
+      ) : null}
 
       {/* DT Upgrade Indicator */}
       {upgradedByDt && (
@@ -147,59 +182,49 @@ export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LO
   // --- Age ---
   const age = parseInt(formData['AGE']);
   if (!isNaN(age)) {
-    if (age >= 35) factors.push(`Age ${age} — older patients may face higher risk`);
-    else if (age <= 20) factors.push(`Age ${age} — younger patients may have higher discontinuation rates`);
-  }
-
-  // --- Method duration ---
-  const months = parseInt(formData['MONTH_USE_CURRENT_METHOD']);
-  if (!isNaN(months) && months > 0) {
-    if (months >= 6) factors.push(`${months} months on current method — established routine`);
-    else factors.push(`Only ${months} month(s) on current method — still adjusting`);
-  }
-
-  // --- Side effects ---
-  const sideEffects = formData['TOLD_ABT_SIDE_EFFECTS'];
-  if (sideEffects?.includes('Yes')) {
-    factors.push('Was informed about side effects');
-  } else if (sideEffects === 'No') {
-    factors.push('Not informed about side effects — may increase risk');
-  }
-
-  // --- Pattern of use ---
-  const pattern = formData['PATTERN_USE'];
-  if (pattern === 'Regular') factors.push('Regular pattern of use');
-  else if (pattern === 'Irregular') factors.push('Irregular pattern of use — may indicate adherence issues');
-
-  // --- Previous discontinuation ---
-  const lastDiscontinued = formData['LAST_METHOD_DISCONTINUED'];
-  if (lastDiscontinued && lastDiscontinued !== 'None') {
-    const reason = formData['REASON_DISCONTINUED'];
-    factors.push(`Previously discontinued ${lastDiscontinued}${reason ? ` (${reason})` : ''}`);
-  } else if (lastDiscontinued === 'None') {
-    factors.push('No history of method discontinuation');
-  }
-
-  // --- Desire for children ---
-  const desire = formData['DESIRE_FOR_MORE_CHILDREN'];
-  if (desire === 'Yes') factors.push('Desires more children — may discontinue to conceive');
-  else if (desire === 'No') factors.push('Does not desire more children');
-
-  // --- Partner alignment ---
-  const husbandDesire = formData['HSBND_DESIRE_FOR_MORE_CHILDREN'];
-  if (husbandDesire && desire && husbandDesire !== desire) {
-    factors.push('Partner\'s fertility goals differ from patient');
+    if (age >= 35) factors.push(`Age ${age} — may need closer follow-up for continuation support`);
+    else if (age <= 20) factors.push(`Age ${age} — younger users may benefit from stronger adherence counseling`);
   }
 
   // --- Smoking ---
   const smoking = formData['SMOKE_CIGAR'];
-  if (smoking === 'Current daily') factors.push('Current smoker — may affect hormonal method eligibility');
+  if (smoking === 'Current daily') {
+    factors.push('Current daily smoking may affect suitability of some hormonal methods');
+  } else if (smoking === 'Never') {
+    factors.push('No smoking history supports safer use of several hormonal options');
+  }
 
-  // --- Residing with partner ---
-  const residingWithPartner = formData['RESIDING_WITH_PARTNER'];
-  if (residingWithPartner === 'No') factors.push('Not residing with partner');
+  // --- Parity ---
+  const parity = parseInt(formData['PARITY']);
+  if (!isNaN(parity)) {
+    if (parity >= 3) factors.push(`Parity ${parity} — long-acting options may improve continuation`);
+    else if (parity === 0) factors.push('Nulliparous status may influence method preference and counseling needs');
+  }
 
-  // Limit to top 2 most relevant
+  // --- Desire for children ---
+  const desire = formData['DESIRE_FOR_MORE_CHILDREN'];
+  if (desire === 'Wants more children') {
+    factors.push('Future fertility plans may favor reversible, short-acting methods');
+  } else if (desire === 'Wants no more children') {
+    factors.push('No desire for more children may favor highly effective long-acting methods');
+  }
+
+  // --- Pattern of use ---
+  const pattern = formData['PATTERN_USE'];
+  if (pattern === 'Current user') {
+    factors.push('Current contraceptive use indicates existing adherence behavior to build on');
+  } else if (pattern === 'Recent user (stopped within 12 months)') {
+    factors.push('Recent discontinuation may indicate unresolved side-effect or counseling concerns');
+  }
+
+  if (factors.length === 0) {
+    factors.push(
+      riskLevel === 'HIGH'
+        ? 'Overall profile suggests higher likelihood of discontinuation without close follow-up'
+        : 'Overall profile suggests good potential for continued method use with routine support'
+    );
+  }
+
   return factors.slice(0, 2);
 }
 
@@ -211,87 +236,115 @@ const styles = StyleSheet.create({
   container: {
     borderWidth: 1.5,
     borderRadius: RADIUS.xl,
-    padding: 20,
-    marginVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    marginVertical: 10,
+    overflow: "hidden",
+  },
+  topAccent: {
+    height: 6,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    marginHorizontal: -16,
+    marginBottom: 12,
   },
 
   // Part 1: Status
   statusRow: {
-    marginBottom: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  badge: {
+  headerRiskWrap: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: RADIUS.full,
   },
-  badgeText: {
-    fontSize: 16,
+  badgeEmoji: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  headerRiskText: {
+    fontSize: 15,
     fontWeight: "700",
   },
-  badgePercent: {
-    fontSize: 14,
+  headerConfidenceText: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
     fontWeight: "600",
-    marginLeft: 4,
+  },
+  headerConfidenceValue: {
+    fontSize: 15,
+    fontWeight: "800",
   },
 
   // Part 2: Metric
   metricContainer: {
     alignItems: "center",
-    paddingVertical: 16,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    paddingTop: 40,
+    marginBottom: 5,
   },
   metricValue: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: "800",
     letterSpacing: -1,
   },
   metricLabel: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
     color: "#6B7280",
-    marginTop: 4,
+    marginTop: 2,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  progressTrack: {
+    marginTop: 10,
+    width: "90%",
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "#E5E7EB",
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 999,
+  },
 
   // Method
-  methodPill: {
-    flexDirection: "row",
+  infoRow: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    marginBottom: 10,
     alignItems: "center",
-    alignSelf: "center",
-    backgroundColor: "#F1F5F9",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: RADIUS.full,
-    marginBottom: 16,
   },
-  methodLabel: {
+  infoLabel: {
     fontSize: 12,
     color: "#6B7280",
-    fontWeight: "500",
-  },
-  methodValue: {
-    fontSize: 12,
-    color: "#0F172A",
     fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  infoValue: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    fontWeight: "700",
+    textAlign: "center",
   },
 
   // Part 3: Key Factors
   factorsContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: RADIUS.lg,
-    padding: 14,
-    marginBottom: 16,
+    padding: 12,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
   factorsTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: "#6B7280",
     textTransform: "uppercase",
@@ -309,7 +362,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   factorText: {
-    fontSize: 13,
+    fontSize: 13.5,
     color: "#374151",
     fontWeight: "500",
     lineHeight: 18,
@@ -319,14 +372,14 @@ const styles = StyleSheet.create({
   // Recommendation
   recommendationContainer: {
     marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    padding: 12,
+    borderRadius: RADIUS.lg,
+    backgroundColor: "#F8FAFC",
   },
   recommendationLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "600",
-    color: "#9CA3AF",
+    color: "#6B7280",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -347,7 +400,7 @@ const styles = StyleSheet.create({
 
   // Disclaimer
   disclaimer: {
-    fontSize: 11,
+    fontSize: 12,
     color: "#9CA3AF",
     lineHeight: 16,
     fontStyle: "italic",

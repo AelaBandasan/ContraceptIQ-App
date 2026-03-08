@@ -1,55 +1,39 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView,
-  TextInput, Alert,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
-  Search, ChevronDown, ChevronRight, X, ArrowRight, Check,
+  X, Check, ChevronLeft, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
 import { colors, shadows, spacing, borderRadius } from '../../theme';
 import {
-  WHO_MEC_CONDITIONS, getParentConditions, buildConditionTree,
-  type ConditionTreeNode,
+  WHO_MEC_CONDITIONS,
 } from '../../data/whoMecData';
 import ObHeader from '../../components/ObHeader';
+import { MecTreeSelector } from '../../components/MecTreeSelector';
 
 const AGE_OPTIONS = [
   { label: '< 18', value: 16 },
-  { label: '18 – 39', value: 25 },
-  { label: '≥ 40', value: 45 },
+  { label: '18-19', value: 18 },
+  { label: '20-39', value: 30 },
+  { label: '40-45', value: 42 },
+  { label: '≥ 46', value: 50 },
 ];
 
 const MAX_CONDITIONS = 3;
 
 const WhoMecConditionsScreen = () => {
   const navigation = useNavigation<any>();
-  const insets = useSafeAreaInsets();
 
   const [selectedAge, setSelectedAge] = useState<number | null>(null);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-  const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
-  const [expandedSubs, setExpandedSubs] = useState<Record<string, boolean>>({});
-  const [searchQuery, setSearchQuery] = useState('');
 
-  const tree = useMemo(() => buildConditionTree(), []);
-  const parentConditions = useMemo(() => getParentConditions(), []);
-
-  // Filter parents by search
-  const filteredParents = useMemo(() => {
-    if (!searchQuery.trim()) return parentConditions;
-    const q = searchQuery.toLowerCase();
-    return parentConditions.filter(name => name.toLowerCase().includes(q));
-  }, [searchQuery, parentConditions]);
-
-  const toggleParent = (name: string) => {
-    setExpandedParents(prev => ({ ...prev, [name]: !prev[name] }));
-  };
-
-  const toggleSub = (key: string) => {
-    setExpandedSubs(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const steps = [
+    { id: 1, label: 'Conditions' },
+    { id: 2, label: 'Preferences' },
+    { id: 3, label: 'Results' },
+  ];
 
   const toggleCondition = (id: string) => {
     setSelectedConditions(prev => {
@@ -86,103 +70,28 @@ const WhoMecConditionsScreen = () => {
     });
   };
 
-  const isDisabled = (id: string) =>
-    !selectedConditions.includes(id) && selectedConditions.length >= MAX_CONDITIONS;
-
-  const renderCheckbox = (id: string, label: string, indent: number) => {
-    const isSelected = selectedConditions.includes(id);
-    const disabled = isDisabled(id);
-
-    return (
-      <TouchableOpacity
-        key={id}
-        style={[
-          styles.leafItem,
-          { paddingLeft: 16 + indent * 16 },
-          isSelected && styles.leafItemSelected,
-          disabled && styles.leafItemDisabled,
-        ]}
-        onPress={() => toggleCondition(id)}
-        disabled={disabled}
-      >
-        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-          {isSelected && <Check size={12} color="#fff" />}
-        </View>
-        <Text style={[styles.leafLabel, isSelected && styles.leafLabelSelected]} numberOfLines={2}>
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderNode = (condName: string, node: ConditionTreeNode) => {
-    const subKeys = Object.keys(node.subs);
-    const hasContent = node.directEntry || node.initiation || subKeys.length > 0;
-
-    // Parent-level direct entry (no subs, no I/C) — e.g. "Epilepsy"
-    if (node.directEntry && subKeys.length === 0 && !node.initiation) {
-      return renderCheckbox(node.directEntry.id, condName, 0);
-    }
-
-    // Parent has I/C only (no subs) — e.g. "Stroke"
-    if (!node.directEntry && subKeys.length === 0 && node.initiation) {
-      return (
-        <View key={condName + '_ic'}>
-          {node.initiation && renderCheckbox(node.initiation.id, 'Initiation', 1)}
-          {node.continuation && renderCheckbox(node.continuation.id, 'Continuation', 1)}
-        </View>
-      );
-    }
-
-    // Parent has sub-conditions
-    return (
-      <View key={condName + '_subs'}>
-        {subKeys.map(subKey => {
-          const sub = node.subs[subKey];
-          const subExpandKey = `${condName}::${subKey}`;
-
-          // Sub has I/C
-          if (sub.initiation || sub.continuation) {
-            const isSubExpanded = expandedSubs[subExpandKey];
-            return (
-              <View key={subExpandKey}>
-                <TouchableOpacity
-                  style={[styles.subHeader, { paddingLeft: 32 }]}
-                  onPress={() => toggleSub(subExpandKey)}
-                >
-                  {isSubExpanded
-                    ? <ChevronDown size={14} color={colors.text.secondary} />
-                    : <ChevronRight size={14} color={colors.text.secondary} />}
-                  <Text style={styles.subLabel} numberOfLines={2}>{subKey}</Text>
-                </TouchableOpacity>
-                {isSubExpanded && (
-                  <View>
-                    {sub.initiation && renderCheckbox(sub.initiation.id, 'Initiation', 3)}
-                    {sub.continuation && renderCheckbox(sub.continuation.id, 'Continuation', 3)}
-                  </View>
-                )}
-              </View>
-            );
-          }
-
-          // Sub is a direct leaf
-          if (sub.directEntry) {
-            return renderCheckbox(sub.directEntry.id, subKey, 1);
-          }
-
-          return null;
-        })}
-
-        {/* Parent-level I/C (in addition to subs) */}
-        {node.initiation && renderCheckbox(node.initiation.id, 'Initiation', 1)}
-        {node.continuation && renderCheckbox(node.continuation.id, 'Continuation', 1)}
-      </View>
-    );
-  };
-
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ObHeader title="WHO MEC Tool" subtitle="Step 1: Conditions" />
+    <View style={styles.container}>
+      <ObHeader title="WHO MEC Tool" subtitle="Step 1: Conditions" showBack onBackPress={() => navigation.navigate('ObHome')} />
+
+      <View style={styles.stepperWrap}>
+        {steps.map((step) => {
+          const isDone = step.id < 1;
+          const isActive = step.id === 1;
+          return (
+            <View key={step.id} style={styles.stepItem}>
+              <View style={[styles.stepDot, isDone && styles.stepDotDone, isActive && styles.stepDotActive]}>
+                <Text style={[styles.stepDotText, (isDone || isActive) && styles.stepDotTextActive]}>
+                  {step.id}
+                </Text>
+              </View>
+              <Text style={[styles.stepLabel, (isDone || isActive) && styles.stepLabelActive]}>
+                {step.label}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -190,9 +99,19 @@ const WhoMecConditionsScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Age Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Age Group</Text>
-          <View style={styles.ageRow}>
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+              <View style={styles.meIconContainer}>
+                <View style={styles.meIconCircle}>
+                <CalendarDays size={20} color={colors.primary} />
+                <View style={styles.plusIconBadge}>
+                  <Text style={styles.plusIconText}>•</Text>
+                </View>
+              </View>
+            </View>
+            <Text style={styles.sectionTitle}>Age Group</Text>
+          </View>
+          <View style={styles.ageChipsWrapper}>
             {AGE_OPTIONS.map(opt => (
               <TouchableOpacity
                 key={opt.value}
@@ -226,101 +145,175 @@ const WhoMecConditionsScreen = () => {
           </View>
         )}
 
-        {/* Search */}
-        <View style={styles.searchContainer}>
-          <Search size={18} color={colors.text.disabled} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search conditions..."
-            placeholderTextColor={colors.text.disabled}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+        {/* Conditions (match ObAssessment MEC section) */}
+        <View style={styles.cardSection}>
+          <Text style={styles.conditionsTitle}>Medical Conditions</Text>
+          <MecTreeSelector
+            selectedConditions={selectedConditions}
+            onToggleCondition={toggleCondition}
+            maxConditions={MAX_CONDITIONS}
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <X size={18} color={colors.text.disabled} />
-            </TouchableOpacity>
-          )}
         </View>
 
-        {/* Alphabetical Condition List */}
-        {filteredParents.map(condName => {
-          const node = tree[condName];
-          if (!node) return null;
+        <View style={{ height: 24 }} />
 
-          const subKeys = Object.keys(node.subs);
-          const isSimple = node.directEntry && subKeys.length === 0 && !node.initiation;
-
-          // Simple condition (no subs, no I/C) — show as direct selectable row
-          if (isSimple) {
-            return (
-              <View key={condName} style={styles.parentContainer}>
-                {renderCheckbox(node.directEntry!.id, condName, 0)}
-              </View>
-            );
-          }
-
-          // Complex condition — expandable
-          const isExpanded = expandedParents[condName];
-          return (
-            <View key={condName} style={styles.parentContainer}>
-              <TouchableOpacity
-                style={styles.parentHeader}
-                onPress={() => toggleParent(condName)}
-              >
-                {isExpanded
-                  ? <ChevronDown size={18} color={colors.text.primary} />
-                  : <ChevronRight size={18} color={colors.text.primary} />}
-                <Text style={styles.parentLabel}>{condName}</Text>
-              </TouchableOpacity>
-              {isExpanded && renderNode(condName, node)}
-            </View>
-          );
-        })}
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Bottom bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <View style={styles.bottomInfo}>
-          <Text style={styles.bottomInfoText}>
-            {selectedAge !== null ? `Age: ${AGE_OPTIONS.find(a => a.value === selectedAge)?.label}` : 'No age selected'}
-          </Text>
-          <Text style={styles.bottomInfoText}>
-            {selectedConditions.length} condition{selectedConditions.length !== 1 ? 's' : ''}
-          </Text>
-        </View>
         <TouchableOpacity
-          style={[styles.nextButton, selectedAge === null && styles.nextButtonDisabled]}
+          style={styles.primaryBtn}
           onPress={handleNext}
           disabled={selectedAge === null}
         >
-          <Text style={styles.nextButtonText}>Next: Preferences</Text>
-          <ArrowRight size={18} color="#fff" />
+          <Text style={styles.primaryBtnText}>Next: Preferences</Text>
+          <ChevronRight size={18} color="#FFF" />
         </TouchableOpacity>
-      </View>
+
+        <TouchableOpacity
+          style={[styles.secondaryBtn, { marginTop: 12 }]}
+          onPress={() => navigation.navigate('ObHome')}
+        >
+          <ChevronLeft size={16} color="#6B4254" />
+          <Text style={styles.secondaryBtnText}>Back to Dashboard</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 36 }} />
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.primary },
+  container: { flex: 1, backgroundColor: '#FDF7FA' },
+  stepperWrap: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 6,
+    backgroundColor: '#FFF8FC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8DDE9',
+  },
+  stepItem: { alignItems: 'center', flex: 1 },
+  stepDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3E8EF',
+    borderWidth: 1,
+    borderColor: '#E4CFDB',
+  },
+  stepDotDone: { backgroundColor: colors.primary, borderColor: colors.primary },
+  stepDotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  stepDotText: { fontSize: 15, fontWeight: '700', color: '#8A7A83' },
+  stepDotTextActive: { color: '#FFFFFF' },
+  stepLabel: { marginTop: 4, fontSize: 14, fontWeight: '600', color: '#8A7A83' },
+  stepLabelActive: { color: colors.primary },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-
   section: { marginBottom: spacing.lg },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.sm },
 
-  ageRow: { flexDirection: 'row', gap: spacing.sm },
-  ageChip: {
-    flex: 1, paddingVertical: 12, borderRadius: borderRadius.md,
-    borderWidth: 1.5, borderColor: colors.border.light,
-    alignItems: 'center', backgroundColor: '#fff',
+  sectionContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 18,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: '#F3DCE8',
+    ...shadows.sm,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.08,
   },
-  ageChipSelected: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
-  ageChipText: { fontSize: 15, fontWeight: '500', color: colors.text.secondary },
-  ageChipTextSelected: { color: colors.primary, fontWeight: '600' },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  meIconContainer: { marginRight: 12 },
+  meIconCircle: {
+    width: 45,
+    height: 45,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+    backgroundColor: '#F0F9FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  meText: {
+    fontSize: 0,
+  },
+  plusIconBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusIconText: {
+    fontSize: 14,
+    color: '#F59E0B',
+    fontWeight: '900',
+    lineHeight: 14,
+  },
+  sectionTitle: { fontSize: 19, fontWeight: '700', color: '#1B211A', marginBottom: spacing.sm },
+
+  ageChipsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'center',
+    paddingTop: 10,
+  },
+  ageChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    width: '30%',
+    minWidth: 100,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+  },
+  ageChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    elevation: 4,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  ageChipText: { fontSize: 15, fontWeight: '700', color: '#1E293B', textAlign: 'center' },
+  ageChipTextSelected: { color: '#FFF' },
+
+  cardSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#F3DCE8',
+    ...shadows.sm,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.08,
+    marginBottom: spacing.lg,
+  },
+  conditionsTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 8,
+  },
 
   selectedChip: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -329,60 +322,42 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.primary + '30',
   },
   selectedChipText: { flex: 1, fontSize: 13, color: colors.primary, fontWeight: '500', marginRight: 8 },
-
-  searchContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.background.card, borderRadius: borderRadius.md,
-    paddingHorizontal: 12, marginBottom: spacing.md,
-    borderWidth: 1, borderColor: colors.border.light,
+  primaryBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    height: 55,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.28,
+    shadowRadius: 7,
+    elevation: 4,
   },
-  searchInput: { flex: 1, paddingVertical: 12, paddingHorizontal: 8, fontSize: 14, color: colors.text.primary },
-
-  parentContainer: {
-    marginBottom: 2,
-    borderBottomWidth: 1, borderBottomColor: colors.border.light + '60',
+  primaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '800',
+    marginRight: 6,
   },
-  parentHeader: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: 8,
+  secondaryBtn: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 55,
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#FFF8FC',
+    borderWidth: 1,
+    borderColor: '#EFD8E5',
   },
-  parentLabel: { fontSize: 15, fontWeight: '600', color: colors.text.primary, flex: 1, marginLeft: 6 },
-
-  subHeader: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 10,
+  secondaryBtnText: {
+    color: '#6B4254',
+    fontSize: 17,
+    fontWeight: '700',
   },
-  subLabel: { fontSize: 14, fontWeight: '500', color: colors.text.secondary, flex: 1, marginLeft: 6 },
-
-  leafItem: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 10, paddingRight: 12,
-  },
-  leafItemSelected: { backgroundColor: colors.primary + '08' },
-  leafItemDisabled: { opacity: 0.4 },
-  checkbox: {
-    width: 20, height: 20, borderRadius: 4, borderWidth: 1.5,
-    borderColor: colors.border.main, alignItems: 'center', justifyContent: 'center',
-    marginRight: 10, backgroundColor: '#fff',
-  },
-  checkboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  leafLabel: { fontSize: 14, color: colors.text.primary, flex: 1 },
-  leafLabelSelected: { color: colors.primary, fontWeight: '500' },
-
-  bottomBar: {
-    paddingHorizontal: spacing.lg, paddingTop: 12,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.border.light,
-    ...shadows.lg,
-  },
-  bottomInfo: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  bottomInfoText: { fontSize: 13, color: colors.text.secondary, fontWeight: '500' },
-  nextButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.primary, borderRadius: borderRadius.md,
-    paddingVertical: 14, gap: 8,
-  },
-  nextButtonDisabled: { opacity: 0.5 },
-  nextButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
 });
 
 export default WhoMecConditionsScreen;

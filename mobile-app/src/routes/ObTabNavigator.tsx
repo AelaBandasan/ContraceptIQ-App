@@ -60,6 +60,14 @@ const ObTabNavigator = () => {
                 name="ObAssessment"
                 component={ObAssessment as any}
                 initialParams={{ isDoctorAssessment: true }}
+                listeners={({ navigation }) => ({
+                    tabPress: () => {
+                        navigation.navigate('ObAssessment', {
+                            isDoctorAssessment: true,
+                            record: undefined,
+                        } as never);
+                    },
+                })}
                 options={{
                     tabBarLabel: 'Assess',
                     tabBarIcon: ({ color, size }) => (
