@@ -43,3 +43,4 @@ mobile-app/package-lock.json
 .claude
 # Large Auto-generated Data Files
 mobile-app/src/data/mecConditionOutputs.json
+nul
