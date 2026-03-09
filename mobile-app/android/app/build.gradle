@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.thesis_contraceptIQ'
+    namespace 'contraceptiq.app'
     defaultConfig {
-        applicationId 'com.anonymous.thesis_contraceptIQ'
+        applicationId 'contraceptiq.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
