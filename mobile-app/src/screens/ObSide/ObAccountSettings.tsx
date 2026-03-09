@@ -5,16 +5,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-    ChevronLeft, Lock, User, Mail, Eye, EyeOff,
-    CheckCircle, ShieldCheck, LogOut, ChevronRight
+    Lock, User, Mail, Eye, EyeOff,
+    CheckCircle, ShieldCheck
 } from 'lucide-react-native';
 import {
     EmailAuthProvider,
     reauthenticateWithCredential,
     updatePassword,
-    signOut,
 } from 'firebase/auth';
 import { auth } from '../../config/firebaseConfig';
+import ObHeader from '../../components/ObHeader';
+import { colors, shadows } from '../../theme';
 
 // ─── Section wrapper ─────────────────────────────────────────────────────────
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -99,29 +100,13 @@ const ObAccountSettings = ({ navigation }: any) => {
         }
     };
 
-    // ── Sign out ─────────────────────────────────────────────────────────────
-    const handleLogout = () => {
-        Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-            { text: 'Cancel', style: 'cancel' },
-            {
-                text: 'Sign Out', style: 'destructive',
-                onPress: async () => {
-                    await signOut(auth);
-                    navigation.reset({ index: 0, routes: [{ name: 'LoginforOB' }] });
-                }
-            }
-        ]);
-    };
-
     return (
         <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <ChevronLeft size={24} color="#1E293B" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Account Settings</Text>
-                <View style={{ width: 40 }} />
+            <ObHeader title="Account Settings" subtitle="Security & profile" showBack onBackPress={() => navigation.navigate('ObProfile')} />
+
+            <View pointerEvents="none" style={styles.bgDecorWrap}>
+                <View style={styles.bgBlobOne} />
+                <View style={styles.bgBlobTwo} />
             </View>
 
             <KeyboardAvoidingView
@@ -133,22 +118,27 @@ const ObAccountSettings = ({ navigation }: any) => {
                     contentContainerStyle={styles.scroll}
                     keyboardShouldPersistTaps="handled"
                 >
+                    <View style={styles.topInfoCard}>
+                        <ShieldCheck size={20} color={colors.primary} />
+                        <Text style={styles.topInfoText}>Manage your profile security and credentials from this screen.</Text>
+                    </View>
+
                     {/* Account Info (read-only) */}
                     <Section title="Account Info">
                         <View style={styles.infoRow}>
                             <View style={styles.infoIcon}>
-                                <Mail size={16} color="#E45A92" />
+                                <Mail size={20} color="#E45A92" />
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.infoLabel}>Email</Text>
                                 <Text style={styles.infoValue}>{user?.email || '—'}</Text>
                             </View>
-                            <ShieldCheck size={16} color="#10B981" />
+                            <ShieldCheck size={20} color="#10B981" />
                         </View>
                         <View style={styles.rowDivider} />
                         <View style={styles.infoRow}>
                             <View style={styles.infoIcon}>
-                                <User size={16} color="#E45A92" />
+                                <User size={20} color="#E45A92" />
                             </View>
                             <View>
                                 <Text style={styles.infoLabel}>Account Type</Text>
@@ -217,17 +207,6 @@ const ObAccountSettings = ({ navigation }: any) => {
                         </TouchableOpacity>
                     </Section>
 
-                    {/* Sign Out */}
-                    <Section title="Session">
-                        <TouchableOpacity style={styles.dangerRow} onPress={handleLogout}>
-                            <View style={[styles.infoIcon, { backgroundColor: '#FEE2E2' }]}>
-                                <LogOut size={16} color="#EF4444" />
-                            </View>
-                            <Text style={styles.dangerText}>Sign Out</Text>
-                            <ChevronRight size={16} color="#EF4444" />
-                        </TouchableOpacity>
-                    </Section>
-
                     <View style={{ height: 40 }} />
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -239,49 +218,85 @@ export default ObAccountSettings;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8FAFC' },
-
-    // Header
-    header: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 16, paddingVertical: 14,
-        backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    bgDecorWrap: {
+        ...StyleSheet.absoluteFillObject,
     },
-    backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-    headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E293B' },
+    bgBlobOne: {
+        position: 'absolute',
+        top: 80,
+        right: -90,
+        width: 220,
+        height: 220,
+        borderRadius: 110,
+        backgroundColor: 'rgba(236, 72, 153, 0.09)',
+    },
+    bgBlobTwo: {
+        position: 'absolute',
+        bottom: 100,
+        left: -100,
+        width: 220,
+        height: 220,
+        borderRadius: 110,
+        backgroundColor: 'rgba(244, 114, 182, 0.07)',
+    },
 
     scroll: { padding: 16 },
+    topInfoCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#FFF5FA',
+        borderWidth: 1,
+        borderColor: '#F8D6E5',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        marginBottom: 14,
+    },
+    topInfoText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#6B4254',
+        fontWeight: '600',
+    },
 
     // Section
     section: { marginBottom: 20 },
-    sectionTitle: { fontSize: 11, fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginLeft: 4 },
-    sectionCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#F1F5F9' },
-    sectionNote: { fontSize: 13, color: '#94A3B8', marginBottom: 14, lineHeight: 19 },
+    sectionTitle: { fontSize: 12, fontWeight: '800', color: '#8A7A83', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginLeft: 4 },
+    sectionCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#F3DCE8',
+        ...shadows.sm,
+        shadowColor: colors.primary,
+        shadowOpacity: 0.06,
+    },
+    sectionNote: { fontSize: 14, color: colors.text.secondary, marginBottom: 14, lineHeight: 19 },
 
     // Info rows
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    infoIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: '#FFF0F6', justifyContent: 'center', alignItems: 'center' },
-    infoLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '500', marginBottom: 2 },
-    infoValue: { fontSize: 14, color: '#1E293B', fontWeight: '600' },
+    infoIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#FFF0F6', justifyContent: 'center', alignItems: 'center' },
+    infoLabel: { fontSize: 13.5, color: '#6B4254', fontWeight: '500', marginBottom: 2 },
+    infoValue: { fontSize: 14.5, color: colors.text.primary, fontWeight: '600' },
     rowDivider: { height: 1, backgroundColor: '#F8FAFC', marginVertical: 12 },
 
     // Inputs
     inputGroup: { marginBottom: 4 },
-    inputLabel: { fontSize: 12, fontWeight: '600', color: '#64748B', marginBottom: 6 },
-    inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', paddingHorizontal: 14 },
-    input: { flex: 1, fontSize: 14, color: '#1E293B', paddingVertical: 13 },
+    inputLabel: { fontSize: 15, fontWeight: '700', color: '#6B4254', marginBottom: 6 },
+    inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFCFE', borderRadius: 12, borderWidth: 1, borderColor: '#EFD8E5', paddingHorizontal: 14 },
+    input: { flex: 1, fontSize: 15, color: '#1E293B', paddingVertical: 13 },
     eyeBtn: { padding: 6 },
 
     // Password strength
     strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
     strengthBar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0' },
-    strengthLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600', marginLeft: 4 },
+    strengthLabel: { fontSize: 12, color: '#94A3B8', fontWeight: '600', marginLeft: 4 },
 
     // Save button
-    saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E45A92', borderRadius: 12, paddingVertical: 13, marginTop: 12 },
+    saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 15, marginTop: 12 },
     saveBtnDisabled: { opacity: 0.6 },
     saveBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 
-    // Danger
-    dangerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    dangerText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#EF4444' },
 });
