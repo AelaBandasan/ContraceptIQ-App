@@ -13,6 +13,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = '@contraceptiq_assessment_state';
 
+// Persists guest MEC preferences (age chip index + chosen preference keys) across sessions.
+// Only these two fields survive app restarts — all ML/assessment data still resets.
+const GUEST_PREFS_KEY = '@contraceptiq_guest_mec_prefs';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -123,6 +127,10 @@ export interface AssessmentContextType extends AssessmentState {
   // Setters for Recommendation flow
   setSelectedAgeIndex: (index: number | null) => void;
   setSelectedPrefs: (prefs: string[]) => void;
+
+  // Explicitly saves age + preferences to AsyncStorage (cross-session persistence).
+  // Call this only when the user intentionally taps "Save Preferences".
+  saveGuestPreferences: (ageIndex: number, prefs: string[]) => Promise<void>;
 }
 
 // ============================================================================
@@ -194,10 +202,22 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
   const [state, setState] = useState<AssessmentState>(initialState);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Persistence removed per user request: "everytime the user exit the app, the record she did in the assessment will be reset"
-  // State remains only in memory and resets on app restart.
+  // ML/assessment data intentionally resets on app exit per user request.
+  // Only guest MEC preferences (age index + prefs) are loaded from AsyncStorage.
   useEffect(() => {
-    setIsInitialized(true);
+    AsyncStorage.getItem(GUEST_PREFS_KEY)
+      .then(raw => {
+        if (raw) {
+          const saved = JSON.parse(raw) as { ageIndex: number; prefs: string[] };
+          setState(prev => ({
+            ...prev,
+            selectedAgeIndex: saved.ageIndex ?? null,
+            selectedPrefs: saved.prefs ?? [],
+          }));
+        }
+      })
+      .catch(() => {/* silently ignore read errors */})
+      .finally(() => setIsInitialized(true));
   }, []);
 
   // Assessment data management
@@ -343,6 +363,13 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
     setState(prev => ({ ...prev, selectedPrefs: prefs }));
   };
 
+  // Persists guest MEC preferences to AsyncStorage AND updates in-memory state.
+  // Only called when the user explicitly taps "Save Preferences" in the results screen.
+  const saveGuestPreferences = async (ageIndex: number, prefs: string[]): Promise<void> => {
+    setState(prev => ({ ...prev, selectedAgeIndex: ageIndex, selectedPrefs: prefs }));
+    await AsyncStorage.setItem(GUEST_PREFS_KEY, JSON.stringify({ ageIndex, prefs }));
+  };
+
   const value: AssessmentContextType = {
     ...state,
     setAssessmentData,
@@ -359,6 +386,7 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
     isAssessmentValid,
     setSelectedAgeIndex,
     setSelectedPrefs,
+    saveGuestPreferences,
   };
 
   return (

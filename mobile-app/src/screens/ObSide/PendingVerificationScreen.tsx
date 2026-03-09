@@ -1,15 +1,47 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
-import { Clock, ArrowLeft } from 'lucide-react-native';
+import { Clock, ArrowLeft, RefreshCw } from 'lucide-react-native';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../config/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../config/firebaseConfig';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PendingVerification'>;
 
 const PendingVerificationScreen = ({ navigation, route }: Props) => {
     const doctorName = route.params?.doctorName || 'Doctor';
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        const user = auth.currentUser;
+        if (!user) {
+            navigation.replace('UserStartingScreen');
+            return;
+        }
+
+        setIsRefreshing(true);
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                if (userData.verificationStatus === "verified") {
+                    const name = userData.fullName || "Dr. " + (userData.email?.split('@')[0] || "User");
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: "ObMainTabs", params: { doctorName: name } }],
+                    });
+                } else {
+                    Alert.alert("Still Pending", "Your account is still under review. We will notify you once it's approved.");
+                }
+            }
+        } catch (error) {
+            console.error("Refresh error:", error);
+            Alert.alert("Error", "Could not refresh status. Please try again.");
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -24,15 +56,24 @@ const PendingVerificationScreen = ({ navigation, route }: Props) => {
                 <Text style={styles.subtext}>
                     We are verifying your PRC License details. You will be able to access the doctor dashboard once your account is approved.
                 </Text>
+                
                 <Pressable
                     style={styles.button}
-                    onPress={() => navigation.navigate('UserStartingScreen')}
+                    onPress={handleRefresh}
+                    disabled={isRefreshing}
                 >
-                    <ArrowLeft size={20} color="#FFFFFF" style={styles.buttonIcon} />
-                    <Text style={styles.buttonText}>Return to Home</Text>
+                    {isRefreshing ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                        <>
+                            <RefreshCw size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                            <Text style={styles.buttonText}>Refresh Status</Text>
+                        </>
+                    )}
                 </Pressable>
+
                 <Pressable
-                    style={styles.loginButton}
+                    style={styles.logoutButton}
                     onPress={async () => {
                         try {
                             await signOut(auth);
@@ -45,7 +86,7 @@ const PendingVerificationScreen = ({ navigation, route }: Props) => {
                         }
                     }}
                 >
-                    <Text style={styles.loginButtonText}>Log Out</Text>
+                    <Text style={styles.logoutButtonText}>Sign Out</Text>
                 </Pressable>
             </View>
         </SafeAreaView>
@@ -70,52 +111,59 @@ const styles = StyleSheet.create({
         borderRadius: 64,
     },
     title: {
-        fontSize: 24,
-        fontWeight: '800',
+        fontSize: 28,
+        fontWeight: '900',
         color: '#111827',
         marginBottom: 16,
         textAlign: 'center',
+        letterSpacing: -0.5,
     },
     message: {
         fontSize: 16,
         color: '#374151',
         textAlign: 'center',
-        marginBottom: 16,
+        marginBottom: 12,
         lineHeight: 24,
     },
     subtext: {
         fontSize: 14,
         color: '#6B7280',
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: 44,
         lineHeight: 20,
     },
     button: {
         flexDirection: 'row',
         backgroundColor: '#d3347a',
-        paddingVertical: 16,
+        paddingVertical: 18,
         paddingHorizontal: 24,
-        borderRadius: 12,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        marginBottom: 16,
+        shadowColor: '#d3347a',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 5,
     },
     buttonIcon: {
-        marginRight: 8,
+        marginRight: 10,
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 18,
+        fontWeight: '800',
     },
-    loginButton: {
-        paddingVertical: 12,
+    logoutButton: {
+        marginTop: 24,
+        padding: 10,
     },
-    loginButtonText: {
-        color: '#d3347a',
-        fontSize: 16,
+    logoutButtonText: {
+        color: '#9CA3AF',
+        fontSize: 15,
         fontWeight: '600',
+        textDecorationLine: 'underline',
     },
 });
 

@@ -31,10 +31,14 @@ export type RootStackParamList = {
   };
   PregnancyPlanning: undefined;
 
-  // WHO MEC Tool
+  // WHO MEC Tool — OB Side
   ObWhoMecConditions: undefined;
   ObWhoMecPreferences: { age: number; conditionIds: string[] };
   ObWhoMecResults: { age: number; conditionIds: string[]; preferences: string[] };
+
+  // WHO MEC Tool — Guest Side (age + preferences only, no medical conditions)
+  GuestMecPreferences: { age: number };
+  GuestMecResults: { age: number; preferences: string[] };
 };
 
 // Drawer Navigator - main app navigation for authenticated users

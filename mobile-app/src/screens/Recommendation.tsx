@@ -1,291 +1,131 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Modal, Animated as RNAnimated, PanResponder, Dimensions, ActivityIndicator, Alert } from 'react-native';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import React, { useState } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { openDrawer } from '../navigation/NavigationService';
-import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
-import { colors, typography, spacing, borderRadius, shadows } from '../theme';
-import { calculateMEC } from '../services/mecService';
-import ObHeader from '../components/ObHeader';
-import Animated, { FadeInDown, FadeInRight, ZoomIn, FadeIn, FadeInUp } from 'react-native-reanimated';
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DrawerScreenProps } from '../types/navigation';
+import { colors, shadows } from '../theme';
+import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { useAssessment } from '../context/AssessmentContext';
+// Context is read-only here; selectedAgeIndex initialises the local chip state.
+import { Check } from 'lucide-react-native';
 
 type Props = DrawerScreenProps<'Recommendation'>;
 
-const Recommendation: React.FC<Props> = ({ navigation, route }) => {
+const AGE_RANGES = [
+  { label: '< 18',  fullLabel: 'Menarche to < 18 years', numericAge: 16 },
+  { label: '18–19', fullLabel: '18 – 19 years',           numericAge: 18 },
+  { label: '20–39', fullLabel: '20 – 39 years',           numericAge: 30 },
+  { label: '40–45', fullLabel: '40 – 45 years',           numericAge: 42 },
+  { label: '≥ 46',  fullLabel: '≥ 46 years',              numericAge: 50 },
+];
+
+const STEPS = [
+  { id: 1, label: 'Age' },
+  { id: 2, label: 'Preferences' },
+  { id: 3, label: 'Results' },
+];
+
+const Recommendation: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const {
-    selectedAgeIndex,
-    setSelectedAgeIndex,
-    selectedPrefs,
-    setSelectedPrefs,
-    reset
-  } = useAssessment();
-  const [modalVisible, setModalVisible] = useState(false);
-  const translateY = useRef(new RNAnimated.Value(500)).current;
+  // Read context only to pre-fill from a previously saved session selection.
+  // We do NOT write back to context here — saving happens explicitly in Step 3.
+  const { selectedAgeIndex } = useAssessment();
+  const [localAgeIndex, setLocalAgeIndex] = useState<number | null>(selectedAgeIndex);
 
-  // Check if we are in Doctor/OB mode
-  const { isDoctorAssessment } = (route?.params as any) || {};
-
-  // Age ranges for compact selection
-  const ageRanges = [
-    {
-      label: "< 18",
-      value: 0,
-      fullLabel: "Menarche to < 18 years",
-      numericAge: 16
-    },
-    {
-      label: "18-19",
-      value: 1,
-      fullLabel: "18 - 19 years",
-      numericAge: 18
-    },
-    {
-      label: "20-39",
-      value: 2,
-      fullLabel: "20 - 39 years",
-      numericAge: 30
-    },
-    {
-      label: "40-45",
-      value: 3,
-      fullLabel: "40 - 45 years",
-      numericAge: 42
-    },
-    {
-      label: "≥ 46",
-      value: 4,
-      fullLabel: "≥ 46 years",
-      numericAge: 50
-    },
-  ];
-
-  const preferences = [
-    {
-      key: "effectiveness",
-      label: "Effectiveness",
-      description: "Most reliable at preventing pregnancy",
-      icon: "sparkles",
-    },
-    {
-      key: "sti",
-      label: "STI Prevention",
-      description: "Protection against STIs/HIV",
-      icon: "shield-checkmark",
-    },
-    {
-      key: "nonhormonal",
-      label: "Non-hormonal",
-      description: "Hormone-free option",
-      icon: "leaf",
-    },
-    {
-      key: "regular",
-      label: "Regular Bleeding",
-      description: "Helps with cramps or heavy bleeding",
-      icon: "water",
-    },
-    {
-      key: "privacy",
-      label: "Privacy",
-      description: "Can be used without others knowing",
-      icon: "eye-off",
-    },
-    {
-      key: "client",
-      label: "Client controlled",
-      description: "Can start or stop it myself",
-      icon: "hand-left",
-    },
-    {
-      key: "longterm",
-      label: "Long-term protection",
-      description: "Lasts for years with little action",
-      icon: "infinite",
-    },
-  ];
-
-  const colorMap: Record<number, string> = {
-    1: '#4CAF50',
-    2: '#FFEB3B',
-    3: '#FF9800',
-    4: '#F44336',
-    5: '#bbb',
+  const handleSelectAge = (index: number) => {
+    setLocalAgeIndex(index);
   };
 
-  const recommendations: Record<number, Record<string, number>> = {
-    0: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 2, injectables: 2 },
-    1: { pills: 1, patch: 1, copperIUD: 2, levIUD: 2, implant: 1, injectables: 1 },
-    2: { pills: 1, patch: 1, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
-    3: { pills: 1, patch: 2, copperIUD: 1, levIUD: 1, implant: 1, injectables: 1 },
-    4: { pills: 1, patch: 2, copperIUD: 1, levIUD: 1, implant: 1, injectables: 2 },
-  };
-
-  const getColor = (method: string) => {
-    const index = selectedAgeIndex ?? 0;
-    const code = recommendations[index][method];
-    return colorMap[code] || "#ccc";
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dy) > 20,
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100) {
-          RNAnimated.timing(translateY, {
-            toValue: 500,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            translateY.setValue(500);
-            setModalVisible(false);
-          });
-        } else {
-          RNAnimated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
-
-  useEffect(() => {
-    if (modalVisible) {
-      RNAnimated.timing(translateY, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [modalVisible]);
-
-  const togglePreference = (key: string) => {
-    const isSelected = selectedPrefs.includes(key);
-
-    if (isSelected) {
-      setSelectedPrefs(selectedPrefs.filter((item) => item !== key));
-    } else {
-      if (selectedPrefs.length >= 3) {
-        Alert.alert('Limit Reached', 'You can only select up to 3 characteristics.');
-        return;
-      }
-      setSelectedPrefs([...selectedPrefs, key]);
-    }
-  };
-
-  const handleViewRecommendation = () => {
-    if (selectedAgeIndex === null) {
-      Alert.alert('Required', 'Please select your age range first.');
+  const handleNext = () => {
+    if (localAgeIndex === null) {
+      Alert.alert('Select Age', 'Please select your age group before continuing.');
       return;
     }
-
-    const numericAge = ageRanges[selectedAgeIndex].numericAge;
-    const mecResults = calculateMEC({ age: numericAge });
-
-    (navigation as any).navigate('ViewRecommendation', {
-      ageLabel: ageRanges[selectedAgeIndex].fullLabel,
-      ageValue: ageRanges[selectedAgeIndex].value,
-      prefs: selectedPrefs,
-      mecResults,
-      isDoctorAssessment
-    });
+    const numericAge = AGE_RANGES[localAgeIndex].numericAge;
+    (navigation as any).navigate('GuestMecPreferences', { age: numericAge });
   };
 
-  const selectedAgeLabel = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].fullLabel : '';
-
   return (
-    <View style={styles.safeArea}>
-      {isDoctorAssessment && (
-        <ObHeader
-          title="Recommendations"
-          subtitle="Results"
-        />
-      )}
-
-      {!isDoctorAssessment && (
-        <Animated.View
-          entering={FadeInDown.duration(600)}
-          style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}
-        >
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
-            <View style={styles.menuButtonSolid}>
-              <Ionicons name="chevron-back" size={26} color="#FFF" />
-            </View>
-          </TouchableOpacity>
-          <View style={styles.titleContainer}>
-            <Text style={styles.headerText}>What's Right for Me?</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <Animated.View
+        entering={FadeInDown.duration(600)}
+        style={[styles.header, { paddingTop: insets.top + 10 }]}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
+          <View style={styles.headerBtnInner}>
+            <Ionicons name="chevron-back" size={26} color="#FFF" />
           </View>
+        </TouchableOpacity>
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.headerTitle}>What's Right for Me?</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => (navigation as any).navigate('ColorMapping')}
+          style={styles.headerBtn}
+        >
+          <View style={styles.headerBtnInner}>
+            <Ionicons name="information-circle-outline" size={26} color="#FFF" />
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
 
-          <TouchableOpacity onPress={() => (navigation as any).navigate('ColorMapping')} style={styles.infoButton}>
-            <View style={styles.menuButtonSolid}>
-              <Ionicons name="information-circle-outline" size={26} color="#FFF" />
+      {/* Stepper */}
+      <View style={styles.stepperWrap}>
+        {STEPS.map((step) => {
+          const isActive = step.id === 1;
+          return (
+            <View key={step.id} style={styles.stepItem}>
+              <View style={[styles.stepDot, isActive && styles.stepDotActive]}>
+                <Text style={[styles.stepDotText, isActive && styles.stepDotTextActive]}>
+                  {step.id}
+                </Text>
+              </View>
+              <Text style={[styles.stepLabel, isActive && styles.stepLabelActive]}>
+                {step.label}
+              </Text>
             </View>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+          );
+        })}
+      </View>
 
       <ScrollView
-        style={styles.containerOne}
+        style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <View style={styles.screenCont}>
-          {/* Age Section */}
+        <View style={styles.content}>
           <Animated.View entering={FadeInDown.delay(200).duration(800)}>
-            <Text style={styles.header2}>Personalize Your Recommendations</Text>
-            <Text style={styles.header3}>
-              Select your age range to receive contraceptive methods suited to you.
+            <Text style={styles.introTitle}>Select Your Age Group</Text>
+            <Text style={styles.introText}>
+              This tool uses WHO Medical Eligibility Criteria (5th Ed.) to recommend contraceptive methods based on your age. No medical history is required.
             </Text>
           </Animated.View>
 
-          <Animated.View
-            entering={FadeInDown.delay(400).duration(800)}
-            style={styles.sectionContainer}
-          >
-            <View style={styles.sectionHeader}>
-              <View style={styles.meIconContainer}>
-                <View style={styles.meIconCircle}>
-                  <Text style={styles.meText}>Age</Text>
-                  <View style={styles.plusIconBadge}>
-                    <Ionicons name="add" size={12} color="#3B82F6" weight="bold" />
-                  </View>
-                </View>
+          {/* Age Selection */}
+          <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardIcon}>
+                <Ionicons name="calendar-outline" size={22} color={colors.primary} />
               </View>
-              <Text style={styles.sectionLabel}>Age</Text>
+              <Text style={styles.cardTitle}>Age Group</Text>
             </View>
 
             <View style={styles.ageChipsWrapper}>
-              {ageRanges.map((range, index) => {
-                const isSelected = selectedAgeIndex === index;
+              {AGE_RANGES.map((range, index) => {
+                const isSelected = localAgeIndex === index;
                 return (
                   <Animated.View
                     key={index}
-                    entering={FadeInRight.delay(600 + (index * 100)).duration(500)}
+                    entering={FadeInRight.delay(600 + index * 100).duration(500)}
                   >
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      style={[
-                        styles.ageChip,
-                        isSelected && styles.ageChipSelected
-                      ]}
-                      onPress={() => setSelectedAgeIndex(index)}
+                      style={[styles.ageChip, isSelected && styles.ageChipSelected]}
+                      onPress={() => handleSelectAge(index)}
                     >
-                      <Text style={[
-                        styles.ageChipLabel,
-                        isSelected && styles.ageChipLabelSelected
-                      ]}>
+                      <Text style={[styles.ageChipLabel, isSelected && styles.ageChipLabelSelected]}>
                         {range.label}
                       </Text>
                     </TouchableOpacity>
@@ -293,88 +133,34 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
                 );
               })}
             </View>
+
+            {localAgeIndex !== null && (
+              <Animated.View entering={FadeInDown.duration(400)} style={styles.selectedAgeBadge}>
+                <Check size={14} color={colors.primary} />
+                <Text style={styles.selectedAgeText}>
+                  {AGE_RANGES[localAgeIndex].fullLabel}
+                </Text>
+              </Animated.View>
+            )}
           </Animated.View>
 
-          {/* Preferences Section */}
-          <Animated.View
-            entering={FadeInDown.delay(1000).duration(800)}
-            style={[styles.sectionContainer, { marginTop: 24 }]}
-          >
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.sectionHeader}>
-                <View style={[styles.iconCircle, { backgroundColor: '#FDF2F8' }]}>
-                  <Image
-                    source={require('../../assets/image/star.png')}
-                    style={styles.sectionIcon}
-                  />
-                </View>
-                <Text style={styles.sectionLabel}>Your Preferences</Text>
-              </View>
-              <View style={styles.optionalBadgeContainer}>
-                <Text style={styles.optionalBadge}>Optional</Text>
-              </View>
-            </View>
-
-            <Text style={styles.subText}>Select up to 3 factors that matter most when choosing a contraceptive method.</Text>
-
-            <View style={styles.prefsList}>
-              {preferences.map((pref, index) => {
-                const selected = selectedPrefs.includes(pref.key);
-                return (
-                  <Animated.View
-                    key={pref.key}
-                    entering={FadeInRight.delay(1200 + (index * 100)).duration(500)}
-                  >
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onPress={() => togglePreference(pref.key)}
-                      style={[
-                        styles.prefItem,
-                        selected && styles.prefItemSelected
-                      ]}
-                    >
-                      <View style={styles.prefItemContent}>
-                        <View style={styles.prefIconWrapper}>
-                          <Ionicons name={pref.icon as any} size={22} color={colors.primary} />
-                        </View>
-                        <View style={styles.prefTextContainer}>
-                          <Text style={[
-                            styles.prefItemLabel,
-                            selected && { color: colors.green.dark }
-                          ]}>{pref.label}</Text>
-                          <Text style={styles.prefItemDesc}>{pref.description}</Text>
-                        </View>
-                        <View style={styles.checkWrapper}>
-                          <Ionicons
-                            name={selected ? "checkmark-circle" : "ellipse-outline"}
-                            size={26}
-                            color={selected ? colors.green.main : "#E2E8F0"}
-                          />
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  </Animated.View>
-                );
-              })}
-            </View>
+          {/* Info note */}
+          <Animated.View entering={FadeInDown.delay(900).duration(800)} style={styles.noteCard}>
+            <Ionicons name="shield-checkmark-outline" size={18} color="#0369A1" />
+            <Text style={styles.noteText}>
+              Your privacy is protected. We only use your age group — no personal medical history is collected.
+            </Text>
           </Animated.View>
 
-          <Animated.View entering={FadeInUp.delay(2000).duration(800)}>
+          <Animated.View entering={FadeInUp.delay(1100).duration(800)}>
             <TouchableOpacity
-              style={styles.viewRecButton}
-              onPress={handleViewRecommendation}
+              style={[styles.nextBtn, localAgeIndex === null && styles.nextBtnDisabled]}
+              onPress={handleNext}
               activeOpacity={0.9}
+              disabled={localAgeIndex === null}
             >
-              <LinearGradient
-                colors={[colors.primary, '#D22E73']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.viewRecGradient}
-              >
-                <Ionicons name="sparkles" size={22} color="#FFF" style={{ marginRight: 10 }} />
-                <Text style={styles.viewRecButtonText}>View Recommendations</Text>
-                <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.7)" style={{ marginLeft: 8 }} />
-              </LinearGradient>
+              <Text style={styles.nextBtnText}>Next: Preferences</Text>
+              <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.9)" style={{ marginLeft: 8 }} />
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -386,14 +172,11 @@ const Recommendation: React.FC<Props> = ({ navigation, route }) => {
 export default Recommendation;
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  containerOne: {
-    flex: 1,
-  },
-  headerContainer: {
+  header: {
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingBottom: 25,
@@ -408,120 +191,115 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
-  titleContainer: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  headerText: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFF',
-    letterSpacing: -0.5,
-  },
-  menuButton: {
+  headerBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
     overflow: 'hidden',
   },
-  menuButtonSolid: {
+  headerBtnInner: {
     flex: 1,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  infoButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    overflow: 'hidden',
+  headerTitleWrap: {
+    flex: 1,
+    marginLeft: 15,
   },
-  screenCont: {
-    paddingHorizontal: 20,
-  },
-  header2: {
-    fontSize: 23,
+  headerTitle: {
+    fontSize: 22,
     fontWeight: '800',
-    color: colors.text.primary,
-    marginBottom: 6,
+    color: '#FFF',
     letterSpacing: -0.5,
-    paddingTop: 20,
   },
-  header3: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  sectionContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    ...shadows.md,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  sectionHeaderRow: {
+  stepperWrap: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#FFF8FC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8DDE9',
   },
-  sectionHeader: {
+  stepItem: { alignItems: 'center', flex: 1 },
+  stepDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3E8EF',
+    borderWidth: 1,
+    borderColor: '#E4CFDB',
+  },
+  stepDotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  stepDotText: { fontSize: 15, fontWeight: '700', color: '#8A7A83' },
+  stepDotTextActive: { color: '#FFFFFF' },
+  stepLabel: { marginTop: 4, fontSize: 13, fontWeight: '600', color: '#8A7A83' },
+  stepLabelActive: { color: colors.primary },
+  scroll: { flex: 1 },
+  content: { paddingHorizontal: 20, paddingTop: 20 },
+  introTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1B211A',
+    marginBottom: 8,
+    letterSpacing: -0.3,
+  },
+  introText: {
+    fontSize: 15,
+    color: '#64748B',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F3DCE8',
+    ...shadows.md,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.08,
+  },
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  cardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor: '#FFF0F6',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#F8D6E5',
   },
-  sectionIcon: {
-    height: 20,
-    width: 20,
-    resizeMode: "contain",
-  },
-  sectionLabel: {
+  cardTitle: {
     fontSize: 19,
     fontWeight: '700',
     color: '#1B211A',
-    marginLeft: 12,
-  },
-  optionalBadgeContainer: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  optionalBadge: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  subText: {
-    fontSize: 15,
-    color: colors.text.secondary,
-    marginBottom: 20,
-    lineHeight: 20,
   },
   ageChipsWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
     justifyContent: 'center',
-    paddingTop: 10,
   },
   ageChip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 8,
-    width: '30%',
-    minWidth: 100,
+    width: 100,
     borderRadius: 20,
     backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
@@ -544,119 +322,57 @@ const styles = StyleSheet.create({
   ageChipLabelSelected: {
     color: '#FFF',
   },
-  meIconContainer: {
-    marginRight: 12,
-  },
-  meIconCircle: {
-    width: 45,
-    height: 40,
-    borderRadius: 19,
-    borderWidth: 2,
-    borderColor: '#3B82F6',
-    backgroundColor: '#F0F9FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  meText: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#F59E0B',
-    lineHeight: 18,
-    textTransform: 'uppercase',
-  },
-  plusIconBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#F0F9FF',
-    borderRadius: 8,
-    padding: 2,
-  },
-  prefsList: {
-    gap: 14,
-  },
-  prefItem: {
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-  },
-  prefItemSelected: {
-    borderColor: colors.green.main,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-  },
-  prefItemContent: {
+  selectedAgeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F3DCE8',
   },
-  prefIconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  prefItemIcon: {
-    width: 26,
-    height: 26,
-    resizeMode: 'contain',
-  },
-  prefTextContainer: {
-    flex: 1,
-  },
-  prefItemLabel: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1B211A',
-    marginBottom: 2,
-  },
-  prefItemDesc: {
+  selectedAgeText: {
     fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 16,
+    color: colors.primary,
+    fontWeight: '600',
   },
-  checkWrapper: {
-    marginLeft: 10,
+  noteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    marginBottom: 24,
   },
-  viewRecButton: {
-    marginTop: 32,
+  noteText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#0C4A6E',
+    lineHeight: 20,
+  },
+  nextBtn: {
+    backgroundColor: colors.primary,
     borderRadius: 20,
-    overflow: 'hidden',
+    paddingVertical: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 8,
     shadowColor: colors.primary,
     shadowOpacity: 0.4,
     shadowRadius: 15,
     shadowOffset: { width: 0, height: 6 },
   },
-  viewRecGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
+  nextBtnDisabled: {
+    opacity: 0.55,
   },
-  viewRecButtonText: {
+  nextBtnText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.5,
-  },
-
-
-  ageChipText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  ageChipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
   },
 });

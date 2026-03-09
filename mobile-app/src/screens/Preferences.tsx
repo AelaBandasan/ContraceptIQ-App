@@ -9,7 +9,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { typography, spacing, colors, borderRadius, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
-import { calculateMEC, calculateMatchScore, MECCategory, getMECColor, getMECLabel } from '../services/mecService';
+import { calculateWhoMecTool, getMECColor } from '../services/mecService';
 import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 
 const prefLabels: Record<string, string> = {
@@ -37,33 +37,26 @@ const Preferences = ({ navigation }: Props) => {
     { label: "≥ 46", value: 4, fullLabel: "≥ 46 years", numericAge: 50 },
   ];
 
-  // Base methods for calculation
-  const baseContraceptives = [
-    { name: 'Implant', mecKey: 'Implant' as const, image: require('../../assets/image/sq_lngetg.png') },
-    { name: 'DMPA (Injectable)', mecKey: 'DMPA' as const, image: require('../../assets/image/sq_dmpainj.png') },
-    { name: 'CHC (Patch/Pills/Ring)', mecKey: 'CHC' as const, image: require('../../assets/image/sq_chcpatch1.png') },
-    { name: 'Cu-IUD (Copper)', mecKey: 'Cu-IUD' as const, image: require('../../assets/image/sq_cuiud.png') },
-    { name: 'POP (Progestin-Only Pills)', mecKey: 'POP' as const, image: require('../../assets/image/sq_chcpills.png') },
-    { name: 'LNG-IUD (Hormonal)', mecKey: 'LNG-IUD' as const, image: require('../../assets/image/sq_lngiud.png') },
-  ];
+  const METHOD_IMAGES: Record<string, any> = {
+    'Combined Hormonal':   require('../../assets/image/sq_chcpatch1.png'),
+    'Progestin-Only Pill': require('../../assets/image/sq_chcpills.png'),
+    'Injectable':          require('../../assets/image/sq_dmpainj.png'),
+    'Implant':             require('../../assets/image/sq_lngetg.png'),
+    'Copper IUD':          require('../../assets/image/sq_cuiud.png'),
+    'Hormonal IUD':        require('../../assets/image/sq_lngiud.png'),
+  };
 
-  // Calculate recommendations
+  // Calculate recommendations using the same WHO MEC tool as the Results screen
   const topRecommendations = React.useMemo(() => {
     const age = selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].numericAge : 25;
-    const mecResults = calculateMEC({ age });
-
-    return baseContraceptives
-      .map(c => ({
-        ...c,
-        mecCategory: mecResults[c.mecKey] as MECCategory,
-        color: getMECColor(mecResults[c.mecKey]),
-        matchScore: calculateMatchScore(c.mecKey, chosenPrefs)
-      }))
-      .sort((a, b) => {
-        if (a.mecCategory !== b.mecCategory) return a.mecCategory - b.mecCategory;
-        return b.matchScore - a.matchScore;
-      })
-      .slice(0, 3); // Get top 3
+    const result = calculateWhoMecTool({ age, conditionIds: [], preferences: chosenPrefs });
+    return result.recommended.slice(0, 3).map(m => ({
+      name: m.name,
+      mecCategory: m.mecCategory,
+      color: getMECColor(m.mecCategory),
+      matchScore: m.matchScore,
+      image: METHOD_IMAGES[m.name],
+    }));
   }, [selectedAgeIndex, chosenPrefs]);
 
   const handleEdit = () => {
@@ -147,10 +140,6 @@ const Preferences = ({ navigation }: Props) => {
                 </View>
                 <View style={styles.recomInfo}>
                   <Text style={styles.recomName}>{item.name}</Text>
-                  <View style={styles.matchBadge}>
-                    <Ionicons name="sparkles" size={12} color={colors.primary} />
-                    <Text style={styles.matchText}>{item.matchScore}% Match</Text>
-                  </View>
                 </View>
                 <View style={styles.chevronContainer}>
                   <Ionicons name="chevron-forward" size={20} color={colors.primary} />
