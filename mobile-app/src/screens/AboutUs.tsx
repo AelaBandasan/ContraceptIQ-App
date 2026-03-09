@@ -64,9 +64,10 @@ const ABOUT_ITEMS: AboutItem[] = [
   },
 ];
 
-const AboutUs = ({ navigation }: any) => {
+const AboutUs = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const [openId, setOpenId] = useState<number | null>(1);
+  const isObView = route?.name === 'ObAbout';
 
   const toggleItem = (id: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -82,16 +83,29 @@ const AboutUs = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
-        <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
-          <View style={styles.menuButtonSolid}>
-            <Ionicons name="menu" size={24} color="#FFF" />
+      {isObView ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
+          <TouchableOpacity onPress={() => navigation.navigate('ObProfile')} style={styles.menuButton}>
+            <View style={styles.menuButtonSolid}>
+              <Ionicons name="chevron-back" size={24} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
+            <Text style={styles.headerText}>About ContraceptIQ</Text>
           </View>
-        </TouchableOpacity>
-        <View style={styles.titleContainer}>
-          <Text style={styles.headerText}>About ContraceptIQ</Text>
         </View>
-      </View>
+      ) : (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
+          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
+            <View style={styles.menuButtonSolid}>
+              <Ionicons name="menu" size={24} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
+            <Text style={styles.headerText}>About ContraceptIQ</Text>
+          </View>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.brandCard}>

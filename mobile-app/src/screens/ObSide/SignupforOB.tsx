@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     borderRadius: 14,
     paddingHorizontal: 14,
-    height: hp("7.5%"),
+    height: hp("6.0%"),
   },
   inputIcon: {
     marginRight: 10,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   signupButton: {
-    height: hp("7.5%"),
+    height: hp("6.0%"),
     borderRadius: 22,
     overflow: "hidden",
     backgroundColor: colors.primary,
