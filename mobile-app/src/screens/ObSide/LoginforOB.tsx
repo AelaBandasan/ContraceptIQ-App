@@ -26,7 +26,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ChevronDown, ChevronUp, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 import Logo from "../../../assets/cl_tempLogo.png";
@@ -158,6 +158,31 @@ const LoginforOB = ({ navigation }: any) => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      Alert.alert(
+        "Forgot Password",
+        "Please enter your email address in the Email field above, then tap Forgot Password again.",
+      );
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, trimmedEmail);
+      Alert.alert(
+        "Reset Email Sent",
+        `A password reset link has been sent to ${trimmedEmail}. Check your inbox and follow the instructions.`,
+      );
+    } catch (error: any) {
+      let message = "Could not send reset email. Please try again.";
+      if (error.code === "auth/user-not-found" || error.code === "auth/invalid-email") {
+        message = "No account found with that email address.";
+      }
+      Alert.alert("Error", message);
+    }
+  };
+
   const fillDemoCredentials = () => {
     setEmail("ob@gmail.com");
     setPassword("password");
@@ -253,7 +278,7 @@ const LoginforOB = ({ navigation }: any) => {
                 </View>
               </View>
 
-              <Pressable style={styles.forgotPassword}>
+              <Pressable style={styles.forgotPassword} onPress={handleForgotPassword}>
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </Pressable>
 

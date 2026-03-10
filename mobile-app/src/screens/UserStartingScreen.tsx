@@ -1,5 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, StatusBar } from 'react-native';
-import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Image, StatusBar, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -14,11 +14,15 @@ import Animated, {
     Easing
 } from 'react-native-reanimated';
 import { ArrowRight } from 'lucide-react-native';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 import Logo from '../../assets/cl_tempLogo.png';
 import { colors, shadows } from '../theme';
+import { auth, db } from '../config/firebaseConfig';
 
 const UserStartingScreen = ({ navigation }: any) => {
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const logoScale = useSharedValue(0.9);
 
     // Background Animation Shared Values
@@ -27,6 +31,35 @@ const UserStartingScreen = ({ navigation }: any) => {
     const blob3Pos = useSharedValue(0);
 
     useEffect(() => {
+        // Auth check logic
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const doctorName = userData.fullName || "Dr. " + (userData.email?.split('@')[0] || "User");
+
+                        if (userData.verificationStatus === "verified") {
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: "ObMainTabs", params: { doctorName } }],
+                            });
+                        } else {
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: "PendingVerification", params: { doctorName } }],
+                            });
+                        }
+                        return; // Exit so isCheckingAuth stays true during transition
+                    }
+                } catch (error) {
+                    console.error("Auth redirect error:", error);
+                }
+            }
+            setIsCheckingAuth(false);
+        });
+
         // Logo breathing animation
         logoScale.value = withRepeat(
             withSequence(
@@ -55,6 +88,8 @@ const UserStartingScreen = ({ navigation }: any) => {
             -1,
             true
         );
+
+        return () => unsubscribe();
     }, []);
 
     const animatedLogoStyle = useAnimatedStyle(() => ({
@@ -90,6 +125,14 @@ const UserStartingScreen = ({ navigation }: any) => {
     const handleOBlogin = () => {
         navigation.navigate('LoginforOB');
     };
+
+    if (isCheckingAuth) {
+        return (
+            <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.screen}>
