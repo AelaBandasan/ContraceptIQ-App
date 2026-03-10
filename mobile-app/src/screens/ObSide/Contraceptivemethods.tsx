@@ -2,11 +2,13 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'rea
 import React from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../../types/navigation';
 import ObHeader from '../../components/ObHeader';
 import { colors, shadows } from '../../theme';
+import Animated, {
+  FadeIn,
+} from 'react-native-reanimated';
 
 type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'> | DrawerScreenProps<'Contraceptive Methods'>;
 
@@ -129,40 +131,44 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
       >
 
 
-        {methods.map((item) => (
-          <TouchableOpacity
+        {methods.map((item, index) => (
+          <Animated.View
             key={item.id}
-            style={styles.methodCard}
-            activeOpacity={0.9}
-            onPress={() => (navigation as any).navigate('MethodDetail', { methodId: item.id as any })}
+            entering={FadeIn.delay(350 + index * 150).duration(1200).withInitialValues({ opacity: 1 })}
           >
-            <View style={styles.cardContent}>
-              <View style={styles.textContainer}>
-                <View style={[styles.miniIconContainer, { backgroundColor: item.color + '20' }]}>
-                  {item.iconFamily === 'Ionicons' ? (
-                    <Ionicons name={item.icon as any} size={18} color={item.color} />
-                  ) : (
-                    <MaterialCommunityIcons name={item.icon as any} size={18} color={item.color} />
-                  )}
-                </View>
-                <Text style={styles.methodName}>{item.name}</Text>
-                <Text style={styles.methodShortName}>{item.shortName}</Text>
+            <TouchableOpacity
+              style={styles.methodCard}
+              activeOpacity={0.9}
+              onPress={() => (navigation as any).navigate('MethodDetail', { methodId: item.id as any })}
+            >
+              <View style={styles.cardContent}>
+                <View style={styles.textContainer}>
+                  <View style={[styles.miniIconContainer, { backgroundColor: item.color + '20' }]}>
+                    {item.iconFamily === 'Ionicons' ? (
+                      <Ionicons name={item.icon as any} size={18} color={item.color} />
+                    ) : (
+                      <MaterialCommunityIcons name={item.icon as any} size={18} color={item.color} />
+                    )}
+                  </View>
+                  <Text style={styles.methodName}>{item.name}</Text>
+                  <Text style={styles.methodShortName}>{item.shortName}</Text>
 
-                <View style={styles.statsContainer}>
-                  <View style={styles.statRow}>
-                    <Ionicons name="people-outline" size={14} color="#666" />
-                    <Text style={styles.statText}>{item.effectiveness}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <MaterialCommunityIcons name="shield-check-outline" size={14} color="#666" />
-                    <Text style={styles.statText}>{item.perfectEffectiveness} Perfect</Text>
+                  <View style={styles.statsContainer}>
+                    <View style={styles.statRow}>
+                      <Ionicons name="people-outline" size={14} color="#666" />
+                      <Text style={styles.statText}>{item.effectiveness}</Text>
+                    </View>
+                    <View style={styles.statRow}>
+                      <MaterialCommunityIcons name="shield-check-outline" size={14} color="#666" />
+                      <Text style={styles.statText}>{item.perfectEffectiveness} Perfect</Text>
+                    </View>
                   </View>
                 </View>
+
+                <Image source={item.illustration} style={styles.illustration} />
               </View>
-
-              <Image source={item.illustration} style={styles.illustration} />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </Animated.View>
         ))}
       </ScrollView>
 
@@ -176,7 +182,7 @@ export default Contraceptivemethods
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F9FB',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     backgroundColor: colors.primary,

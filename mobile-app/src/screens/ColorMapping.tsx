@@ -83,7 +83,7 @@ const ColorMapping: React.FC<Props> = ({ navigation }) => {
                     return (
                         <Animated.View
                             key={index}
-                            entering={FadeInDown.delay(200 + index * 100).duration(600)}
+                            entering={FadeInDown.delay(200 + index * 100).duration(600).withInitialValues({ opacity: 1 })}
                             style={[styles.card, { borderLeftColor: category.color }]}
                         >
                             <View style={styles.cardHeader}>

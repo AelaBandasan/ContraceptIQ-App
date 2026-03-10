@@ -58,7 +58,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
             >
                 {/* Main Info Card */}
-                <Animated.View entering={FadeInDown.delay(100).duration(500)} style={[styles.mainCard, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+                <Animated.View entering={FadeInDown.delay(100).duration(500).withInitialValues({ opacity: 1 })} style={[styles.mainCard, { flexDirection: 'column', alignItems: 'flex-start' }]}> 
                     <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', marginBottom: 15 }}>
                         <Image source={data.illustration} style={styles.mainImage} />
                         <View style={[styles.mainTextContent, { marginLeft: 16, justifyContent: 'center' }]}>
@@ -76,7 +76,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 </Animated.View>
 
                 {/* Stats Row */}
-                <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.statsRow}>
+                <Animated.View entering={FadeInDown.delay(200).duration(500).withInitialValues({ opacity: 1 })} style={styles.statsRow}>
                     <View style={styles.statItem}>
                         <Text style={styles.statLabel}>Effectiveness</Text>
                         <View style={styles.effChipSmall}>
@@ -100,7 +100,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 </Animated.View>
 
                 {/* How to Use Section */}
-                <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+                <Animated.View entering={FadeInDown.delay(300).duration(500).withInitialValues({ opacity: 1 })}>
                     <View style={styles.sectionCard}>
                         <View style={styles.sectionHeader}>
                             <View>
@@ -133,7 +133,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 </Animated.View>
 
                 {/* Benefits & Disadvantages Section */}
-                <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.richComparisonContainer}>
+                <Animated.View entering={FadeInDown.delay(400).duration(500).withInitialValues({ opacity: 1 })} style={styles.richComparisonContainer}>
                     <View style={[styles.richComparisonBox, styles.benefitsBox]}>
                         <View style={styles.comparisonHeaderRow}>
                             <View style={[styles.iconBox, { backgroundColor: '#DCFCE7' }]}>
@@ -170,7 +170,7 @@ export const MethodDetail: React.FC<Props> = ({ navigation, route }) => {
                 </Animated.View>
 
                 {/* Pregnancy Planning Link */}
-                <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.footerContainer}>
+                <Animated.View entering={FadeInDown.delay(500).duration(500).withInitialValues({ opacity: 1 })} style={styles.footerContainer}>
                     {data.reversible && (
                         <View style={styles.reversibleBadge}>
                             <Ionicons name="leaf" size={14} color="#16A34A" />

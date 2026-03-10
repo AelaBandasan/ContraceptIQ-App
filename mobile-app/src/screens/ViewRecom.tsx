@@ -171,7 +171,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 20, paddingBottom: 90 }}
       >
-        <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.heroCard}>
+        <Animated.View entering={FadeInDown.delay(120).duration(500).withInitialValues({ opacity: 1 })} style={styles.heroCard}>
           <LinearGradient
             colors={['#FFFFFF', '#FFF7FB']}
             start={{ x: 0, y: 0 }}
@@ -267,7 +267,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         )}
 
-        <Animated.View entering={FadeInUp.delay(220).duration(500)} style={styles.listContainer}>
+        <Animated.View entering={FadeInUp.delay(220).duration(500).withInitialValues({ opacity: 1 })} style={styles.listContainer}>
           <View style={styles.listHeadingRow}>
             <Text style={styles.listHeading}>All Methods</Text>
             <View style={styles.listCountPill}>
@@ -275,7 +275,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
           {contraceptives.map((item, index) => (
-            <Animated.View key={item.name} entering={FadeInRight.delay(260 + index * 70).duration(360)}>
+            <Animated.View key={item.name} entering={FadeInRight.delay(260 + index * 70).duration(360).withInitialValues({ opacity: 1 })}>
               <TouchableOpacity
                 style={[
                   styles.listItem,

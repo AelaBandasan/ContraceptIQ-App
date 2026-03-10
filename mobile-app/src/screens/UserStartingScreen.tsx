@@ -172,7 +172,7 @@ const UserStartingScreen = ({ navigation }: any) => {
 
                     {/* Action Section */}
                     <Animated.View
-                        entering={FadeInUp.delay(1000).duration(1200).springify()}
+                        entering={FadeInUp.delay(1000).duration(1200).springify().withInitialValues({ opacity: 1 })}
                         style={styles.bottomSection}
                     >
                         <TouchableOpacity

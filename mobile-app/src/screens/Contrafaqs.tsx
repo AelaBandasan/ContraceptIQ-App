@@ -120,7 +120,7 @@ const FaqItemComponent = ({
   };
 
   return (
-    <Animated.View entering={FadeInDown.delay(item.id * 45).duration(350)} style={[styles.faqCard, isOpen && styles.faqCardOpen]}>
+    <Animated.View entering={FadeInDown.delay(item.id * 45).duration(350).withInitialValues({ opacity: 1 })} style={[styles.faqCard, isOpen && styles.faqCardOpen]}>
       <TouchableOpacity
         style={styles.faqHeader}
         onPress={onToggle}

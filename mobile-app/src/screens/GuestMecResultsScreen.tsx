@@ -261,11 +261,6 @@ const GuestMecResultsScreen = () => {
           </Text>
         </View>
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Bottom bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <TouchableOpacity
           style={[styles.primaryBtn, saved && styles.primaryBtnSaved]}
           onPress={saved ? undefined : handleSave}
@@ -284,7 +279,9 @@ const GuestMecResultsScreen = () => {
           <Ionicons name="home-outline" size={16} color="#6B4254" />
           <Text style={styles.secondaryBtnText}>Return to Home</Text>
         </TouchableOpacity>
-      </View>
+
+        <View style={{ height: 28 }} />
+      </ScrollView>
     </View>
   );
 };
@@ -453,13 +450,6 @@ const styles = StyleSheet.create({
   disclaimerTitle: { fontSize: 14, fontWeight: '700', color: '#92400E' },
   disclaimerText: { fontSize: 12.5, color: '#92400E', lineHeight: 18 },
 
-  // Bottom bar
-  bottomBar: {
-    flexDirection: 'column', alignItems: 'stretch',
-    paddingHorizontal: 20, paddingTop: 12,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#F3DCE8',
-    ...shadows.lg,
-  },
   primaryBtn: {
     backgroundColor: colors.primary, borderRadius: 16, height: 55,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

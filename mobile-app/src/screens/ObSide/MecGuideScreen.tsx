@@ -73,7 +73,7 @@ const MecGuideScreen = () => {
                     return (
                         <Animated.View
                             key={index}
-                            entering={FadeInDown.delay(120 + index * 90).duration(450)}
+                            entering={FadeInDown.delay(120 + index * 90).duration(450).withInitialValues({ opacity: 1 })}
                             style={[styles.card, { borderLeftColor: category.color }]}
                         >
                             <View style={styles.cardHeader}>

@@ -22,7 +22,7 @@ const WhatIsContraception = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.mainCard}>
+        <Animated.View entering={FadeInDown.delay(100).duration(400).withInitialValues({ opacity: 1 })} style={styles.mainCard}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconBox, { backgroundColor: '#E0E7FF' }]}>
               <Ionicons name="heart" size={24} color="#6366F1" />
@@ -34,7 +34,7 @@ const WhatIsContraception = ({ navigation }: any) => {
           </Text>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(180).duration(400)} style={styles.quoteCard}>
+        <Animated.View entering={FadeInDown.delay(180).duration(400).withInitialValues({ opacity: 1 })} style={styles.quoteCard}>
           <View style={styles.quoteHeader}>
             <Ionicons name="shield-checkmark" size={20} color="#10B981" />
             <Text style={styles.quoteTitle}>Why It Matters</Text>
@@ -45,21 +45,6 @@ const WhatIsContraception = ({ navigation }: any) => {
           <View style={styles.whoBadge}>
             <Text style={styles.whoText}>WHO</Text>
           </View>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(260).duration(400)}>
-          <TouchableOpacity style={styles.learnMoreCard} onPress={() => navigation.navigate('LearnHub')} activeOpacity={0.8}>
-            <View style={styles.learnMoreContent}>
-              <View style={[styles.learnMoreIcon, { backgroundColor: '#F0FDF4' }]}>
-                <Ionicons name="book" size={22} color="#16A34A" />
-              </View>
-              <View style={styles.learnMoreText}>
-                <Text style={styles.learnMoreTitle}>Learn More</Text>
-                <Text style={styles.learnMoreSubtitle}>Explore different birth control methods</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#16A34A" />
-          </TouchableOpacity>
         </Animated.View>
 
         <View style={{ height: 40 }} />
@@ -94,18 +79,12 @@ const styles = StyleSheet.create({
   mainCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 20, marginBottom: 16, ...shadows.sm, borderWidth: 1, borderColor: '#E0E7FF' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   iconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937', flex: 1 },
-  cardDescription: { fontSize: 15, color: '#64748B', lineHeight: 24 },
+  cardTitle: { fontSize: 19, fontWeight: '700', color: '#1F2937', flex: 1 },
+  cardDescription: { fontSize: 16, color: '#64748B', lineHeight: 24 },
   quoteCard: { backgroundColor: '#F0FDF4', borderRadius: 20, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#BBF7D0' },
   quoteHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 },
-  quoteTitle: { fontSize: 16, fontWeight: '700', color: '#166534' },
-  quoteText: { fontSize: 14, color: '#15803D', lineHeight: 22, fontStyle: 'italic' },
+  quoteTitle: { fontSize: 17.5, fontWeight: '700', color: '#166534' },
+  quoteText: { fontSize: 15, color: '#15803D', lineHeight: 22, fontStyle: 'italic' },
   whoBadge: { alignSelf: 'flex-end', backgroundColor: '#16A34A', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 12 },
-  whoText: { fontSize: 11, fontWeight: '700', color: '#FFF' },
-  learnMoreCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...shadows.sm, borderWidth: 1, borderColor: '#DCFCE7' },
-  learnMoreContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  learnMoreIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  learnMoreText: { flex: 1 },
-  learnMoreTitle: { fontSize: 15, fontWeight: '700', color: '#166534' },
-  learnMoreSubtitle: { fontSize: 13, color: '#15803D', marginTop: 2 },
+  whoText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
 });

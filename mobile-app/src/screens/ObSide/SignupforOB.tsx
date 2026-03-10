@@ -203,7 +203,7 @@ const SignupforOB = ({ navigation }: any) => {
             </View>
 
             {/* Form */}
-            <Animated.View entering={FadeInUp.delay(120).duration(700)} style={styles.formSection}>
+            <Animated.View entering={FadeInUp.delay(120).duration(700).withInitialValues({ opacity: 1 })} style={styles.formSection}>
 
               {/* Full Name */}
               <View style={styles.inputContainer}>

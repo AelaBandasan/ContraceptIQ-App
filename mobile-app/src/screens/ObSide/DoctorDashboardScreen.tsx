@@ -15,7 +15,6 @@ import { auth } from '../../config/firebaseConfig';
 import { loadAssessmentsCache, flushSyncQueue, AssessmentRecord } from '../../services/doctorService';
 import ObHeader from '../../components/ObHeader';
 import { colors, shadows } from '../../theme';
-import Animated, { FadeInDown, FadeOut, Layout } from 'react-native-reanimated';
 
 /**
  * Redesigned Doctor Dashboard
@@ -106,7 +105,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
         const topMethod = Object.keys(item.riskResults || {})[0] || '—';
 
         return (
-            <Animated.View key={item.id} entering={FadeInDown.duration(320)} layout={Layout.springify()}>
+            <View key={item.id}>
                 <TouchableOpacity
                     style={styles.assessmentCard}
                     onPress={() => {
@@ -164,7 +163,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                         </View>
                     </View>
                 </TouchableOpacity>
-            </Animated.View>
+            </View>
         );
     };
 
@@ -181,7 +180,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                 renderItem={null}
                 ListHeaderComponent={
                     <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}> 
-                        <Animated.View entering={FadeInDown.delay(80).duration(360)} style={styles.section}>
+                        <View style={styles.section}>
                             <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Quick Actions</Text>
                             <View style={styles.actionGrid}>
                                 <TouchableOpacity
@@ -240,9 +239,9 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     </View>
                                 </TouchableOpacity>
                             </View>
-                        </Animated.View>
+                        </View>
 
-                        <Animated.View entering={FadeInDown.delay(140).duration(360)} style={styles.section}>
+                        <View style={styles.section}>
                             <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Activity Summary</Text>
 
                             <View style={[styles.activityCard, isCompact && styles.activityCardCompact]}>
@@ -273,9 +272,9 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     ))}
                                 </View>
                             </View>
-                        </Animated.View>
+                        </View>
 
-                        <Animated.View entering={FadeInDown.delay(200).duration(360)} style={[styles.section, styles.recentSection]}>
+                        <View style={[styles.section, styles.recentSection]}>
                             <View style={styles.rowBetween}>
                                 <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Recent Assessments</Text>
                                 <TouchableOpacity onPress={() => navigation.navigate('ObHistory')}>
@@ -327,9 +326,9 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     </View>
                                 )}
                             </View>
-                        </Animated.View>
+                        </View>
 
-                        <Animated.View entering={FadeInDown.delay(240).duration(360)}>
+                        <View>
                             <TouchableOpacity
                                 style={[styles.mecCard, mecExpanded && styles.mecCardExpanded]}
                                 onPress={() => setMecExpanded(!mecExpanded)}
@@ -351,7 +350,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </View>
 
                                 {mecExpanded && (
-                                    <Animated.View entering={FadeInDown.duration(250)} exiting={FadeOut.duration(180)} layout={Layout.springify()} style={styles.mecContent}>
+                                    <View style={styles.mecContent}>
                                         <View style={styles.mecItem}>
                                             <View style={[styles.colorDot, { backgroundColor: '#10B981' }]} />
                                             <Text style={styles.mecLabel}>Green — Safe to Use</Text>
@@ -375,10 +374,10 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                             <Info size={16} color="#FFF" />
                                             <Text style={styles.mecFullBtnText}>View Full MEC Guide</Text>
                                         </TouchableOpacity>
-                                    </Animated.View>
+                                    </View>
                                 )}
                             </TouchableOpacity>
-                        </Animated.View>
+                        </View>
                     </View>
                 }
                 contentContainerStyle={{ paddingBottom: 40 }}

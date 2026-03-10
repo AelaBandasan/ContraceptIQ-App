@@ -164,7 +164,7 @@ const LearnHub = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.introCard}>
+        <Animated.View entering={FadeInDown.delay(100).duration(500).withInitialValues({ opacity: 1 })} style={styles.introCard}>
           <View style={styles.introCardHeader}>
             <View style={[styles.introIconBox, { backgroundColor: '#E0E7FF' }]}>
               <Ionicons name="information-circle" size={22} color="#6366F1" />
@@ -197,7 +197,7 @@ export const LearnHubDetail = ({ navigation, route }: any) => {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('LearnHub')} style={styles.backButton}>
           <View style={styles.menuButtonSolid}>
             <Ionicons name="chevron-back" size={24} color="#FFF" />
           </View>
@@ -209,7 +209,7 @@ export const LearnHubDetail = ({ navigation, route }: any) => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {content?.sections?.map((section: any, index: number) => (
-          <Animated.View key={index} entering={FadeInDown.delay(index * 100).duration(350)} style={[styles.infoCard, section.isUrgent && styles.urgentCard]}> 
+          <Animated.View key={index} entering={FadeInDown.delay(index * 100).duration(350).withInitialValues({ opacity: 1 })} style={[styles.infoCard, section.isUrgent && styles.urgentCard]}> 
             <View style={styles.infoCardHeader}>
               <View style={[styles.infoIconBox, { backgroundColor: section.iconBg }]}>
                 <section.icon size={18} color={section.iconColor} />
@@ -274,26 +274,26 @@ const styles = StyleSheet.create({
   introCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 20, marginBottom: 20, ...shadows.md, borderWidth: 1, borderColor: '#E0E7FF' },
   introCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   introIconBox: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  introCardTitle: { fontSize: 17, fontWeight: '700', color: '#1F2937', flex: 1 },
-  introCardText: { fontSize: 14, color: '#64748B', lineHeight: 22 },
+  introCardTitle: { fontSize: 19, fontWeight: '700', color: '#1F2937', flex: 1 },
+  introCardText: { fontSize: 16, color: '#64748B', lineHeight: 24 },
   introContainer: { paddingHorizontal: 4, marginBottom: 20 },
-  introTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937', marginBottom: 4 },
-  introSubtitle: { fontSize: 14, color: '#64748B' },
+  introTitle: { fontSize: 19, fontWeight: '700', color: '#1F2937', marginBottom: 4 },
+  introSubtitle: { fontSize: 15, color: '#64748B' },
   listContainer: { paddingHorizontal: 0 },
   rowCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 12, ...shadows.sm, borderWidth: 1, borderColor: '#F1F5F9' },
   iconContainer: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   textContainer: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: '700', color: '#1F2937', marginBottom: 2 },
-  rowSubtitle: { fontSize: 13, color: '#64748B' },
+  rowTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937', marginBottom: 2 },
+  rowSubtitle: { fontSize: 15, color: '#64748B' },
   infoCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 12, ...shadows.sm, borderWidth: 1, borderColor: '#F1F5F9' },
   urgentCard: { backgroundColor: '#FEF2F2', borderColor: '#FEE2E2' },
   infoCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  infoIconBox: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  infoCardTitle: { fontSize: 15, fontWeight: '700', color: '#1F2937' },
-  infoCardText: { fontSize: 14, color: '#64748B', lineHeight: 21 },
+  infoIconBox: { width: 40, height: 40, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  infoCardTitle: { fontSize: 17, fontWeight: '700', color: '#1F2937' },
+  infoCardText: { fontSize: 15.5, color: '#64748B', lineHeight: 21 },
   reminderToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
-  reminderText: { fontSize: 14, color: '#636E72', fontWeight: '500' },
+  reminderText: { fontSize: 15, color: '#636E72', fontWeight: '500' },
   badgeContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, gap: 4 },
-  badgeText: { fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: 13, fontWeight: '600' },
 });

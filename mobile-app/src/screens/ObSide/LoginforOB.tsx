@@ -216,7 +216,7 @@ const LoginforOB = ({ navigation }: any) => {
               <Text style={styles.subtext}>Secure access for smarter contraceptive care.</Text>
             </View>
 
-            <Animated.View entering={FadeInUp.delay(80).duration(650)} style={styles.demoBannerOutside}>
+            <Animated.View entering={FadeInUp.delay(80).duration(650).withInitialValues({ opacity: 1 })} style={styles.demoBannerOutside}>
               <Pressable style={styles.demoBannerTop} onPress={fillDemoCredentials}>
                 <Text style={styles.demoTitle}>Use Demo Credentials</Text>
                 <Text style={styles.demoHintInline}>Tap to auto-fill</Text>
@@ -240,7 +240,7 @@ const LoginforOB = ({ navigation }: any) => {
               ) : null}
             </Animated.View>
 
-            <Animated.View entering={FadeInUp.delay(120).duration(700)} style={styles.formSection}>
+            <Animated.View entering={FadeInUp.delay(120).duration(700).withInitialValues({ opacity: 1 })} style={styles.formSection}>
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Email Address</Text>
                 <View style={styles.inputWrapper}>
