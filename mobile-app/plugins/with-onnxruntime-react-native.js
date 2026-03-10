@@ -11,6 +11,7 @@ const withOrtFixed = (config) => {
       throw new Error('Cannot add ONNX Runtime maven gradle because the build.gradle is not groovy');
     }
 
+    // Inject onnxruntime-react-native dependency
     config.modResults.contents = mergeContents({
       src: config.modResults.contents,
       newSrc: "    implementation project(':onnxruntime-react-native')",
@@ -18,6 +19,23 @@ const withOrtFixed = (config) => {
       anchor: /^dependencies[ \t]*\{$/m,
       offset: 1,
       comment: '    // onnxruntime-react-native',
+    }).contents;
+
+    // Inject abiFilters (arm64-v8a only) and REACT_NATIVE_RELEASE_LEVEL into defaultConfig
+    // abiFilters reduces APK size by targeting arm64 devices only (covers ~95% of modern Android)
+    // REACT_NATIVE_RELEASE_LEVEL is required by MainApplication.kt for New Architecture initialisation
+    config.modResults.contents = mergeContents({
+      src: config.modResults.contents,
+      newSrc: [
+        '        ndk {',
+        '            abiFilters "arm64-v8a"',
+        '        }',
+        '        buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\\"stable\\""',
+      ].join('\n'),
+      tag: 'onnxruntime-android-config',
+      anchor: /^[ \t]*defaultConfig[ \t]*\{$/m,
+      offset: 1,
+      comment: '        // onnxruntime-android-config',
     }).contents;
 
     return config;
