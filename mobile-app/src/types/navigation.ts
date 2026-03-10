@@ -105,7 +105,9 @@ export type ObTabParamList = {
   ObAbout: undefined;
 
   // WHO MEC Tool standalone tab (Preferences/Results navigate via RootStack)
-  ObWhoMecConditions: undefined;
+  ObWhoMecConditions: { age?: number; conditionIds?: string[] } | undefined;
+  ObWhoMecPreferences: { age: number; conditionIds: string[]; preferences?: string[] };
+  ObWhoMecResults: { age: number; conditionIds: string[]; preferences: string[] };
 };
 
 // Navigation prop types for screens in the Root Stack

@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, useWindowDimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
-  X, Check, ChevronLeft, ChevronRight, CalendarDays,
+  Check, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
-import { colors, shadows, spacing, borderRadius } from '../../theme';
-import {
-  WHO_MEC_CONDITIONS,
-} from '../../data/whoMecData';
+import { colors, shadows, spacing } from '../../theme';
 import ObHeader from '../../components/ObHeader';
 import { MecTreeSelector } from '../../components/MecTreeSelector';
 
@@ -25,9 +22,24 @@ const MAX_CONDITIONS = 3;
 
 const WhoMecConditionsScreen = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
 
   const [selectedAge, setSelectedAge] = useState<number | null>(null);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const { width } = useWindowDimensions();
+  const horizontalPadding = width < 360 ? spacing.md : spacing.lg;
+  const ageChipWidth = width < 360 ? '47%' : width < 430 ? '31%' : '23%';
+
+  useEffect(() => {
+    const ageFromParams = route.params?.age;
+    const conditionsFromParams = route.params?.conditionIds;
+    if (typeof ageFromParams === 'number') {
+      setSelectedAge(ageFromParams);
+    }
+    if (Array.isArray(conditionsFromParams)) {
+      setSelectedConditions(conditionsFromParams);
+    }
+  }, [route.params?.age, route.params?.conditionIds]);
 
   const steps = [
     { id: 1, label: 'Conditions' },
@@ -46,19 +58,6 @@ const WhoMecConditionsScreen = () => {
     });
   };
 
-  const removeCondition = (id: string) => {
-    setSelectedConditions(prev => prev.filter(c => c !== id));
-  };
-
-  const getConditionLabel = (id: string) => {
-    const entry = WHO_MEC_CONDITIONS.find(c => c.id === id);
-    if (!entry) return id;
-    let label = entry.condition;
-    if (entry.subCondition) label += ` — ${entry.subCondition}`;
-    if (entry.variant) label += ` (${entry.variant === 'I' ? 'Initiation' : 'Continuation'})`;
-    return label;
-  };
-
   const handleNext = () => {
     if (selectedAge === null) {
       Alert.alert('Select Age', 'Please select an age group before continuing.');
@@ -67,6 +66,7 @@ const WhoMecConditionsScreen = () => {
     navigation.navigate('ObWhoMecPreferences', {
       age: selectedAge,
       conditionIds: selectedConditions,
+      preferences: route.params?.preferences || [],
     });
   };
 
@@ -95,7 +95,7 @@ const WhoMecConditionsScreen = () => {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Age Selection */}
@@ -115,7 +115,7 @@ const WhoMecConditionsScreen = () => {
             {AGE_OPTIONS.map(opt => (
               <TouchableOpacity
                 key={opt.value}
-                style={[styles.ageChip, selectedAge === opt.value && styles.ageChipSelected]}
+                style={[styles.ageChip, { width: ageChipWidth }, selectedAge === opt.value && styles.ageChipSelected]}
                 onPress={() => setSelectedAge(opt.value)}
               >
                 <Text style={[styles.ageChipText, selectedAge === opt.value && styles.ageChipTextSelected]}>
@@ -125,25 +125,6 @@ const WhoMecConditionsScreen = () => {
             ))}
           </View>
         </View>
-
-        {/* Selected Conditions */}
-        {selectedConditions.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Selected ({selectedConditions.length}/{MAX_CONDITIONS})
-            </Text>
-            {selectedConditions.map(id => (
-              <View key={id} style={styles.selectedChip}>
-                <Text style={styles.selectedChipText} numberOfLines={2}>
-                  {getConditionLabel(id)}
-                </Text>
-                <TouchableOpacity onPress={() => removeCondition(id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <X size={16} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
 
         {/* Conditions (match ObAssessment MEC section) */}
         <View style={styles.cardSection}>
@@ -164,14 +145,6 @@ const WhoMecConditionsScreen = () => {
         >
           <Text style={styles.primaryBtnText}>Next: Preferences</Text>
           <ChevronRight size={18} color="#FFF" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.secondaryBtn, { marginTop: 12 }]}
-          onPress={() => navigation.navigate('ObHome')}
-        >
-          <ChevronLeft size={16} color="#6B4254" />
-          <Text style={styles.secondaryBtnText}>Back to Dashboard</Text>
         </TouchableOpacity>
 
         <View style={{ height: 36 }} />
@@ -211,7 +184,7 @@ const styles = StyleSheet.create({
   stepLabel: { marginTop: 4, fontSize: 14, fontWeight: '600', color: '#8A7A83' },
   stepLabelActive: { color: colors.primary },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  scrollContent: { paddingTop: spacing.md },
   section: { marginBottom: spacing.lg },
 
   sectionContainer: {
@@ -278,8 +251,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 8,
-    width: '30%',
-    minWidth: 100,
+    minWidth: 92,
     borderRadius: 20,
     backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
@@ -315,13 +287,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  selectedChip: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.primary + '12', borderRadius: borderRadius.sm,
-    paddingHorizontal: 12, paddingVertical: 10, marginBottom: 6,
-    borderWidth: 1, borderColor: colors.primary + '30',
-  },
-  selectedChipText: { flex: 1, fontSize: 13, color: colors.primary, fontWeight: '500', marginRight: 8 },
   primaryBtn: {
     backgroundColor: colors.primary,
     borderRadius: 16,
@@ -340,23 +305,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     marginRight: 6,
-  },
-  secondaryBtn: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 55,
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#FFF8FC',
-    borderWidth: 1,
-    borderColor: '#EFD8E5',
-  },
-  secondaryBtnText: {
-    color: '#6B4254',
-    fontSize: 17,
-    fontWeight: '700',
   },
 });
 

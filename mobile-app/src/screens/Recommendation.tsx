@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, useWindowDimensions } from 'react-native';
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { colors, shadows } from '../theme';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { useAssessment } from '../context/AssessmentContext';
 // Context is read-only here; selectedAgeIndex initialises the local chip state.
-import { Check } from 'lucide-react-native';
+import { CalendarDays, Check } from 'lucide-react-native';
 
 type Props = DrawerScreenProps<'Recommendation'>;
 
@@ -28,10 +28,13 @@ const STEPS = [
 
 const Recommendation: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   // Read context only to pre-fill from a previously saved session selection.
   // We do NOT write back to context here — saving happens explicitly in Step 3.
   const { selectedAgeIndex } = useAssessment();
   const [localAgeIndex, setLocalAgeIndex] = useState<number | null>(selectedAgeIndex);
+  const horizontalPadding = width < 360 ? 14 : 20;
+  const ageChipWidth = width < 360 ? '47%' : width < 430 ? '31%' : '23%';
 
   const handleSelectAge = (index: number) => {
     setLocalAgeIndex(index);
@@ -95,7 +98,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <View style={styles.content}>
+        <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}>
           <Animated.View entering={FadeInDown.delay(200).duration(800)}>
             <Text style={styles.introTitle}>Select Your Age Group</Text>
             <Text style={styles.introText}>
@@ -106,8 +109,13 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
           {/* Age Selection */}
           <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={styles.cardIcon}>
-                <Ionicons name="calendar-outline" size={22} color={colors.primary} />
+              <View style={styles.meIconContainer}>
+                <View style={styles.meIconCircle}>
+                  <CalendarDays size={20} color={colors.primary} />
+                  <View style={styles.plusIconBadge}>
+                    <Text style={styles.plusIconText}>•</Text>
+                  </View>
+                </View>
               </View>
               <Text style={styles.cardTitle}>Age Group</Text>
             </View>
@@ -122,7 +130,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
                   >
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      style={[styles.ageChip, isSelected && styles.ageChipSelected]}
+                      style={[styles.ageChip, { width: ageChipWidth }, isSelected && styles.ageChipSelected]}
                       onPress={() => handleSelectAge(index)}
                     >
                       <Text style={[styles.ageChipLabel, isSelected && styles.ageChipLabelSelected]}>
@@ -241,7 +249,7 @@ const styles = StyleSheet.create({
   stepLabel: { marginTop: 4, fontSize: 13, fontWeight: '600', color: '#8A7A83' },
   stepLabelActive: { color: colors.primary },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 20 },
+  content: { paddingTop: 20 },
   introTitle: {
     fontSize: 22,
     fontWeight: '800',
@@ -271,16 +279,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 13,
-    backgroundColor: '#FFF0F6',
+  meIconContainer: { marginRight: 12 },
+  meIconCircle: {
+    width: 45,
+    height: 45,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    position: 'relative',
+  },
+  plusIconBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 9,
     borderWidth: 1,
-    borderColor: '#F8D6E5',
+    borderColor: '#BFDBFE',
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusIconText: {
+    fontSize: 14,
+    color: '#F59E0B',
+    fontWeight: '900',
+    lineHeight: 14,
   },
   cardTitle: {
     fontSize: 19,
@@ -299,7 +327,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 8,
-    width: 100,
+    minWidth: 92,
     borderRadius: 20,
     backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
