@@ -15,8 +15,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeInDown,
   FadeInUp,
-  FadeIn,
-  ZoomIn,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
@@ -84,7 +82,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       >
         {/* Premium Header */}
         <Animated.View
-          entering={FadeInDown.duration(800)}
+          entering={FadeInDown.duration(800).withInitialValues({ opacity: 1 })}
           style={[styles.header, { paddingTop: insets.top + 10 }]}
         >
           <TouchableOpacity
@@ -107,7 +105,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* 1 Hero Section - Infographic in a Premium Card */}
         <Animated.View
-          entering={FadeInDown.delay(200).duration(1000)}
+          entering={FadeInDown.delay(200).duration(1000).withInitialValues({ opacity: 1 })}
           style={[styles.infographicCard, animatedHeroStyle]}
         >
           <Image
@@ -118,7 +116,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* 2 Primary Call-to-Action */}
         <Animated.View
-          entering={FadeInUp.delay(400).duration(1000)}
+          entering={FadeInUp.delay(400).duration(1000).withInitialValues({ opacity: 1 })}
           style={[styles.ctaContainer, animatedPulseStyle]}
         >
           <TouchableOpacity
@@ -141,7 +139,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* 3 Secondary Action Grid */}
         <Animated.View
-          entering={FadeInUp.delay(600).duration(1000)}
+          entering={FadeInUp.delay(600).duration(1000).withInitialValues({ opacity: 1 })}
           style={styles.secondaryActionsRow}
         >
           <TouchableOpacity
@@ -182,7 +180,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           {contraceptiveMethods.map((method, index) => (
             <Animated.View
               key={method.id}
-              entering={ZoomIn.delay(800 + index * 100).duration(800)}
+              entering={FadeInUp.delay(800 + index * 100).duration(500).withInitialValues({ opacity: 1 })}
             >
               <TouchableOpacity
                 style={styles.methodCard}
@@ -246,7 +244,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* 6 Emergency Section */}
-        <Animated.View entering={FadeInUp.delay(1000).duration(1000)}>
+        <Animated.View entering={FadeInUp.delay(1000).duration(1000).withInitialValues({ opacity: 1 })}>
           <TouchableOpacity
             style={styles.emergencyCard}
             onPress={() => (navigation as any).navigate('Emergency Contraception')}

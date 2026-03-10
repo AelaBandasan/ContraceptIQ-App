@@ -53,7 +53,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <Animated.View
-        entering={FadeInDown.duration(600)}
+        entering={FadeInDown.duration(600).withInitialValues({ opacity: 1 })}
         style={[styles.header, { paddingTop: insets.top + 10 }]}
       >
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
@@ -99,7 +99,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}>
-          <Animated.View entering={FadeInDown.delay(200).duration(800)}>
+          <Animated.View entering={FadeInDown.delay(200).duration(800).withInitialValues({ opacity: 1 })}>
             <Text style={styles.introTitle}>Select Your Age Group</Text>
             <Text style={styles.introText}>
               This tool uses WHO Medical Eligibility Criteria (5th Ed.) to recommend contraceptive methods based on your age. No medical history is required.
@@ -107,7 +107,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
           </Animated.View>
 
           {/* Age Selection */}
-          <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.card}>
+          <Animated.View entering={FadeInDown.delay(400).duration(800).withInitialValues({ opacity: 1 })} style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.meIconContainer}>
                 <View style={styles.meIconCircle}>
@@ -126,7 +126,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
                 return (
                   <Animated.View
                     key={index}
-                    entering={FadeInRight.delay(600 + index * 100).duration(500)}
+                    entering={FadeInRight.delay(600 + index * 100).duration(500).withInitialValues({ opacity: 1 })}
                   >
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -143,7 +143,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {localAgeIndex !== null && (
-              <Animated.View entering={FadeInDown.duration(400)} style={styles.selectedAgeBadge}>
+              <Animated.View entering={FadeInDown.duration(400).withInitialValues({ opacity: 1 })} style={styles.selectedAgeBadge}>
                 <Check size={14} color={colors.primary} />
                 <Text style={styles.selectedAgeText}>
                   {AGE_RANGES[localAgeIndex].fullLabel}
@@ -153,14 +153,14 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
           </Animated.View>
 
           {/* Info note */}
-          <Animated.View entering={FadeInDown.delay(900).duration(800)} style={styles.noteCard}>
+          <Animated.View entering={FadeInDown.delay(900).duration(800).withInitialValues({ opacity: 1 })} style={styles.noteCard}>
             <Ionicons name="shield-checkmark-outline" size={18} color="#0369A1" />
             <Text style={styles.noteText}>
               Your privacy is protected. We only use your age group — no personal medical history is collected.
             </Text>
           </Animated.View>
 
-          <Animated.View entering={FadeInUp.delay(1100).duration(800)}>
+          <Animated.View entering={FadeInUp.delay(1100).duration(800).withInitialValues({ opacity: 1 })}>
             <TouchableOpacity
               style={[styles.nextBtn, localAgeIndex === null && styles.nextBtnDisabled]}
               onPress={handleNext}

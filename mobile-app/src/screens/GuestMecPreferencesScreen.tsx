@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  Check, ChevronLeft, ChevronRight,
+  Check, ChevronRight,
   Heart, ShieldCheck, Clock, EyeOff, UserCheck, Leaf, Shield,
 } from 'lucide-react-native';
 import { colors, shadows, spacing } from '../theme';
@@ -147,20 +147,13 @@ const GuestMecPreferencesScreen = () => {
           );
         })}
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Bottom bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <TouchableOpacity style={styles.primaryBtn} onPress={handleViewResults}>
           <Text style={styles.primaryBtnText}>View Results</Text>
           <ChevronRight size={18} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={16} color="#6B4254" />
-          <Text style={styles.secondaryBtnText}>Back to Age</Text>
-        </TouchableOpacity>
-      </View>
+
+        <View style={{ height: 28 }} />
+      </ScrollView>
     </View>
   );
 };
@@ -282,16 +275,6 @@ const styles = StyleSheet.create({
   },
   prefCheckSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
 
-  bottomBar: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#F3DCE8',
-    ...shadows.lg,
-  },
   primaryBtn: {
     backgroundColor: colors.primary,
     borderRadius: 16, height: 55,
@@ -301,13 +284,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.28, shadowRadius: 7, elevation: 4,
   },
   primaryBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  secondaryBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    justifyContent: 'center', height: 50,
-    marginTop: 10,
-    borderRadius: 12,
-    backgroundColor: '#FFF8FC',
-    borderWidth: 1, borderColor: '#EFD8E5',
-  },
-  secondaryBtnText: { color: '#6B4254', fontSize: 16, fontWeight: '700' },
 });

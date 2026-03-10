@@ -108,7 +108,7 @@ const AboutUs = ({ navigation, route }: any) => {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.brandCard}>
+        <Animated.View entering={FadeInDown.delay(80).duration(420).withInitialValues({ opacity: 1 })} style={styles.brandCard}>
           <View style={styles.brandMark}>
             <Ionicons name="heart" size={22} color={colors.primary} />
           </View>
@@ -123,7 +123,7 @@ const AboutUs = ({ navigation, route }: any) => {
             const isOpen = openId === item.id;
 
             return (
-              <Animated.View key={item.id} entering={FadeInDown.delay(120 + index * 60).duration(360)} style={[styles.accordionCard, isOpen && styles.accordionCardOpen]}>
+              <Animated.View key={item.id} entering={FadeInDown.delay(120 + index * 60).duration(360).withInitialValues({ opacity: 1 })} style={[styles.accordionCard, isOpen && styles.accordionCardOpen]}>
                 <TouchableOpacity
                   style={styles.accordionHeader}
                   activeOpacity={0.85}
@@ -154,7 +154,7 @@ const AboutUs = ({ navigation, route }: any) => {
           })}
         </View>
 
-        <Animated.View entering={FadeInDown.delay(420).duration(420)} style={styles.bannerCard}>
+        <Animated.View entering={FadeInDown.delay(420).duration(420).withInitialValues({ opacity: 1 })} style={styles.bannerCard}>
           <Sparkles size={18} color="#166534" />
           <Text style={styles.bannerText}>You deserve clear, trusted information to make confident reproductive health decisions.</Text>
         </Animated.View>

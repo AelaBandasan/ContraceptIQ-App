@@ -93,7 +93,7 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.brandCard}>
+        <Animated.View entering={FadeInDown.delay(80).duration(420).withInitialValues({ opacity: 1 })} style={styles.brandCard}>
           <View style={styles.brandMark}>
             <Ionicons name="shield-outline" size={22} color={colors.primary} />
           </View>
@@ -108,7 +108,7 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
           return (
             <Animated.View
               key={block.id}
-              entering={FadeInDown.delay(130 + index * 55).duration(360)}
+              entering={FadeInDown.delay(130 + index * 55).duration(360).withInitialValues({ opacity: 1 })}
               style={[
                 styles.infoCard,
                 isMedical ? styles.infoCardMedical : styles.infoCardPrivacy,
@@ -128,7 +128,7 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
           );
         })}
 
-        <Animated.View entering={FadeInDown.delay(460).duration(420)} style={styles.bannerCard}>
+        <Animated.View entering={FadeInDown.delay(460).duration(420).withInitialValues({ opacity: 1 })} style={styles.bannerCard}>
           <Sparkles size={18} color="#166534" />
           <Text style={styles.bannerText}>
             If you are making medical decisions, please consult a qualified healthcare professional.

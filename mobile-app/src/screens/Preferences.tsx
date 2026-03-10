@@ -91,7 +91,7 @@ const Preferences = ({ navigation }: Props) => {
 
           {/* Preferences Summary */}
           <Animated.View
-            entering={FadeInDown.delay(200).duration(800)}
+            entering={FadeInDown.delay(200).duration(800).withInitialValues({ opacity: 1 })}
             style={styles.summaryCard}
           >
             <View style={styles.cardHeaderLine} />
@@ -100,7 +100,7 @@ const Preferences = ({ navigation }: Props) => {
               {chosenPrefs.length > 0 ? chosenPrefs.map((p, idx) => (
                 <Animated.View
                   key={p}
-                  entering={ZoomIn.delay(400 + (idx * 100))}
+                  entering={ZoomIn.delay(400 + (idx * 100)).withInitialValues({ opacity: 1 })}
                   style={styles.prefChip}
                 >
                   <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
@@ -116,7 +116,7 @@ const Preferences = ({ navigation }: Props) => {
           </Animated.View>
 
           {/* Personalized Recommendations */}
-          <Animated.View entering={FadeInDown.delay(400).duration(800)}>
+          <Animated.View entering={FadeInDown.delay(400).duration(800).withInitialValues({ opacity: 1 })}>
             <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
             <Text style={styles.header3}>Based on your preferences and age</Text>
           </Animated.View>
@@ -124,7 +124,7 @@ const Preferences = ({ navigation }: Props) => {
           {topRecommendations.map((item, index) => (
             <Animated.View
               key={index}
-              entering={FadeInRight.delay(600 + (index * 150)).duration(600)}
+              entering={FadeInRight.delay(600 + (index * 150)).duration(600).withInitialValues({ opacity: 1 })}
             >
               <TouchableOpacity
                 style={styles.recomCard}
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#F0F0F0',
     elevation: 3,
@@ -328,8 +328,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   recomIcon: {
-    width: 42,
-    height: 42,
+    width: 60,
+    height: 60,
     resizeMode: 'contain',
   },
   recomInfo: {
