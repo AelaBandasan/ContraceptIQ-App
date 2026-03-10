@@ -16,6 +16,7 @@ import { isOnline } from '../../utils/networkUtils';
 import ObHeader from '../../components/ObHeader';
 import { colors } from '../../theme';
 import { WHO_MEC_CONDITIONS } from '../../data/whoMecData';
+import { getDisplayNameFromModelKey } from '../../services/mecService';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -206,7 +207,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                                     return (
                                         <View key={method} style={styles.riskRow}>
                                             <View style={styles.riskRowTop}>
-                                                <Text style={styles.riskMethodName}>{method}</Text>
+                                                <Text style={styles.riskMethodName}>{getDisplayNameFromModelKey(method)}</Text>
                                                 <Text style={[styles.riskPct, { color: mColor }]}>{pct.toFixed(0)}%</Text>
                                             </View>
                                             <View style={styles.barBg}>

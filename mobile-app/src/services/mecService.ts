@@ -20,6 +20,15 @@ export interface MECResult {
     'POP': MECCategory;
 }
 
+export const MODEL_KEY_TO_MEC_ID: Record<string, string> = {
+    'Pills': 'CHC',
+    'Patch': 'CHC',
+    'Injectable': 'DMPA',
+    'Implant': 'Implant',
+    'Copper IUD': 'Cu-IUD',
+    'Intrauterine Device (IUD)': 'LNG-IUD',
+};
+
 export interface MECInput {
     age: number;
     smokingStatus?: 'never' | 'former' | 'occasional' | 'current_daily';
@@ -189,13 +198,30 @@ export interface MethodAttributes {
 
 // Define static attributes for all 6 core methods
 export const METHOD_ATTRIBUTES: MethodAttributes[] = [
-    { id: 'Cu-IUD', name: 'Copper IUD', isHighlyEffective: true, isNonHormonal: true, isLongActing: true, isPrivate: true },
-    { id: 'LNG-IUD', name: 'Hormonal IUD', isHighlyEffective: true, isLongActing: true, isPrivate: true, regulatesBleeding: true },
-    { id: 'Implant', name: 'Implant', isHighlyEffective: true, isLongActing: true, isPrivate: true },
-    { id: 'DMPA', name: 'Injectable', isPrivate: true, isHighlyEffective: true },
-    { id: 'CHC', name: 'Combined Hormonal', isClientControlled: true, regulatesBleeding: true },
-    { id: 'POP', name: 'Progestin-Only Pill', isClientControlled: true, isPrivate: true },
+    { id: 'Cu-IUD', name: 'Copper IUD (Cu-IUD)', isHighlyEffective: true, isNonHormonal: true, isLongActing: true, isPrivate: true },
+    { id: 'LNG-IUD', name: 'LNG-IUD (Levonorgestrel-IUD)', isHighlyEffective: true, isLongActing: true, isPrivate: true, regulatesBleeding: true },
+    { id: 'Implant', name: 'Implant (LNG/ETG)', isHighlyEffective: true, isLongActing: true, isPrivate: true },
+    { id: 'DMPA', name: 'Injectable (DMPA)', isPrivate: true, isHighlyEffective: true },
+    { id: 'CHC', name: 'Combined Hormonal Contraceptive (CHC)', isClientControlled: true, regulatesBleeding: true },
+    { id: 'POP', name: 'Progestogen-only Pill (POP)', isClientControlled: true, isPrivate: true },
 ];
+
+/**
+ * Get display name for model key (e.g. 'Pills' -> 'Combined Hormonal Contraceptive (CHC)')
+ */
+export function getDisplayNameFromModelKey(modelKey: string): string {
+    const mecId = MODEL_KEY_TO_MEC_ID[modelKey];
+    if (!mecId) return modelKey;
+    const attr = METHOD_ATTRIBUTES.find(a => a.id === mecId);
+    if (!attr) return modelKey;
+
+    // Special case for CHC sub-types (Pills vs Patch) to avoid duplicate display names
+    if (mecId === 'CHC' && (modelKey === 'Pills' || modelKey === 'Patch')) {
+        return `Combined Hormonal Contraceptive (${modelKey})`;
+    }
+
+    return attr.name;
+}
 
 /**
  * Calculates a match score (0-100%) based on user preferences.
