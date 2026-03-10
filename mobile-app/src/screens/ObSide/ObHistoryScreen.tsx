@@ -3,7 +3,7 @@ import {
     StyleSheet, View, Text, TouchableOpacity, FlatList,
     RefreshControl, ScrollView, ActivityIndicator, LayoutAnimation, UIManager, Platform
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
     CheckCircle2, AlertTriangle, ChevronDown, ChevronUp,
     User as UserIcon, Baby, Cigarette, Calendar,
@@ -15,6 +15,7 @@ import { fetchDoctorAssessments, loadAssessmentsCache, AssessmentRecord } from '
 import { isOnline } from '../../utils/networkUtils';
 import ObHeader from '../../components/ObHeader';
 import { colors } from '../../theme';
+import { WHO_MEC_CONDITIONS } from '../../data/whoMecData';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -52,8 +53,8 @@ const formatDate = (iso?: string) => {
 };
 
 // ─── Expandable Card ────────────────────────────────────────────────────────
-const HistoryCard = ({ item }: { item: AssessmentRecord }) => {
-    const [expanded, setExpanded] = useState(false);
+const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord; initialExpanded?: boolean }) => {
+    const [expanded, setExpanded] = useState(initialExpanded);
 
     const pd = item.patientData || {};
     const riskLevel = item.status === 'critical' ? 'high' : 'low';
@@ -110,7 +111,7 @@ const HistoryCard = ({ item }: { item: AssessmentRecord }) => {
                     <View style={styles.pillRow}>
                         <View style={styles.pill}>
                             <UserIcon size={11} color="#64748B" />
-                            <Text style={styles.pillText}>{pd.AGE_GROUP || (pd.AGE ? pd.AGE + 'y' : '—')}</Text>
+                            <Text style={styles.pillText}>{pd.AGE ? pd.AGE + 'y' : '—'}</Text>
                         </View>
                         <View style={styles.pill}>
                             <Cigarette size={11} color="#64748B" />
@@ -120,11 +121,14 @@ const HistoryCard = ({ item }: { item: AssessmentRecord }) => {
                             <Baby size={11} color="#64748B" />
                             <Text style={styles.pillText}>P{pd.PARITY ?? '0'}</Text>
                         </View>
-                        <View style={[styles.pill, { backgroundColor: riskColor + '15' }]}>
-                            <Text style={[styles.pillText, { color: riskColor, fontWeight: '700' }]}>
-                                {pd.RECOMMENDED || '—'}
-                            </Text>
-                        </View>
+                        {item.mecConditionIds && item.mecConditionIds.length > 0 && (
+                            <View style={[styles.pill, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
+                                <Stethoscope size={11} color="#0369A1" />
+                                <Text style={[styles.pillText, { color: '#0369A1' }]}>
+                                    {item.mecConditionIds.length} MEC
+                                </Text>
+                            </View>
+                        )}
                     </View>
                 )}
 
@@ -148,51 +152,44 @@ const HistoryCard = ({ item }: { item: AssessmentRecord }) => {
                             </View>
                             <View style={styles.profileGrid}>
                                 {[
-                                    { label: 'Age', value: pd.AGE ? `${pd.AGE} yrs` : '—', sub: pd.AGE_GROUP },
-                                    { label: 'Region', value: pd.REGION || '—' },
-                                    { label: 'Marital', value: pd.MARITAL_STATUS || '—' },
-                                    { label: 'Religion', value: pd.RELIGION || '—' },
-                                    { label: 'Education', value: pd.EDUC_LEVEL || '—' },
+                                    { label: 'Patient Age', value: pd.AGE ? `${pd.AGE} yrs` : '—' },
+                                    { label: 'Husband Age', value: pd.HUSBAND_AGE || '—' },
+                                    { label: 'Ethnicity', value: pd.ETHNICITY || '—' },
+                                    { label: 'HH Head Sex', value: pd.HOUSEHOLD_HEAD_SEX || '—' },
                                     { label: 'Smoking', value: pd.SMOKE_CIGAR || 'Never' },
-                                    { label: 'Parity', value: `${pd.PARITY ?? 0} birth${pd.PARITY !== '1' ? 's' : ''}` },
-                                    { label: 'More Children', value: pd.DESIRE_FOR_MORE_CHILDREN || '—' },
+                                    { label: 'Parity', value: `${pd.PARITY ?? 0}` },
+                                    { label: 'Use Pattern', value: pd.PATTERN_USE || '—' },
+                                    { label: 'Child Plans', value: pd.DESIRE_FOR_MORE_CHILDREN || '—' },
                                 ].map((row, i) => (
                                     <View key={i} style={[styles.profileRow, i % 2 === 0 && styles.profileRowAlt]}>
                                         <Text style={styles.profileLabel}>{row.label}</Text>
-                                        <View style={{ alignItems: 'flex-end' }}>
-                                            <Text style={styles.profileValue}>{row.value}</Text>
-                                            {row.sub ? <Text style={styles.profileSub}>{row.sub}</Text> : null}
-                                        </View>
+                                        <Text style={styles.profileValue}>{row.value}</Text>
                                     </View>
                                 ))}
                             </View>
                         </View>
 
-                        {/* ─ Patient Preferences ─ */}
-                        <View style={styles.section}>
-                            <View style={styles.sectionHeader}>
-                                <Heart size={14} color="#E45A92" />
-                                <Text style={styles.sectionTitle}>Stated Preferences</Text>
-                            </View>
-                            <View style={styles.prefGrid}>
-                                <View style={styles.prefCard}>
-                                    <Text style={styles.prefLabel}>Last Method</Text>
-                                    <Text style={styles.prefValue}>{pd.LAST_METHOD_DISCONTINUED || 'None'}</Text>
+                        {/* ─ Medical Conditions (MEC) ─ */}
+                        {item.mecConditionIds && item.mecConditionIds.length > 0 && (
+                            <View style={styles.section}>
+                                <View style={styles.sectionHeader}>
+                                    <Stethoscope size={14} color="#E45A92" />
+                                    <Text style={styles.sectionTitle}>Medical Conditions (MEC)</Text>
                                 </View>
-                                <View style={styles.prefCard}>
-                                    <Text style={styles.prefLabel}>Reason Stopped</Text>
-                                    <Text style={styles.prefValue}>{pd.REASON_DISCONTINUED || 'N/A'}</Text>
-                                </View>
-                                <View style={styles.prefCard}>
-                                    <Text style={styles.prefLabel}>Wants More Children</Text>
-                                    <Text style={styles.prefValue}>{pd.DESIRE_FOR_MORE_CHILDREN || '—'}</Text>
-                                </View>
-                                <View style={[styles.prefCard, { backgroundColor: riskColor + '10', borderColor: riskColor + '30' }]}>
-                                    <Text style={styles.prefLabel}>OB Recommended</Text>
-                                    <Text style={[styles.prefValue, { color: riskColor }]}>{pd.RECOMMENDED || '—'}</Text>
+                                <View style={styles.notesBox}>
+                                    {item.mecConditionIds.map((id, idx) => {
+                                        const entry = WHO_MEC_CONDITIONS.find(c => c.id === id);
+                                        let label = entry ? entry.condition : id;
+                                        if (entry?.subCondition) label += ` — ${entry.subCondition}`;
+                                        return (
+                                            <Text key={id} style={[styles.notesText, idx > 0 && { marginTop: 4 }]}>
+                                                • {label}
+                                            </Text>
+                                        );
+                                    })}
                                 </View>
                             </View>
-                        </View>
+                        )}
 
                         {/* ─ Risk Results ─ */}
                         {Object.keys(riskResults).length > 0 && (
@@ -253,6 +250,9 @@ const HistoryCard = ({ item }: { item: AssessmentRecord }) => {
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
 const ObHistoryScreen = () => {
+    const route = useRoute<any>();
+    const scrollToId = route.params?.recordId;
+
     const [history, setHistory] = useState<AssessmentRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -368,7 +368,12 @@ const ObHistoryScreen = () => {
 
             <FlatList
                 data={filtered}
-                renderItem={({ item }) => <HistoryCard item={item} />}
+                renderItem={({ item }) => (
+                    <HistoryCard
+                        item={item}
+                        initialExpanded={item.id === scrollToId}
+                    />
+                )}
                 keyExtractor={item => item.id}
                 contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
                 refreshControl={
