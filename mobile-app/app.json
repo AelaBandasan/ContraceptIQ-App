@@ -4,11 +4,11 @@
     "slug": "contraceptiq-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/tempLogo.png",
+    "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/tempLogo.png",
+      "image": "./assets/adaptive-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/tempLogo.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

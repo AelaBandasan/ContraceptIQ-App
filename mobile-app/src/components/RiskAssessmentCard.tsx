@@ -10,6 +10,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ViewStyle } from "react-native";
 import { colors as themeColors } from "../theme";
+import SHAP_DATA from "../../assets/models/risk_factors_v4.json";
 
 // ============================================================================
 // TYPES
@@ -100,9 +101,9 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
 
       {/* ── PART 1: STATUS + CONFIDENCE ── */}
       <View style={styles.statusRow}>
-        <View style={[styles.headerRiskWrap, { backgroundColor: riskBadgeBg }]}> 
-          <Text style={[styles.badgeEmoji, { color: riskAccent }]}>{isHighRisk ? "⚠" : "✓"}</Text>
-          <Text style={[styles.headerRiskText, { color: riskAccent }]}> 
+        <View style={styles.headerRiskWrap}>
+          <Text style={styles.badgeEmoji}>{isHighRisk ? "⚠" : "✓"}</Text>
+          <Text style={[styles.headerRiskText, { color: theme.accent }]}>
             {isHighRisk ? "High Risk" : "Low Risk"}
           </Text>
         </View>
@@ -120,7 +121,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
 
       {/* ── PART 2: THE METRIC ── */}
       <View style={styles.metricContainer}>
-        <Text style={[styles.metricValue, { color: theme.accent }]}> 
+        <Text style={[styles.metricValue, { color: theme.accent }]}>
           {prob}%
         </Text>
         <Text style={styles.metricLabel}>
@@ -181,59 +182,69 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
 // ============================================================================
 
 /**
- * Generate human-readable key factors from the patient's form data.
- * These explain WHY the model predicted LOW or HIGH risk.
+ * Generate human-readable key factors from the patient's form data using SHAP importance.
+ * These explain WHY the model predicted LOW or HIGH risk based on globally important features.
  */
 export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LOW' | 'HIGH'): string[] {
-  const factors: string[] = [];
+  const activeFeatures: { label: string; importance: number }[] = [];
 
-  // --- Age ---
-  const age = parseInt(formData['AGE']);
-  if (!isNaN(age)) {
-    if (age >= 35) factors.push(`Age ${age} — may need closer follow-up for continuation support`);
-    else if (age <= 20) factors.push(`Age ${age} — younger users may benefit from stronger adherence counseling`);
+  const shapMap = SHAP_DATA as Record<string, number>;
+
+  // 1. Map Categorical Features
+  const catFeatures = [
+    { feat: "PATTERN_USE", label: "Contraceptive use pattern" },
+    { feat: "ETHNICITY", label: "Ethnicity" },
+    { feat: "HOUSEHOLD_HEAD_SEX", label: "Household head sex" },
+    { feat: "CONTRACEPTIVE_METHOD", label: "Proposed method" },
+    { feat: "SMOKE_CIGAR", label: "Smoking habits" },
+    { feat: "DESIRE_FOR_MORE_CHILDREN", label: "Future child plans" },
+    { feat: "HUSBAND_AGE", label: "Husband/Partner age" },
+  ];
+
+  catFeatures.forEach(({ feat, label }) => {
+    const val = formData[feat];
+    if (val !== undefined && val !== null) {
+      // The SHAP keys are "cat__FEAT_VALUE"
+      const shapKey = `cat__${feat}_${val}`;
+      if (shapMap[shapKey] !== undefined) {
+        activeFeatures.push({
+          label: `${label}: ${val}`,
+          importance: shapMap[shapKey]
+        });
+      }
+    }
+  });
+
+  // 2. Map Numerical Features
+  if (formData['AGE'] !== undefined) {
+    activeFeatures.push({
+      label: `Patient age: ${formData['AGE']}`,
+      importance: shapMap['num__AGE'] || 0
+    });
+  }
+  if (formData['PARITY'] !== undefined) {
+    activeFeatures.push({
+      label: `Number of children: ${formData['PARITY']}`,
+      importance: shapMap['num__PARITY'] || 0
+    });
   }
 
-  // --- Smoking ---
-  const smoking = formData['SMOKE_CIGAR'];
-  if (smoking === 'Current daily') {
-    factors.push('Current daily smoking may affect suitability of some hormonal methods');
-  } else if (smoking === 'Never') {
-    factors.push('No smoking history supports safer use of several hormonal options');
-  }
+  // 3. Sort and filter
+  // Only keep features that actually contribute (importance > 0)
+  const sorted = activeFeatures
+    .filter(f => f.importance > 0.01) // Filter out noise
+    .sort((a, b) => b.importance - a.importance);
 
-  // --- Parity ---
-  const parity = parseInt(formData['PARITY']);
-  if (!isNaN(parity)) {
-    if (parity >= 3) factors.push(`Parity ${parity} — long-acting options may improve continuation`);
-    else if (parity === 0) factors.push('Nulliparous status may influence method preference and counseling needs');
-  }
-
-  // --- Desire for children ---
-  const desire = formData['DESIRE_FOR_MORE_CHILDREN'];
-  if (desire === 'Wants more children') {
-    factors.push('Future fertility plans may favor reversible, short-acting methods');
-  } else if (desire === 'Wants no more children') {
-    factors.push('No desire for more children may favor highly effective long-acting methods');
-  }
-
-  // --- Pattern of use ---
-  const pattern = formData['PATTERN_USE'];
-  if (pattern === 'Current user') {
-    factors.push('Current contraceptive use indicates existing adherence behavior to build on');
-  } else if (pattern === 'Recent user (stopped within 12 months)') {
-    factors.push('Recent discontinuation may indicate unresolved side-effect or counseling concerns');
-  }
-
-  if (factors.length === 0) {
-    factors.push(
+  if (sorted.length === 0) {
+    return [
       riskLevel === 'HIGH'
-        ? 'Overall profile suggests higher likelihood of discontinuation without close follow-up'
-        : 'Overall profile suggests good potential for continued method use with routine support'
-    );
+        ? 'Overall profile suggests higher likelihood of discontinuation'
+        : 'Overall profile suggests good potential for continued use'
+    ];
   }
 
-  return factors.slice(0, 2);
+  // Return top 3 impactful factors
+  return sorted.slice(0, 3).map(f => f.label);
 }
 
 // ============================================================================

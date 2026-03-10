@@ -62,7 +62,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
         setAssessments(data);
         setLoading(false);
         // Flush any records that failed to sync previously
-        flushSyncQueue(doctorUid).catch(() => {});
+        flushSyncQueue(doctorUid).catch(() => { });
     }, [doctorUid]);
 
     useFocusEffect(
@@ -107,63 +107,63 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
         return (
             <Animated.View key={item.id} entering={FadeInDown.duration(320)} layout={Layout.springify()}>
-            <TouchableOpacity
-                style={styles.assessmentCard}
-                onPress={() => {
-                    navigation.navigate('ObAssessment', { record: item, isDoctorAssessment: true });
-                }}
-                activeOpacity={0.88}
-            >
-                <View style={[styles.mecStrip, { backgroundColor: riskColor }]} />
-                <View style={styles.cardContent}>
-                    <View style={styles.rowBetween}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.patientName}>{item.patientName || "Patient"}</Text>
-                            <Text style={styles.patientSub}>
-                                {new Date(item.createdAt).toLocaleDateString()}
-                                {item.pendingSync ? ' · Pending sync' : ''}
-                            </Text>
-                        </View>
-                        <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-                            <StatusIcon size={10} color={status.textColor} />
-                            <Text style={[styles.statusLabel, { color: status.textColor }]}>{status.label}</Text>
-                        </View>
-                    </View>
-
-                     <View style={[styles.summaryGrid, isCompact && styles.summaryGridCompact]}>
-                        <View style={[styles.summaryItem, isCompact && styles.summaryItemCompact]}>
-                            <UserIcon size={15} color="#64748B" />
-                            <Text style={styles.summaryText}>{item.patientData?.AGE ? `Age ${item.patientData.AGE}` : '—'}</Text>
-                        </View>
-                        <View style={[styles.summaryItem, isCompact && styles.summaryItemCompact]}>
-                            <Cigarette size={15} color="#64748B" />
-                            <Text style={styles.summaryText}>{smoker ? 'Smoker' : 'Non-Smoker'}</Text>
-                        </View>
-                        <View style={[styles.summaryItem, isCompact && styles.summaryItemCompact]}>
-                            <Baby size={15} color="#64748B" />
-                            <Text style={styles.summaryText}>{item.patientData?.PARITY != null ? `Parity: ${item.patientData.PARITY}` : '—'}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.rowBetween}>
-                        <View style={styles.recBox}>
-                            <Text style={styles.recTitle}>Assessed Method:</Text>
-                            <View style={styles.row}>
-                                <Text style={styles.recValue}>{topMethod}</Text>
-                                <View style={[styles.riskDotMini, { backgroundColor: riskColor }]} />
+                <TouchableOpacity
+                    style={styles.assessmentCard}
+                    onPress={() => {
+                        navigation.navigate('ObHistory', { recordId: item.id });
+                    }}
+                    activeOpacity={0.88}
+                >
+                    <View style={[styles.mecStrip, { backgroundColor: riskColor }]} />
+                    <View style={styles.cardContent}>
+                        <View style={styles.rowBetween}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.patientName}>{item.patientName || "Patient"}</Text>
+                                <Text style={styles.patientSub}>
+                                    {new Date(item.createdAt).toLocaleDateString()}
+                                    {item.pendingSync ? ' · Pending sync' : ''}
+                                </Text>
+                            </View>
+                            <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
+                                <StatusIcon size={10} color={status.textColor} />
+                                <Text style={[styles.statusLabel, { color: status.textColor }]}>{status.label}</Text>
                             </View>
                         </View>
-                        <View style={styles.cardActions}>
-                            <TouchableOpacity
-                                style={[styles.miniActionBtn, { backgroundColor: riskColor + '15' }]}
-                                onPress={() => navigation.navigate('ObAssessment', { record: item, isDoctorAssessment: true })}
-                            >
-                                <Eye size={18} color={riskColor} />
-                            </TouchableOpacity>
+
+                        <View style={styles.summaryGrid}>
+                            <View style={styles.summaryItem}>
+                                <UserIcon size={15} color="#64748B" />
+                                <Text style={styles.summaryText}>{item.patientData?.AGE ? `Age ${item.patientData.AGE}` : '—'}</Text>
+                            </View>
+                            <View style={styles.summaryItem}>
+                                <Cigarette size={15} color="#64748B" />
+                                <Text style={styles.summaryText}>{smoker ? 'Smoker' : 'Non-Smoker'}</Text>
+                            </View>
+                            <View style={styles.summaryItem}>
+                                <Baby size={15} color="#64748B" />
+                                <Text style={styles.summaryText}>{item.patientData?.PARITY != null ? `Parity: ${item.patientData.PARITY}` : '—'}</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.rowBetween}>
+                            <View style={styles.recBox}>
+                                <Text style={styles.recTitle}>Assessed Method:</Text>
+                                <View style={styles.row}>
+                                    <Text style={styles.recValue}>{topMethod}</Text>
+                                    <View style={[styles.riskDotMini, { backgroundColor: riskColor }]} />
+                                </View>
+                            </View>
+                            <View style={styles.cardActions}>
+                                <TouchableOpacity
+                                    style={[styles.miniActionBtn, { backgroundColor: riskColor + '15' }]}
+                                    onPress={() => navigation.navigate('ObHistory', { recordId: item.id })}
+                                >
+                                    <Eye size={18} color={riskColor} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
             </Animated.View>
         );
     };
@@ -189,7 +189,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     onPress={() => navigation.navigate('ObAssessment', { isDoctorAssessment: true })}
                                     activeOpacity={0.88}
                                 >
-                                    <View style={[styles.iconBox, styles.iconBoxSuccess]}> 
+                                    <View style={[styles.iconBox, styles.iconBoxSuccess]}>
                                         <Plus color="#059669" size={24} />
                                     </View>
                                     <View>
@@ -203,7 +203,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     onPress={() => navigation.navigate('ObMethods', { isDoctorAssessment: true })}
                                     activeOpacity={0.88}
                                 >
-                                    <View style={[styles.iconBox, styles.iconBoxInfo]}> 
+                                    <View style={[styles.iconBox, styles.iconBoxInfo]}>
                                         <Book color="#4F46E5" size={24} />
                                     </View>
                                     <View>
@@ -217,7 +217,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     onPress={() => navigation.navigate('ObEducation')}
                                     activeOpacity={0.88}
                                 >
-                                    <View style={[styles.iconBox, styles.iconBoxWarning]}> 
+                                    <View style={[styles.iconBox, styles.iconBoxWarning]}>
                                         <HelpCircle color="#CA8A04" size={24} />
                                     </View>
                                     <View>
@@ -231,7 +231,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     onPress={() => navigation.navigate('ObEmergency')}
                                     activeOpacity={0.88}
                                 >
-                                    <View style={[styles.iconBox, styles.iconBoxDanger]}> 
+                                    <View style={[styles.iconBox, styles.iconBoxDanger]}>
                                         <AlertTriangle color="#DC2626" size={24} />
                                     </View>
                                     <View>
@@ -330,54 +330,54 @@ const DoctorDashboardScreen = ({ route }: any) => {
                         </Animated.View>
 
                         <Animated.View entering={FadeInDown.delay(240).duration(360)}>
-                        <TouchableOpacity
-                            style={[styles.mecCard, mecExpanded && styles.mecCardExpanded]}
-                            onPress={() => setMecExpanded(!mecExpanded)}
-                            activeOpacity={0.9}
-                        >
-                            <View style={styles.rowBetweenNoMargin}>
-                                <View style={styles.mecHeaderLeft}>
-                                    <View style={styles.mecIconWrap}>
-                                        <Palette size={20} color={colors.primary} />
+                            <TouchableOpacity
+                                style={[styles.mecCard, mecExpanded && styles.mecCardExpanded]}
+                                onPress={() => setMecExpanded(!mecExpanded)}
+                                activeOpacity={0.9}
+                            >
+                                <View style={styles.rowBetweenNoMargin}>
+                                    <View style={styles.mecHeaderLeft}>
+                                        <View style={styles.mecIconWrap}>
+                                            <Palette size={20} color={colors.primary} />
+                                        </View>
+                                        <View>
+                                            <Text style={styles.mecTitle}>MEC Color Guide</Text>
+                                            <Text style={styles.mecSubtitle}>WHO quick category legend</Text>
+                                        </View>
                                     </View>
-                                    <View>
-                                        <Text style={styles.mecTitle}>MEC Color Guide</Text>
-                                        <Text style={styles.mecSubtitle}>WHO quick category legend</Text>
+                                    <View style={styles.mecTogglePill}>
+                                        {mecExpanded ? <ChevronUp size={18} color="#64748B" /> : <ChevronDown size={16} color="#64748B" />}
                                     </View>
                                 </View>
-                                <View style={styles.mecTogglePill}>
-                                    {mecExpanded ? <ChevronUp size={18} color="#64748B" /> : <ChevronDown size={16} color="#64748B" />}
-                                </View>
-                            </View>
 
-                            {mecExpanded && (
-                                <Animated.View entering={FadeInDown.duration(250)} exiting={FadeOut.duration(180)} layout={Layout.springify()} style={styles.mecContent}>
-                                    <View style={styles.mecItem}>
-                                        <View style={[styles.colorDot, { backgroundColor: '#10B981' }]} />
-                                        <Text style={styles.mecLabel}>Green — Safe to Use</Text>
-                                    </View>
-                                    <View style={styles.mecItem}>
-                                        <View style={[styles.colorDot, { backgroundColor: '#F59E0B' }]} />
-                                        <Text style={styles.mecLabel}>Yellow — Generally Safe</Text>
-                                    </View>
-                                    <View style={styles.mecItem}>
-                                        <View style={[styles.colorDot, { backgroundColor: '#FB923C' }]} />
-                                        <Text style={styles.mecLabel}>Orange — Use With Caution</Text>
-                                    </View>
-                                    <View style={styles.mecItem}>
-                                        <View style={[styles.colorDot, { backgroundColor: '#EF4444' }]} />
-                                        <Text style={styles.mecLabel}>Red — Not recommended</Text>
-                                    </View>
-                                    <TouchableOpacity
-                                        style={styles.mecFullBtn}
-                                        onPress={() => navigation.navigate('ObMecGuide')}
-                                    >
-                                        <Info size={16} color="#FFF" />
-                                        <Text style={styles.mecFullBtnText}>View Full MEC Guide</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            )}
-                        </TouchableOpacity>
+                                {mecExpanded && (
+                                    <Animated.View entering={FadeInDown.duration(250)} exiting={FadeOut.duration(180)} layout={Layout.springify()} style={styles.mecContent}>
+                                        <View style={styles.mecItem}>
+                                            <View style={[styles.colorDot, { backgroundColor: '#10B981' }]} />
+                                            <Text style={styles.mecLabel}>Green — Safe to Use</Text>
+                                        </View>
+                                        <View style={styles.mecItem}>
+                                            <View style={[styles.colorDot, { backgroundColor: '#F59E0B' }]} />
+                                            <Text style={styles.mecLabel}>Yellow — Generally Safe</Text>
+                                        </View>
+                                        <View style={styles.mecItem}>
+                                            <View style={[styles.colorDot, { backgroundColor: '#FB923C' }]} />
+                                            <Text style={styles.mecLabel}>Orange — Use With Caution</Text>
+                                        </View>
+                                        <View style={styles.mecItem}>
+                                            <View style={[styles.colorDot, { backgroundColor: '#EF4444' }]} />
+                                            <Text style={styles.mecLabel}>Red — Not recommended</Text>
+                                        </View>
+                                        <TouchableOpacity
+                                            style={styles.mecFullBtn}
+                                            onPress={() => navigation.navigate('ObMecGuide')}
+                                        >
+                                            <Info size={16} color="#FFF" />
+                                            <Text style={styles.mecFullBtnText}>View Full MEC Guide</Text>
+                                        </TouchableOpacity>
+                                    </Animated.View>
+                                )}
+                            </TouchableOpacity>
                         </Animated.View>
                     </View>
                 }
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     },
     mecStrip: { width: 6, height: '100%' },
     cardContent: { flex: 1, paddingTop: 14, paddingHorizontal: 16, paddingBottom: 15 },
-    patientName: { fontSize:18, fontWeight: 'bold', color: '#1E293B' },
+    patientName: { fontSize: 18, fontWeight: 'bold', color: '#1E293B' },
     patientSub: { fontSize: 14, color: '#94A3B8', marginTop: 2 },
     statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
     statusLabel: { fontSize: 13, fontWeight: '800', marginLeft: 4, },
