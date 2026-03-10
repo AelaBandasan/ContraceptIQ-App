@@ -15,11 +15,19 @@
  * bypassing the onnxruntime-react-native string tensor bug.
  */
 
-import { InferenceSession, Tensor } from 'onnxruntime-react-native';
+import { NativeModules } from 'react-native';
 import { Asset } from 'expo-asset';
 import { buildOHEVector, validateFeaturesV4 } from '../utils/featureEncoder';
 import { createModuleLogger } from '../utils/loggerUtils';
 import type { RiskAssessmentResponse } from './discontinuationRiskService';
+
+// Conditionally require onnxruntime-react-native to avoid a null.install() crash
+// in New Architecture (Bridgeless) mode where NativeModules.Onnxruntime is null
+// because OnnxruntimeModule is a legacy bridge module, not a TurboModule.
+const _onnxAvailable = NativeModules.Onnxruntime != null;
+const { InferenceSession, Tensor } = _onnxAvailable
+  ? (require('onnxruntime-react-native') as typeof import('onnxruntime-react-native'))
+  : ({ InferenceSession: null, Tensor: null } as unknown as typeof import('onnxruntime-react-native'));
 
 // ============================================================================
 // CONFIGURATION (matches hybrid_v4_config.json)
