@@ -1,11 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
-  ChevronLeft, Check, Heart, Shield, Clock,
+  Check, Heart, Shield, Clock,
   EyeOff, UserCheck, Leaf, ShieldCheck,
   ChevronRight,
 } from 'lucide-react-native';
@@ -26,14 +25,20 @@ const PREFERENCES = [
 const WhoMecPreferencesScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const insets = useSafeAreaInsets();
 
-  const { age, conditionIds } = route.params as {
+  const { age, conditionIds, preferences: initialPreferences } = route.params as {
     age: number;
     conditionIds: string[];
+    preferences?: string[];
   };
 
-  const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
+  const [selectedPrefs, setSelectedPrefs] = useState<string[]>(initialPreferences || []);
+
+  useEffect(() => {
+    if (Array.isArray(initialPreferences)) {
+      setSelectedPrefs(initialPreferences);
+    }
+  }, [initialPreferences]);
 
   const steps = [
     { id: 1, label: 'Conditions' },
@@ -80,7 +85,14 @@ const WhoMecPreferencesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ObHeader title="WHO MEC Tool" subtitle="Step 2: Preferences" showBack onBackPress={() => navigation.navigate('ObWhoMecConditions')} />
+      <ObHeader
+        title="WHO MEC Tool"
+        subtitle="Step 2: Preferences"
+        showBack
+        onBackPress={() =>
+          navigation.navigate('ObWhoMecConditions', { age, conditionIds, preferences: selectedPrefs })
+        }
+      />
 
       <View style={styles.stepperWrap}>
         {steps.map((step) => {
@@ -152,20 +164,12 @@ const WhoMecPreferencesScreen = () => {
           );
         })}
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Bottom bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}> 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleViewResults}>
           <Text style={styles.resultsButtonText}>View Results</Text>
           <ChevronRight size={18} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={16} color="#6B4254" />
-          <Text style={styles.secondaryBtnText}>Back</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={{ height: 28 }} />
+      </ScrollView>
     </View>
   );
 };
@@ -263,13 +267,6 @@ const styles = StyleSheet.create({
   },
   prefCheckSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
 
-  bottomBar: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    paddingHorizontal: spacing.lg, paddingTop: 12,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.border.light,
-    ...shadows.lg,
-  },
   primaryBtn: {
     backgroundColor: colors.primary,
     borderRadius: 16,
@@ -283,18 +280,7 @@ const styles = StyleSheet.create({
     shadowRadius: 7,
     elevation: 4,
   },
-  secondaryBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    justifyContent: 'center',
-    height: 55,
-    marginTop: 12,
-    borderRadius: 12,
-    backgroundColor: '#FFF8FC',
-    borderWidth: 1,
-    borderColor: '#EFD8E5',
-  },
   resultsButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  secondaryBtnText: { color: '#6B4254', fontSize: 17, fontWeight: '700' },
 });
 
 export default WhoMecPreferencesScreen;

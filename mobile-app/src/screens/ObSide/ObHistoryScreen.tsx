@@ -42,7 +42,7 @@ const getRiskColor = (risk?: string) => {
 const getStatusMeta = (status: string, riskLevel?: string) => {
     const risk = (riskLevel || '').toLowerCase();
     if (risk === 'high' || status === 'critical') return { label: 'HIGH RISK', bg: '#FEF2F2', text: '#EF4444', icon: AlertTriangle };
-    if (status === 'completed') return { label: 'COMPLETED', bg: '#F0FDF4', text: '#10B981', icon: CheckCircle2 };
+    if (status === 'completed') return { label: 'LOW RISK', bg: '#F0FDF4', text: '#10B981', icon: CheckCircle2 };
     return { label: 'REVIEWED', bg: '#F0F9FF', text: '#0EA5E9', icon: Activity };
 };
 

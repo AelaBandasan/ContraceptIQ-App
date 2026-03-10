@@ -193,6 +193,21 @@ const ObAssessment = ({ navigation, route }: any) => {
     setScreen("form");
   };
 
+  const handleExitAssessment = () => {
+    Alert.alert(
+      "Exit Assessment",
+      "Are you sure you want to exit?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Exit",
+          style: "destructive",
+          onPress: () => navigation.navigate("ObHome"),
+        },
+      ]
+    );
+  };
+
   useEffect(() => {
     const record = route.params?.record as AssessmentRecord | undefined;
     if (!record) {
@@ -202,6 +217,8 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     setFormData(record.patientData || {});
     setClinicalNotes(record.clinicalNotes || "");
+    setMecConditionIds(record.mecConditionIds || []);
+    setMecPrefs(record.mecPreferences || []);
 
     if (record.riskResults) {
       const restored: Record<string, RiskAssessmentResponse> = {};
@@ -408,6 +425,7 @@ const ObAssessment = ({ navigation, route }: any) => {
         patientData: formData,
         mecResults: mecResultsToSave,
         mecConditionIds,
+        mecPreferences: mecPrefs,
         riskResults,
         clinicalNotes: clinicalNotes.trim() || "",
         status: hasHighRisk ? "critical" : "completed",
@@ -531,6 +549,21 @@ const ObAssessment = ({ navigation, route }: any) => {
             ))}
           </View>
         )}
+        {mecPrefs.length > 0 && (
+          <View style={styles.conditionSummary}>
+            <Text style={styles.conditionSummaryTitle}>Selected Preferences</Text>
+            <View style={styles.prefSummaryRow}>
+              {mecPrefs.map((prefKey) => {
+                const pref = PREFERENCES.find((p) => p.key === prefKey);
+                return (
+                  <View key={prefKey} style={styles.prefSummaryChip}>
+                    <Text style={styles.prefSummaryChipText}>{pref?.label || prefKey}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
         {([1, 2, 3, 4] as MECCategory[]).map((cat) => {
           const methodsInCat = Object.entries(mecResults)
             .filter(([, value]) => value === cat)
@@ -563,7 +596,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                   >
                     <View style={styles.mecMethodRow}>
                       {method.image ? (
-                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}>
+                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}> 
                           <Image source={method.image} style={styles.mecMethodImage} resizeMode="cover" />
                         </View>
                       ) : null}
@@ -598,7 +631,7 @@ const ObAssessment = ({ navigation, route }: any) => {
         title="Patient Assessment"
         subtitle={formData?.NAME || "New Patient"}
         showBack
-        onBackPress={() => navigation.navigate('ObHome')}
+        onBackPress={handleExitAssessment}
       />
 
       <View style={styles.stepperWrap}>
@@ -1155,6 +1188,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#334155",
     marginBottom: 4,
+  },
+  prefSummaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  prefSummaryChip: {
+    backgroundColor: colors.primary + "15",
+    borderWidth: 1,
+    borderColor: colors.primary + "30",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  prefSummaryChipText: {
+    color: colors.primary,
+    fontWeight: "600",
+    fontSize: 13,
   },
   mecCatRow: {
     flexDirection: "row",

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
     StyleSheet, View, Text, TouchableOpacity, FlatList,
-    RefreshControl, ScrollView
+    RefreshControl, ScrollView, useWindowDimensions
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
@@ -22,6 +22,11 @@ import Animated, { FadeInDown, FadeOut, Layout } from 'react-native-reanimated';
  */
 const DoctorDashboardScreen = ({ route }: any) => {
     const navigation = useNavigation<any>();
+    const { width } = useWindowDimensions();
+    const isCompact = width < 390;
+    const isTablet = width >= 900;
+    const horizontalPadding = isCompact ? 14 : isTablet ? 26 : 20;
+    const actionCardWidth = isCompact ? '100%' : isTablet ? '31.5%' : '48%';
 
     // Core State
     const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
@@ -29,7 +34,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
     // UI State
     const [mecExpanded, setMecExpanded] = useState(false);
-    const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'Moderate' | 'High'>('All');
+    const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'High'>('All');
 
     // Computed stats from local assessment cache
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -88,7 +93,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
     const getStatusBadge = (item: AssessmentRecord) => {
         if (item.status === 'critical') return { label: 'HIGH RISK', color: '#FEF2F2', textColor: '#EF4444', icon: AlertTriangle };
-        return { label: 'COMPLETED', color: '#F0FDF4', textColor: '#10B981', icon: CheckCircle2 };
+        return { label: 'LOW RISK', color: '#F0FDF4', textColor: '#10B981', icon: CheckCircle2 };
     };
 
     const renderCard = (item: AssessmentRecord) => {
@@ -125,16 +130,16 @@ const DoctorDashboardScreen = ({ route }: any) => {
                         </View>
                     </View>
 
-                    <View style={styles.summaryGrid}>
-                        <View style={styles.summaryItem}>
+                     <View style={[styles.summaryGrid, isCompact && styles.summaryGridCompact]}>
+                        <View style={[styles.summaryItem, isCompact && styles.summaryItemCompact]}>
                             <UserIcon size={15} color="#64748B" />
                             <Text style={styles.summaryText}>{item.patientData?.AGE ? `Age ${item.patientData.AGE}` : '—'}</Text>
                         </View>
-                        <View style={styles.summaryItem}>
+                        <View style={[styles.summaryItem, isCompact && styles.summaryItemCompact]}>
                             <Cigarette size={15} color="#64748B" />
                             <Text style={styles.summaryText}>{smoker ? 'Smoker' : 'Non-Smoker'}</Text>
                         </View>
-                        <View style={styles.summaryItem}>
+                        <View style={[styles.summaryItem, isCompact && styles.summaryItemCompact]}>
                             <Baby size={15} color="#64748B" />
                             <Text style={styles.summaryText}>{item.patientData?.PARITY != null ? `Parity: ${item.patientData.PARITY}` : '—'}</Text>
                         </View>
@@ -175,12 +180,12 @@ const DoctorDashboardScreen = ({ route }: any) => {
                 data={[]}
                 renderItem={null}
                 ListHeaderComponent={
-                    <View style={styles.content}>
+                    <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}> 
                         <Animated.View entering={FadeInDown.delay(80).duration(360)} style={styles.section}>
-                            <Text style={styles.sectionTitle}>Quick Actions</Text>
+                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Quick Actions</Text>
                             <View style={styles.actionGrid}>
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardSuccess]}
+                                    style={[styles.actionCard, styles.actionCardSuccess, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
                                     onPress={() => navigation.navigate('ObAssessment', { isDoctorAssessment: true })}
                                     activeOpacity={0.88}
                                 >
@@ -194,7 +199,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardInfo]}
+                                    style={[styles.actionCard, styles.actionCardInfo, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
                                     onPress={() => navigation.navigate('ObMethods', { isDoctorAssessment: true })}
                                     activeOpacity={0.88}
                                 >
@@ -208,7 +213,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardWarning]}
+                                    style={[styles.actionCard, styles.actionCardWarning, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
                                     onPress={() => navigation.navigate('ObEducation')}
                                     activeOpacity={0.88}
                                 >
@@ -222,7 +227,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardDanger]}
+                                    style={[styles.actionCard, styles.actionCardDanger, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
                                     onPress={() => navigation.navigate('ObEmergency')}
                                     activeOpacity={0.88}
                                 >
@@ -238,9 +243,9 @@ const DoctorDashboardScreen = ({ route }: any) => {
                         </Animated.View>
 
                         <Animated.View entering={FadeInDown.delay(140).duration(360)} style={styles.section}>
-                            <Text style={styles.sectionTitle}>Activity Summary</Text>
+                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Activity Summary</Text>
 
-                            <View style={styles.activityCard}>
+                            <View style={[styles.activityCard, isCompact && styles.activityCardCompact]}>
                                 <View style={styles.activityLeft}>
                                     <Text style={styles.activityBigNum}>{stats.total}</Text>
                                     <Text style={styles.activityBigLabel}>Total Records</Text>
@@ -252,7 +257,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     </View>
                                 </View>
 
-                                <View style={styles.activityDivider} />
+                                <View style={[styles.activityDivider, isCompact && styles.activityDividerCompact]} />
 
                                 <View style={styles.activityRight}>
                                     {[
@@ -272,7 +277,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
                         <Animated.View entering={FadeInDown.delay(200).duration(360)} style={[styles.section, styles.recentSection]}>
                             <View style={styles.rowBetween}>
-                                <Text style={styles.sectionTitle}>Recent Assessments</Text>
+                                <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Recent Assessments</Text>
                                 <TouchableOpacity onPress={() => navigation.navigate('ObHistory')}>
                                     <View style={styles.row}>
                                         <Text style={styles.viewAllText}>View History</Text>
@@ -286,14 +291,14 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 showsHorizontalScrollIndicator={false}
                                 style={styles.filterScroll}
                             >
-                                {['All', 'Low', 'Moderate', 'High'].map((risk) => (
+                                {['All', 'Low', 'High'].map((risk) => (
                                     <TouchableOpacity
                                         key={risk}
                                         style={[
                                             styles.filterChip,
                                             filterRisk === risk && styles.filterChipActive
                                         ]}
-                                        onPress={() => setFilterRisk(risk as any)}
+                                        onPress={() => setFilterRisk(risk as 'All' | 'Low' | 'High')}
                                     >
                                         {risk !== 'All' && <View style={[styles.smallDot, { backgroundColor: getRiskColor(risk) }]} />}
                                         <Text style={[styles.filterText, filterRisk === risk && styles.filterTextActive]}>
@@ -387,23 +392,26 @@ export default DoctorDashboardScreen;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background.secondary },
-    content: { padding: 20 },
+    content: { paddingTop: 20, paddingBottom: 10 },
     section: { marginBottom: 24 },
     recentSection: { marginBottom: 8 },
     sectionTitle: { fontSize: 21, fontWeight: 'bold', color: colors.text.primary, marginBottom: 13 },
+    sectionTitleCompact: { fontSize: 19 },
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     rowBetweenNoMargin: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     row: { flexDirection: 'row', alignItems: 'center' },
     actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'space-between' },
     actionCard: {
-        width: '48%',
         borderRadius: 20,
         padding: 16,
-        height: 160,
+        minHeight: 160,
         justifyContent: 'space-between',
         borderWidth: 1,
         borderColor: '#F1F5F9',
         ...shadows.sm,
+    },
+    actionCardCompact: {
+        minHeight: 132,
     },
     actionCardSuccess: { backgroundColor: '#ECFDF5' },
     actionCardInfo: { backgroundColor: '#EEF2FF' },
@@ -439,7 +447,9 @@ const styles = StyleSheet.create({
     statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
     statusLabel: { fontSize: 13, fontWeight: '800', marginLeft: 4, },
     summaryGrid: { flexDirection: 'row', marginVertical: 12, backgroundColor: '#F8FAFC', padding: 8, borderRadius: 10 },
+    summaryGridCompact: { flexWrap: 'wrap', rowGap: 8 },
     summaryItem: { flexDirection: 'row', alignItems: 'center', marginRight: 15 },
+    summaryItemCompact: { width: '48%', marginRight: 0 },
     summaryText: { fontSize: 14, color: '#64748B', fontWeight: '500', marginLeft: 4 },
     recBox: { flex: 1 },
     recTitle: { fontSize: 13, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase' },
@@ -491,12 +501,17 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         elevation: 2,
     },
+    activityCardCompact: {
+        flexDirection: 'column',
+        alignItems: 'stretch',
+    },
     activityLeft: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     activityBigNum: { fontSize: 42, fontWeight: '800', color: '#1E293B', lineHeight: 46 },
     activityBigLabel: { fontSize: 13, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
     activityPendingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFE4F1', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
     activityPendingText: { fontSize: 13, color: colors.primary, fontWeight: '700' },
     activityDivider: { width: 1, backgroundColor: '#F1F5F9', marginHorizontal: 18 },
+    activityDividerCompact: { width: '100%', height: 1, marginHorizontal: 0, marginVertical: 14 },
     activityRight: { flex: 2, justifyContent: 'center' },
     // Queue stat rows
     queueStatRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },

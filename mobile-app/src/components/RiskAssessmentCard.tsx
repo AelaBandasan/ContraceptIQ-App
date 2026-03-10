@@ -72,6 +72,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   const progressPercent = Math.max(0, Math.min(100, confidence * 100));
 
   const riskAccent = isHighRisk ? COLORS.error : COLORS.success;
+  const riskBadgeBg = isHighRisk ? COLORS.errorBg : COLORS.successBg;
   const mecAccent =
     mecCategory === 1
       ? COLORS.success
@@ -86,7 +87,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   const theme = {
     bg: COLORS.background,
     border: COLORS.border,
-    accent: mecAccent || riskAccent,
+    accent: riskAccent,
     badgeBg: "#F8FAFC",
   };
 
@@ -99,15 +100,22 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
 
       {/* ── PART 1: STATUS + CONFIDENCE ── */}
       <View style={styles.statusRow}>
-        <View style={styles.headerRiskWrap}>
-          <Text style={styles.badgeEmoji}>{isHighRisk ? "⚠" : "✓"}</Text>
-          <Text style={[styles.headerRiskText, { color: theme.accent }]}> 
+        <View style={[styles.headerRiskWrap, { backgroundColor: riskBadgeBg }]}> 
+          <Text style={[styles.badgeEmoji, { color: riskAccent }]}>{isHighRisk ? "⚠" : "✓"}</Text>
+          <Text style={[styles.headerRiskText, { color: riskAccent }]}> 
             {isHighRisk ? "High Risk" : "Low Risk"}
           </Text>
         </View>
-        <Text style={styles.headerConfidenceText}>
-          Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{prob}%</Text>
-        </Text>
+        <View style={styles.statusMetaWrap}>
+          {mecCategory ? (
+            <View style={[styles.mecMiniBadge, { backgroundColor: mecAccent || COLORS.warning }]}> 
+              <Text style={styles.mecMiniBadgeText}>MEC {mecCategory}</Text>
+            </View>
+          ) : null}
+          <Text style={styles.headerConfidenceText}>
+            Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{prob}%</Text>
+          </Text>
+        </View>
       </View>
 
       {/* ── PART 2: THE METRIC ── */}
@@ -259,9 +267,12 @@ const styles = StyleSheet.create({
   headerRiskWrap: {
     flexDirection: "row",
     alignItems: "center",
+    borderRadius: RADIUS.full,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   badgeEmoji: {
-    fontSize: 18,
+    fontSize: 15,
     marginRight: 6,
   },
   headerRiskText: {
@@ -269,13 +280,27 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   headerConfidenceText: {
-    fontSize: 15,
+    fontSize: 13,
     color: COLORS.textSecondary,
     fontWeight: "600",
   },
   headerConfidenceValue: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "800",
+  },
+  statusMetaWrap: {
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  mecMiniBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  mecMiniBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
   },
 
   // Part 2: Metric
