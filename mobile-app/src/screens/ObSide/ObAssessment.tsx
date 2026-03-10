@@ -39,6 +39,9 @@ import {
   MECResult,
   getMECColor,
   MECCategory,
+  METHOD_ATTRIBUTES,
+  getDisplayNameFromModelKey,
+  MODEL_KEY_TO_MEC_ID,
 } from "../../services/mecService";
 import RiskAssessmentCard, {
   generateKeyFactors,
@@ -326,17 +329,10 @@ const ObAssessment = ({ navigation, route }: any) => {
         return;
       }
 
-      const nameToKey: Record<string, keyof MECResult> = {
-        Pills: "CHC",
-        Patch: "CHC",
-        Injectable: "DMPA",
-        Implant: "Implant",
-        "Copper IUD": "Cu-IUD",
-        "Intrauterine Device (IUD)": "LNG-IUD",
-      };
+      const nameToKey = MODEL_KEY_TO_MEC_ID;
 
       const eligibleMethods = Object.keys(METHOD_NAME_TO_INDEX).filter((m) => {
-        const cat = mecResults[nameToKey[m]] || 1;
+        const cat = (mecResults as any)[nameToKey[m]] || 1;
         return cat <= 3;
       });
 
@@ -353,7 +349,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             CONTRACEPTIVE_METHOD: methodName,
           } as unknown as UserAssessmentData);
 
-          const cat = mecResults[nameToKey[methodName]] || 1;
+          const cat = (mecResults as any)[nameToKey[methodName]] || 1;
           if (cat >= 3 && result) {
             result.risk_level = "HIGH";
             result.recommendation = `Medical risks present (MEC Cat ${cat}). Strong clinical counseling required.`;
@@ -539,37 +535,49 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     return (
       <View>
-        {mecConditionIds.length > 0 && (
-          <View style={styles.conditionSummary}>
-            <Text style={styles.conditionSummaryTitle}>Selected Conditions</Text>
-            {mecConditionIds.map((id) => (
-              <Text key={id} style={styles.conditionSummaryItem}>
-                • {getConditionLabel(id)}
-              </Text>
-            ))}
-          </View>
-        )}
-        {mecPrefs.length > 0 && (
-          <View style={styles.conditionSummary}>
-            <Text style={styles.conditionSummaryTitle}>Selected Preferences</Text>
-            <View style={styles.prefSummaryRow}>
-              {mecPrefs.map((prefKey) => {
-                const pref = PREFERENCES.find((p) => p.key === prefKey);
-                return (
-                  <View key={prefKey} style={styles.prefSummaryChip}>
-                    <Text style={styles.prefSummaryChipText}>{pref?.label || prefKey}</Text>
-                  </View>
-                );
-              })}
+        <View style={styles.conditionSummary}>
+          <Text style={styles.conditionSummaryTitle}>Patient Summary</Text>
+
+          <View style={styles.summaryRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.summarySectionLabel}>Age</Text>
+              <Text style={styles.summaryValue}>{formData.AGE || "—"}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.summarySectionLabel}>Status</Text>
+              <Text style={styles.summaryValue}>OB Assessment</Text>
             </View>
           </View>
-        )}
+
+          <Text style={styles.summarySectionLabel}>Conditions ({mecConditionIds.length})</Text>
+          {mecConditionIds.length > 0 ? (
+            mecConditionIds.map((id) => (
+              <Text key={id} style={styles.summaryItem}>• {getConditionLabel(id)}</Text>
+            ))
+          ) : (
+            <Text style={styles.summaryItem}>• None selected</Text>
+          )}
+
+          {mecPrefs.length > 0 && (
+            <>
+              <Text style={styles.summarySectionLabel}>Preferences ({mecPrefs.length})</Text>
+              {mecPrefs.map((key) => {
+                const p = PREFERENCES.find((pref) => pref.key === key);
+                return (
+                  <Text key={key} style={styles.summaryItem}>• {p?.label || key}</Text>
+                );
+              })}
+            </>
+          )}
+        </View>
+
         {([1, 2, 3, 4] as MECCategory[]).map((cat) => {
-          const methodsInCat = Object.entries(mecResults)
-            .filter(([, value]) => value === cat)
-            .map(([key]) => ({
-              label: methodMap[key]?.label || key,
-              image: methodMap[key]?.image,
+          // Use METHOD_ATTRIBUTES to ensure identical ordering and naming
+          const methodsInCat = METHOD_ATTRIBUTES
+            .filter(attr => (mecResults as any)[attr.id] === cat)
+            .map(attr => ({
+              label: attr.name,
+              image: methodMap[attr.id]?.image,
             }));
           if (methodsInCat.length === 0) return null;
           return (
@@ -581,8 +589,8 @@ const ObAssessment = ({ navigation, route }: any) => {
                 <Text style={styles.mecCatDesc}>
                   {cat === 1 ? "Safe - No Restrictions"
                     : cat === 2 ? "Generally Safe - Benefits > Risks"
-                    : cat === 3 ? "Use with Caution - Risks > Benefits"
-                    : "Not Recommended - Do Not Use"}
+                      : cat === 3 ? "Use with Caution - Risks > Benefits"
+                        : "Not Recommended - Do Not Use"}
                 </Text>
               </View>
               <View style={styles.mecMethodCard}>
@@ -807,7 +815,7 @@ const ObAssessment = ({ navigation, route }: any) => {
               </>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec")}> 
+          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec")}>
             <ChevronLeft size={16} color="#6B4254" />
             <Text style={styles.secondaryBtnText}>Back to Conditions</Text>
           </TouchableOpacity>
@@ -841,28 +849,20 @@ const ObAssessment = ({ navigation, route }: any) => {
             <>
               {Object.entries(allMethodResults).map(([methodName, result]) => {
                 if (!result) return null;
-                const nameToKey: Record<string, keyof MECResult> = {
-                  Pills: "CHC",
-                  Patch: "CHC",
-                  Injectable: "DMPA",
-                  Implant: "Implant",
-                  "Copper IUD": "Cu-IUD",
-                  "Intrauterine Device (IUD)": "LNG-IUD",
-                };
-                const mecKey = nameToKey[methodName];
-                const mecCat = mecResults && mecKey ? mecResults[mecKey] : null;
+                const mecKey = MODEL_KEY_TO_MEC_ID[methodName];
+                const mecCat = mecResults && mecKey ? (mecResults as any)[mecKey] : null;
 
                 const mecCardStyle = mecCat
                   ? {
-                      borderColor: getMECColor(mecCat as MECCategory),
-                      borderWidth: 1.5,
-                    }
+                    borderColor: getMECColor(mecCat as MECCategory),
+                    borderWidth: 1.5,
+                  }
                   : undefined;
 
                 return (
                   <View key={methodName} style={{ marginBottom: 10 }}>
                     <View style={styles.methodHeader}>
-                      <Text style={styles.methodName}>{methodName}</Text>
+                      <Text style={styles.methodName}>{getDisplayNameFromModelKey(methodName)}</Text>
                       {mecCat && (
                         <View style={[styles.mecBadge, { backgroundColor: getMECColor(mecCat as MECCategory) }]}>
                           <Text style={styles.mecBadgeText}>MEC {mecCat}</Text>
@@ -1189,23 +1189,29 @@ const styles = StyleSheet.create({
     color: "#334155",
     marginBottom: 4,
   },
-  prefSummaryRow: {
+  summaryRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    gap: 20,
+    marginBottom: 8,
   },
-  prefSummaryChip: {
-    backgroundColor: colors.primary + "15",
-    borderWidth: 1,
-    borderColor: colors.primary + "30",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  summarySectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#64748B",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: 10,
+    marginBottom: 2,
   },
-  prefSummaryChipText: {
-    color: colors.primary,
-    fontWeight: "600",
-    fontSize: 13,
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+  summaryItem: {
+    fontSize: 14,
+    color: "#475569",
+    marginBottom: 2,
   },
   mecCatRow: {
     flexDirection: "row",

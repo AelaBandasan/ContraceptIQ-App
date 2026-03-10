@@ -11,7 +11,7 @@ import { colors, shadows, spacing, borderRadius } from '../../theme';
 import { WHO_MEC_CONDITIONS } from '../../data/whoMecData';
 import {
   calculateWhoMecTool, getMECColor, getMECLabel,
-  type WhoMecMethodResult, type MECCategory,
+  type WhoMecMethodResult, type MECCategory, METHOD_ATTRIBUTES,
 } from '../../services/mecService';
 import ObHeader from '../../components/ObHeader';
 
@@ -26,12 +26,12 @@ const PREF_LABELS: Record<string, string> = {
 };
 
 const METHOD_IMAGES: Record<string, any> = {
-  'Combined Hormonal': require('../../../assets/image/sq_chcpills.png'),
-  'Progestin-Only Pill': require('../../../assets/image/sq_poppills.png'),
-  'Injectable': require('../../../assets/image/sq_dmpainj.png'),
-  'Implant': require('../../../assets/image/sq_lngetg.png'),
-  'Copper IUD': require('../../../assets/image/sq_cuiud.png'),
-  'Hormonal IUD': require('../../../assets/image/sq_lngiud.png'),
+  'Combined Hormonal Contraceptive (CHC)': require('../../../assets/image/sq_chcpills.png'),
+  'Progestogen-only Pill (POP)': require('../../../assets/image/sq_poppills.png'),
+  'Injectable (DMPA)': require('../../../assets/image/sq_dmpainj.png'),
+  'Implant (LNG/ETG)': require('../../../assets/image/sq_lngetg.png'),
+  'Copper IUD (Cu-IUD)': require('../../../assets/image/sq_cuiud.png'),
+  'LNG-IUD (Levonorgestrel-IUD)': require('../../../assets/image/sq_lngiud.png'),
 };
 
 const CategoryIcon = ({ category }: { category: MECCategory }) => {
@@ -55,10 +55,10 @@ const WhoMecResultsScreen = () => {
 
   const ageLabel =
     age < 18 ? '< 18' :
-    age === 18 ? '18-19' :
-    age === 30 ? '20-39' :
-    age === 42 ? '40-45' :
-    '≥ 46';
+      age === 18 ? '18-19' :
+        age === 30 ? '20-39' :
+          age === 42 ? '40-45' :
+            '≥ 46';
   const steps = [
     { id: 1, label: 'Conditions' },
     { id: 2, label: 'Preferences' },
@@ -99,55 +99,60 @@ const WhoMecResultsScreen = () => {
     );
   };
 
-  const renderMethodCard = (method: WhoMecMethodResult) => {
-    const bgColor = getMECColor(method.mecCategory);
+  const renderMECResults = () => {
+    const methodCategories = result.mecCategories;
 
     return (
-      <View key={method.id} style={[styles.methodCard, { borderLeftColor: bgColor }]}>
-        <View style={styles.methodHeader}>
-          <View style={styles.methodTitleRow}>
-            <CategoryIcon category={method.mecCategory} />
-            <Text style={styles.methodName}>{method.name}</Text>
-          </View>
-        </View>
+      <View>
+        {([1, 2, 3, 4] as MECCategory[]).map((cat) => {
+          const methodsInCat = METHOD_ATTRIBUTES
+            .filter((attr: any) => (methodCategories as any)[attr.id] === cat)
+            .map((attr: any) => ({
+              id: attr.id,
+              name: attr.name,
+              image: METHOD_IMAGES[attr.name],
+            }));
 
-        <Text style={styles.categoryLabel}>
-          {getMECLabel(method.mecCategory)}
-        </Text>
+          if (methodsInCat.length === 0) return null;
 
-        {preferences.length > 0 && (
-          <View style={styles.matchRow}>
-            <Text style={styles.matchLabel}>Preference Match:</Text>
-            <View style={styles.matchBarContainer}>
-              <View style={[styles.matchBarFill, { width: `${method.matchScore}%`, backgroundColor: bgColor }]} />
+          return (
+            <View key={cat} style={styles.resultsSectionCard}>
+              <View style={styles.mecCatRow}>
+                <View style={[styles.mecCatBadge, { backgroundColor: getMECColor(cat) }]}>
+                  <Text style={styles.mecCatBadgeText}>{cat}</Text>
+                </View>
+                <Text style={styles.mecCatDesc}>
+                  {cat === 1 ? "Safe - No Restrictions"
+                    : cat === 2 ? "Generally Safe - Benefits > Risks"
+                      : cat === 3 ? "Use with Caution - Risks > Benefits"
+                        : "Not Recommended - Do Not Use"}
+                </Text>
+              </View>
+
+              <View style={styles.mecMethodCard}>
+                {methodsInCat.map((m: any, i: number) => (
+                  <View
+                    key={m.id}
+                    style={[
+                      styles.mecMethodItem,
+                      i < methodsInCat.length - 1 && styles.mecMethodItemBorder,
+                    ]}
+                  >
+                    <View style={styles.mecMethodRow}>
+                      <View style={styles.mecMethodImageWrap}>
+                        {m.image ? (
+                          <Image source={m.image} style={styles.mecMethodImage} resizeMode="cover" />
+                        ) : null}
+                      </View>
+                      <Text style={styles.mecMethodText}>{m.name}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
             </View>
-            <Text style={[styles.matchScore, { color: bgColor }]}>{method.matchScore}%</Text>
-          </View>
-        )}
+          );
+        })}
       </View>
-    );
-  };
-
-  const renderEligibleCard = (method: WhoMecMethodResult) => {
-    const bgColor = getMECColor(method.mecCategory);
-    const methodImage = METHOD_IMAGES[method.name];
-
-    return (
-      <TouchableOpacity key={method.id} style={styles.recomCard} activeOpacity={0.8}>
-        <View style={[styles.rankIndicator, { backgroundColor: bgColor }]} />
-        <View style={styles.recomIconContainer}>
-          {methodImage ? (
-            <Image source={methodImage} style={styles.recomIcon} />
-          ) : null}
-        </View>
-        <View style={styles.recomInfo}>
-          <Text style={styles.recomName}>{method.name}</Text>
-          <View style={styles.matchBadge}>
-            <Ionicons name="sparkles" size={12} color={colors.primary} />
-            <Text style={styles.matchText}>{method.matchScore}% Match</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
     );
   };
 
@@ -182,12 +187,20 @@ const WhoMecResultsScreen = () => {
       >
         {/* Input Summary */}
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Step 1: Patient Summary</Text>
+          <Text style={styles.summaryTitle}>Patient Summary</Text>
 
-          <Text style={styles.summarySectionLabel}>Age Group</Text>
-          <Text style={styles.summaryAgeValue}>{ageLabel}</Text>
+          <View style={styles.summaryRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.summarySectionLabel}>Age</Text>
+              <Text style={styles.summaryAgeValue}>{ageLabel}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.summarySectionLabel}>Status</Text>
+              <Text style={styles.summaryAgeValue}>Standalone MEC Tool</Text>
+            </View>
+          </View>
 
-          <Text style={styles.summarySectionLabel}>Conditions Identified ({conditionIds.length})</Text>
+          <Text style={styles.summarySectionLabel}>Conditions identified ({conditionIds.length})</Text>
           {conditionLabels.length > 0 ? (
             conditionLabels.map((label, i) => (
               <Text key={i} style={styles.summaryCondition}>• {label}</Text>
@@ -233,25 +246,7 @@ const WhoMecResultsScreen = () => {
 
         </View>
 
-        {/* Recommended Methods */}
-        {result.recommended.length > 0 && (
-          <View style={styles.resultsSectionCard}>
-            <Text style={styles.resultsSectionTitle}>
-              Eligible Methods ({result.recommended.length})
-            </Text>
-            {result.recommended.map(renderEligibleCard)}
-          </View>
-        )}
-
-        {/* Not Recommended Methods */}
-        {result.notRecommended.length > 0 && (
-          <View style={styles.resultsSectionCard}>
-            <Text style={[styles.resultsSectionTitle, { color: colors.error }]}> 
-              Not Recommended ({result.notRecommended.length})
-            </Text>
-            {result.notRecommended.map(renderMethodCard)}
-          </View>
-        )}
+        {renderMECResults()}
 
         {/* Disclaimer */}
         <View style={styles.disclaimerCard}>
@@ -264,6 +259,11 @@ const WhoMecResultsScreen = () => {
           </Text>
         </View>
 
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* Bottom bar */}
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <TouchableOpacity style={styles.primaryBtn} onPress={handleStartOver}>
           <Text style={styles.startOverButtonText}>Start New Assessment</Text>
           <ChevronRight size={18} color="#fff" />
@@ -337,6 +337,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryCondition: { fontSize: 13, color: colors.text.secondary, marginBottom: 8, lineHeight: 18 },
+  summaryRow: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 8,
+  },
   prefChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   prefChip: {
     backgroundColor: colors.primary + '15', borderRadius: 12,
@@ -391,98 +396,67 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  methodCard: {
-    backgroundColor: '#fff', borderRadius: 14,
-    padding: 14, marginBottom: 10,
-    borderLeftWidth: 5, borderWidth: 1, borderColor: '#F3DCE8',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+  mecCatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 10,
   },
-  recomCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+  mecCatBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  rankIndicator: {
-    width: 6,
-    height: '100%',
-    borderRadius: 3,
-    marginRight: 16,
+  mecCatBadgeText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 15,
   },
-  recomIconContainer: {
-    width: 62,
-    height: 62,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  recomIcon: {
-    width: 70,
-    height: 70,
-    resizeMode: 'contain',
-  },
-  recomInfo: {
+  mecCatDesc: {
+    color: "#64748B",
+    fontSize: 14,
+    fontWeight: "600",
     flex: 1,
   },
-  recomName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
+  mecMethodCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    overflow: "hidden",
   },
-  matchBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF0F6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+  mecMethodItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
-  matchText: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '700',
-    marginLeft: 4,
+  mecMethodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
   },
-  chevronContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFF0F6',
-    justifyContent: 'center',
-    alignItems: 'center',
+  mecMethodImageWrap: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    backgroundColor: "#F8FAFC",
   },
-  methodHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: 6,
+  mecMethodImage: {
+    width: "100%",
+    height: "100%",
   },
-  methodTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  methodName: { fontSize: 16, fontWeight: '700', color: colors.text.primary },
-  categoryLabel: { fontSize: 12, color: colors.text.disabled, marginBottom: 10, marginLeft: 26, fontWeight: '600' },
-
-  matchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  matchLabel: { fontSize: 12, color: colors.text.secondary },
-  matchBarContainer: {
-    flex: 1, height: 6, backgroundColor: colors.border.light,
-    borderRadius: 3, overflow: 'hidden',
+  mecMethodItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
   },
-  matchBarFill: { height: '100%', borderRadius: 3 },
-  matchScore: { fontSize: 13, fontWeight: '700', minWidth: 36, textAlign: 'right' },
+  mecMethodText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#334155",
+  },
 
   disclaimerCard: {
     backgroundColor: '#FFFBEB',
