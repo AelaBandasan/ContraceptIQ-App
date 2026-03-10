@@ -1,3 +1,20 @@
+# Fixing ONNX Runtime in Expo (Continuous Native Generation)
+
+## The Problem
+When implementing `onnxruntime-react-native` for offline machine learning inference in a modern Expo project (CNG / SDK 50+), the app throws the following JavaScript error upon loading the model:
+
+> `ERROR - Failed to load ONNX models {"error": [TypeError: Cannot read property 'create' of null]}`
+
+## The Root Cause
+This error occurs because the React Native JavaScript bridge returns `null` when attempting to access the ONNX engine. While the C++ engine compiles correctly, React Native's modern autolinker completely misses the `OnnxruntimePackage` and fails to add it to the generated `PackageList.java` file. Because the autolinker is blind to it, the native Android module and the JavaScript code remain disconnected.
+
+## The Solution: Manual Linking via Config Plugin
+To fix this, we bypass the autolinker entirely. We use an Expo Config Plugin to forcefully inject the Java/Kotlin import and package initialization directly into the `MainApplication` file during the prebuild phase.
+
+### Step 1: Create/Update the Config Plugin
+Create or update the plugin file at `./plugins/with-onnxruntime-react-native.js` with the following code. This script modifies the `build.gradle` for C++ compatibility and forcefully links the package in `MainApplication`.
+
+```javascript
 const { withAppBuildGradle, withDangerousMod, createRunOncePlugin, withMainApplication } = require('@expo/config-plugins');
 const { mergeContents } = require('@expo/config-plugins/build/utils/generateCode');
 const path = require('path');
@@ -5,12 +22,12 @@ const fs = require('fs');
 const pkg = require('onnxruntime-react-native/package.json');
 
 const withOrtFixed = (config) => {
+  // 1. Configure Android Gradle for C++ compatibility
   config = withAppBuildGradle(config, (config) => {
     if (config.modResults.language !== 'groovy') {
       throw new Error('Cannot add ONNX Runtime maven gradle because the build.gradle is not groovy');
     }
 
-    // Inject onnxruntime-react-native dependency
     config.modResults.contents = mergeContents({
       src: config.modResults.contents,
       newSrc: "    implementation project(':onnxruntime-react-native')",
@@ -20,7 +37,6 @@ const withOrtFixed = (config) => {
       comment: '    // onnxruntime-react-native',
     }).contents;
 
-    // Inject abiFilters (arm64-v8a only) and REACT_NATIVE_RELEASE_LEVEL into defaultConfig
     config.modResults.contents = mergeContents({
       src: config.modResults.contents,
       newSrc: [
@@ -38,11 +54,11 @@ const withOrtFixed = (config) => {
     return config;
   });
 
-  // --- NEW BLOCK: FORCE MANUAL LINKING IN MAIN APPLICATION ---
+  // 2. Force Manual Linking in MainApplication (Bypass Autolinker)
   config = withMainApplication(config, (config) => {
     let contents = config.modResults.contents;
 
-    // 1. Inject the import statement at the top of the file
+    // Inject the import statement
     if (!contents.includes('import ai.onnxruntime.reactnative.OnnxruntimePackage')) {
       contents = contents.replace(
         /^package .+$/m,
@@ -50,14 +66,14 @@ const withOrtFixed = (config) => {
       );
     }
 
-    // 2. Inject the package instantiation (Kotlin syntax for modern Expo)
+    // Inject the package instantiation (Kotlin syntax)
     if (contents.includes('PackageList(this).packages.apply {') && !contents.includes('add(OnnxruntimePackage())')) {
       contents = contents.replace(
         /PackageList\(this\)\.packages\.apply\s*\{/m,
         `PackageList(this).packages.apply {\n          add(OnnxruntimePackage())`
       );
-    }
-    // Fallback for older Java syntax just in case
+    } 
+    // Fallback for older Java syntax
     else if (contents.includes('new PackageList(this).getPackages();') && !contents.includes('packages.add(new OnnxruntimePackage());')) {
       contents = contents.replace(
         /List<ReactPackage> packages = new PackageList\(this\)\.getPackages\(\);/m,
@@ -68,8 +84,8 @@ const withOrtFixed = (config) => {
     config.modResults.contents = contents;
     return config;
   });
-  // --- END OF NEW BLOCK ---
 
+  // 3. Configure iOS Podfile
   config = withDangerousMod(config, [
     'ios',
     (config) => {
