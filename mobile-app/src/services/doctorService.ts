@@ -45,6 +45,9 @@ export interface AssessmentRecord {
     /** Selected WHO MEC condition IDs (up to 3) */
     mecConditionIds?: string[];
 
+    /** Selected preference keys used in MEC assessment (up to 3) */
+    mecPreferences?: string[];
+
     /** Per-method discontinuation risk predictions */
     riskResults: Record<string, {
         riskLevel: string;

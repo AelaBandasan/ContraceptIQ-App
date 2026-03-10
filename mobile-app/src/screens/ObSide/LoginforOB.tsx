@@ -29,7 +29,7 @@ import { ChevronDown, ChevronUp, Eye, EyeOff, Lock, Mail } from "lucide-react-na
 import { sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-import Logo from "../../../assets/cl_tempLogo.png";
+import Logo from "../../../assets/clearBG.png";
 import { auth, db } from "../../config/firebaseConfig";
 import { colors, shadows } from "../../theme";
 

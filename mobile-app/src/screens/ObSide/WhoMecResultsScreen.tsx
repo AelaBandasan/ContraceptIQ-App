@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import {
   StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   ChevronLeft, ChevronRight, CheckCircle, Check, AlertTriangle, XCircle, Info, Palette,
@@ -47,7 +46,6 @@ const CategoryIcon = ({ category }: { category: MECCategory }) => {
 const WhoMecResultsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const insets = useSafeAreaInsets();
 
   const { age, conditionIds, preferences } = route.params as {
     age: number;
@@ -93,13 +91,10 @@ const WhoMecResultsScreen = () => {
   const handleReturnToDashboard = () => {
     Alert.alert(
       'Return to Dashboard?',
-      'You will leave the results screen and go back to the dashboard.',
+      'You will leave the WHO MEC tool and go back to dashboard.',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Return to Dashboard',
-          onPress: () => navigation.navigate('ObMainTabs', { screen: 'ObHome' }),
-        },
+        { text: 'Return to Dashboard', onPress: () => navigation.navigate('ObHome') },
       ]
     );
   };
@@ -163,7 +158,12 @@ const WhoMecResultsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ObHeader title="WHO MEC Tool" subtitle="Step 3: Results" showBack onBackPress={() => navigation.navigate('ObWhoMecPreferences', { age, conditionIds })} />
+      <ObHeader
+        title="WHO MEC Tool"
+        subtitle="Step 3: Results"
+        showBack
+        onBackPress={() => navigation.navigate('ObWhoMecPreferences', { age, conditionIds, preferences })}
+      />
 
       <View style={styles.stepperWrap}>
         {steps.map((step) => {
@@ -270,9 +270,11 @@ const WhoMecResultsScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryBtn} onPress={handleReturnToDashboard}>
           <ChevronLeft size={16} color="#6B4254" />
-          <Text style={styles.secondaryBtnText}>Return to Dashboard</Text>
+          <Text style={styles.secondaryBtnText}>Back to Dashboard</Text>
         </TouchableOpacity>
-      </View>
+
+        <View style={{ height: 28 }} />
+      </ScrollView>
     </View>
   );
 };
@@ -477,13 +479,6 @@ const styles = StyleSheet.create({
   },
   disclaimerText: { fontSize: 12.5, color: '#92400E', lineHeight: 18 },
 
-  bottomBar: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    paddingHorizontal: spacing.lg, paddingTop: 12,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.border.light,
-    ...shadows.lg,
-  },
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     justifyContent: 'center',

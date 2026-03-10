@@ -1,13 +1,16 @@
 import React from 'react';
-import { Alert, StyleSheet, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { Alert, StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
-import { LogOut, ChevronRight, Settings, Info, MessageSquare, Pencil } from 'lucide-react-native';
+import { LogOut, ChevronRight, Settings, Info, Pencil } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ObHeader from '../../components/ObHeader';
 import { colors } from '../../theme';
 
 const ProfileScreen = ({ navigation }: any) => {
+    const { width } = useWindowDimensions();
+    const horizontalPadding = width < 360 ? 14 : 20;
+
     const handleLogout = async () => {
         try {
             await auth.signOut();
@@ -32,7 +35,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
     return (
         <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-            <ObHeader title="My Profile" subtitle={doctorName} />
+            <ObHeader title="My Profile" subtitle="View and update your personal details." />
 
             <View pointerEvents="none" style={styles.bgDecorWrap}>
                 <View style={styles.bgBlobOne} />
@@ -40,7 +43,7 @@ const ProfileScreen = ({ navigation }: any) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}>
-                <View style={styles.contentWrap}>
+                <View style={[styles.contentWrap, { paddingHorizontal: horizontalPadding }]}>
                     <LinearGradient
                         colors={['#F3EDF2', '#F3EDF2']}
                         start={{ x: 0, y: 0 }}
@@ -77,16 +80,6 @@ const ProfileScreen = ({ navigation }: any) => {
                                 <Info size={20} color="#DB2777" />
                             </View>
                             <Text style={styles.rowText}>About Us</Text>
-                            <ChevronRight size={20} color="#CBD5E1" />
-                        </TouchableOpacity>
-
-                        <View style={styles.divider} />
-
-                        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ObFeedback')}>
-                            <View style={styles.rowIcon}>
-                                <MessageSquare size={20} color="#DB2777" />
-                            </View>
-                            <Text style={styles.rowText}>Send Feedback</Text>
                             <ChevronRight size={20} color="#CBD5E1" />
                         </TouchableOpacity>
 

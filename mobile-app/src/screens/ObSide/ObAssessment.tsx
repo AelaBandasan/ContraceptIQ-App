@@ -196,6 +196,21 @@ const ObAssessment = ({ navigation, route }: any) => {
     setScreen("form");
   };
 
+  const handleExitAssessment = () => {
+    Alert.alert(
+      "Exit Assessment",
+      "Are you sure you want to exit?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Exit",
+          style: "destructive",
+          onPress: () => navigation.navigate("ObHome"),
+        },
+      ]
+    );
+  };
+
   useEffect(() => {
     const record = route.params?.record as AssessmentRecord | undefined;
     if (!record) {
@@ -205,6 +220,8 @@ const ObAssessment = ({ navigation, route }: any) => {
 
     setFormData(record.patientData || {});
     setClinicalNotes(record.clinicalNotes || "");
+    setMecConditionIds(record.mecConditionIds || []);
+    setMecPrefs(record.mecPreferences || []);
 
     if (record.riskResults) {
       const restored: Record<string, RiskAssessmentResponse> = {};
@@ -404,6 +421,7 @@ const ObAssessment = ({ navigation, route }: any) => {
         patientData: formData,
         mecResults: mecResultsToSave,
         mecConditionIds,
+        mecPreferences: mecPrefs,
         riskResults,
         clinicalNotes: clinicalNotes.trim() || "",
         status: hasHighRisk ? "critical" : "completed",
@@ -586,7 +604,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                   >
                     <View style={styles.mecMethodRow}>
                       {method.image ? (
-                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}>
+                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}> 
                           <Image source={method.image} style={styles.mecMethodImage} resizeMode="cover" />
                         </View>
                       ) : null}
@@ -621,7 +639,7 @@ const ObAssessment = ({ navigation, route }: any) => {
         title="Patient Assessment"
         subtitle={formData?.NAME || "New Patient"}
         showBack
-        onBackPress={() => navigation.navigate('ObHome')}
+        onBackPress={handleExitAssessment}
       />
 
       <View style={styles.stepperWrap}>

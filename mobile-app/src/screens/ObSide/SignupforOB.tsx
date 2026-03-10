@@ -31,7 +31,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
-import Logo from "../../../assets/cl_tempLogo.png";
+import Logo from "../../../assets/clearBG.png";
 import { auth, db } from "../../config/firebaseConfig";
 import { colors, shadows } from "../../theme";
 

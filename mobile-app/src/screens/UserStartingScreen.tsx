@@ -17,7 +17,7 @@ import { ArrowRight } from 'lucide-react-native';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
-import Logo from '../../assets/cl_tempLogo.png';
+import Logo from '../../assets/clearBG.png';
 import { colors, shadows } from '../theme';
 import { auth, db } from '../config/firebaseConfig';
 
