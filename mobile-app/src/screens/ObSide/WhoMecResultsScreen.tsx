@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   ChevronLeft, ChevronRight, CheckCircle, Check, AlertTriangle, XCircle, Info, Palette,
@@ -46,6 +47,7 @@ const CategoryIcon = ({ category }: { category: MECCategory }) => {
 const WhoMecResultsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const insets = useSafeAreaInsets();
 
   const { age, conditionIds, preferences } = route.params as {
     age: number;
@@ -263,7 +265,7 @@ const WhoMecResultsScreen = () => {
       </ScrollView>
 
       {/* Bottom bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}> 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleStartOver}>
           <Text style={styles.startOverButtonText}>Start New Assessment</Text>
           <ChevronRight size={18} color="#fff" />
@@ -274,7 +276,7 @@ const WhoMecResultsScreen = () => {
         </TouchableOpacity>
 
         <View style={{ height: 28 }} />
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -478,6 +480,17 @@ const styles = StyleSheet.create({
     color: '#92400E',
   },
   disclaimerText: { fontSize: 12.5, color: '#92400E', lineHeight: 18 },
+
+  bottomBar: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    paddingHorizontal: spacing.lg,
+    paddingTop: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+    ...shadows.lg,
+  },
 
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

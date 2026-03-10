@@ -19,6 +19,7 @@ import { NativeModules } from 'react-native';
 import { Asset } from 'expo-asset';
 import { buildOHEVector, validateFeaturesV4 } from '../utils/featureEncoder';
 import { createModuleLogger } from '../utils/loggerUtils';
+import type { InferenceSession as OrtInferenceSession } from 'onnxruntime-react-native';
 import type { RiskAssessmentResponse } from './discontinuationRiskService';
 
 // Conditionally require onnxruntime-react-native to avoid a null.install() crash
@@ -43,8 +44,8 @@ const HYBRID_CONFIG = {
 // MODEL MANAGEMENT
 // ============================================================================
 
-let xgbSession: InferenceSession | null = null;
-let dtSession: InferenceSession | null = null;
+let xgbSession: OrtInferenceSession | null = null;
+let dtSession: OrtInferenceSession | null = null;
 let modelsLoaded = false;
 let loadingPromise: Promise<void> | null = null;
 
