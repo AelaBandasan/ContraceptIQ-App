@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Alert, StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db, storage } from '../../config/firebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from '../../config/firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { LogOut, ChevronRight, Settings, Info, Pencil } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +26,14 @@ const ProfileScreen = ({ navigation }: any) => {
     const fetchUserProfile = async () => {
         if (!user) return;
         try {
+            // Check AsyncStorage for local profile picture first
+            const localPic = await AsyncStorage.getItem(`profilePic_${user.uid}`);
+            if (localPic) {
+                setProfilePic(localPic);
+                return;
+            }
+
+            // Fallback to Firestore if no local picture is found
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
                 const data = userDoc.data();
@@ -34,7 +42,7 @@ const ProfileScreen = ({ navigation }: any) => {
                 }
             }
         } catch (error) {
-            console.error('Error fetching profile:', error);
+             console.error('Error fetching profile:', error);
         }
     };
 
@@ -74,23 +82,20 @@ const ProfileScreen = ({ navigation }: any) => {
         setUploading(true);
 
         try {
-            const response = await fetch(uri);
-            const blob = await response.blob();
-            const storageRef = ref(storage, `profile_pics/${user.uid}`);
-
-            await uploadBytes(storageRef, blob);
-            const downloadURL = await getDownloadURL(storageRef);
-
-            // Update Firestore
+            // Save the URI locally using AsyncStorage instead of Firebase Storage
+            await AsyncStorage.setItem(`profilePic_${user.uid}`, uri);
+            
+            // Still update the Firestore profilePicUrl to point to this local URI 
+            // incase other offline fallback systems try to read it
             await updateDoc(doc(db, 'users', user.uid), {
-                profilePicUrl: downloadURL
+                profilePicUrl: uri
             });
 
-            setProfilePic(downloadURL);
-            Alert.alert('Success', 'Profile picture updated successfully!');
+            setProfilePic(uri);
+            Alert.alert('Success', 'Profile picture updated locally!');
         } catch (error) {
             console.error('Upload Error:', error);
-            Alert.alert('Error', 'Failed to upload image. Please try again.');
+            Alert.alert('Error', 'Failed to save image locally. Please try again.');
         } finally {
             setUploading(false);
         }
