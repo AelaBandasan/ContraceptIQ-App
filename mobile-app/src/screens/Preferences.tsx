@@ -10,7 +10,7 @@ import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { typography, spacing, colors, borderRadius, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
 import { calculateWhoMecTool, getMECColor } from '../services/mecService';
-import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
@@ -39,7 +39,7 @@ const Preferences = ({ navigation }: Props) => {
 
   const METHOD_IMAGES: Record<string, any> = {
     'Combined Hormonal':   require('../../assets/image/sq_chcpatch1.png'),
-    'Progestin-Only Pill': require('../../assets/image/sq_chcpills.png'),
+    'Progestin-Only Pill': require('../../assets/image/sq_poppills.png'),
     'Injectable':          require('../../assets/image/sq_dmpainj.png'),
     'Implant':             require('../../assets/image/sq_lngetg.png'),
     'Copper IUD':          require('../../assets/image/sq_cuiud.png'),
@@ -91,7 +91,7 @@ const Preferences = ({ navigation }: Props) => {
 
           {/* Preferences Summary */}
           <Animated.View
-            entering={FadeInDown.delay(200).duration(800).withInitialValues({ opacity: 1 })}
+            entering={FadeIn.delay(200).duration(800).withInitialValues({ opacity: 1 })}
             style={styles.summaryCard}
           >
             <View style={styles.cardHeaderLine} />
@@ -100,7 +100,7 @@ const Preferences = ({ navigation }: Props) => {
               {chosenPrefs.length > 0 ? chosenPrefs.map((p, idx) => (
                 <Animated.View
                   key={p}
-                  entering={ZoomIn.delay(400 + (idx * 100)).withInitialValues({ opacity: 1 })}
+                  entering={FadeIn.delay(400 + (idx * 100)).withInitialValues({ opacity: 1 })}
                   style={styles.prefChip}
                 >
                   <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
@@ -116,7 +116,7 @@ const Preferences = ({ navigation }: Props) => {
           </Animated.View>
 
           {/* Personalized Recommendations */}
-          <Animated.View entering={FadeInDown.delay(400).duration(800).withInitialValues({ opacity: 1 })}>
+          <Animated.View entering={FadeIn.delay(400).duration(800).withInitialValues({ opacity: 1 })}>
             <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
             <Text style={styles.header3}>Based on your preferences and age</Text>
           </Animated.View>
@@ -124,7 +124,7 @@ const Preferences = ({ navigation }: Props) => {
           {topRecommendations.map((item, index) => (
             <Animated.View
               key={index}
-              entering={FadeInRight.delay(600 + (index * 150)).duration(600).withInitialValues({ opacity: 1 })}
+              entering={FadeIn.delay(600 + (index * 150)).duration(600).withInitialValues({ opacity: 1 })}
             >
               <TouchableOpacity
                 style={styles.recomCard}

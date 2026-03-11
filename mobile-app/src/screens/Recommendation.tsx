@@ -7,8 +7,8 @@ import { DrawerScreenProps } from '../types/navigation';
 import { colors, shadows } from '../theme';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { useAssessment } from '../context/AssessmentContext';
-// Context is read-only here; selectedAgeIndex initialises the local chip state.
 import { CalendarDays, Check } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 type Props = DrawerScreenProps<'Recommendation'>;
 
@@ -29,10 +29,14 @@ const STEPS = [
 const Recommendation: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  // Read context only to pre-fill from a previously saved session selection.
-  // We do NOT write back to context here — saving happens explicitly in Step 3.
   const { selectedAgeIndex } = useAssessment();
   const [localAgeIndex, setLocalAgeIndex] = useState<number | null>(selectedAgeIndex);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setLocalAgeIndex(selectedAgeIndex);
+    }, [selectedAgeIndex])
+  );
   const horizontalPadding = width < 360 ? 14 : 20;
   const ageChipWidth = width < 360 ? '47%' : width < 430 ? '31%' : '23%';
 
@@ -52,8 +56,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Animated.View
-        entering={FadeInDown.duration(600).withInitialValues({ opacity: 1 })}
+      <View
         style={[styles.header, { paddingTop: insets.top + 10 }]}
       >
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
@@ -72,7 +75,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
             <Ionicons name="information-circle-outline" size={26} color="#FFF" />
           </View>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       {/* Stepper */}
       <View style={styles.stepperWrap}>
@@ -99,15 +102,15 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         <View style={[styles.content, { paddingHorizontal: horizontalPadding }]}>
-          <Animated.View entering={FadeInDown.delay(200).duration(800).withInitialValues({ opacity: 1 })}>
+          <View>
             <Text style={styles.introTitle}>Select Your Age Group</Text>
             <Text style={styles.introText}>
               This tool uses WHO Medical Eligibility Criteria (5th Ed.) to recommend contraceptive methods based on your age. No medical history is required.
             </Text>
-          </Animated.View>
+          </View>
 
           {/* Age Selection */}
-          <Animated.View entering={FadeInDown.delay(400).duration(800).withInitialValues({ opacity: 1 })} style={styles.card}>
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.meIconContainer}>
                 <View style={styles.meIconCircle}>
@@ -124,9 +127,8 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
               {AGE_RANGES.map((range, index) => {
                 const isSelected = localAgeIndex === index;
                 return (
-                  <Animated.View
+                  <View
                     key={index}
-                    entering={FadeInRight.delay(600 + index * 100).duration(500).withInitialValues({ opacity: 1 })}
                   >
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -137,30 +139,30 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
                         {range.label}
                       </Text>
                     </TouchableOpacity>
-                  </Animated.View>
+                  </View>
                 );
               })}
             </View>
 
             {localAgeIndex !== null && (
-              <Animated.View entering={FadeInDown.duration(400).withInitialValues({ opacity: 1 })} style={styles.selectedAgeBadge}>
+              <View style={styles.selectedAgeBadge}>
                 <Check size={14} color={colors.primary} />
                 <Text style={styles.selectedAgeText}>
                   {AGE_RANGES[localAgeIndex].fullLabel}
                 </Text>
-              </Animated.View>
+              </View>
             )}
-          </Animated.View>
+          </View>
 
           {/* Info note */}
-          <Animated.View entering={FadeInDown.delay(900).duration(800).withInitialValues({ opacity: 1 })} style={styles.noteCard}>
+          <View style={styles.noteCard}>
             <Ionicons name="shield-checkmark-outline" size={18} color="#0369A1" />
             <Text style={styles.noteText}>
               Your privacy is protected. We only use your age group — no personal medical history is collected.
             </Text>
-          </Animated.View>
+          </View>
 
-          <Animated.View entering={FadeInUp.delay(1100).duration(800).withInitialValues({ opacity: 1 })}>
+          <View>
             <TouchableOpacity
               style={[styles.nextBtn, localAgeIndex === null && styles.nextBtnDisabled]}
               onPress={handleNext}
@@ -170,7 +172,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.nextBtnText}>Next: Preferences</Text>
               <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.9)" style={{ marginLeft: 8 }} />
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         </View>
       </ScrollView>
     </View>

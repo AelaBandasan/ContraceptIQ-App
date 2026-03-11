@@ -11,7 +11,7 @@ import {
 import { colors, shadows, spacing } from '../theme';
 import {
   calculateWhoMecTool, getMECColor, getMECLabel,
-  type WhoMecMethodResult, type MECCategory,
+  type WhoMecMethodResult, type MECCategory, METHOD_ATTRIBUTES,
 } from '../services/mecService';
 import { useAssessment } from '../context/AssessmentContext';
 
@@ -27,11 +27,10 @@ const PREF_LABELS: Record<string, string> = {
   privacy: 'Privacy',
   client: 'Client Controlled',
   nonhormonal: 'No Hormones',
-  sti: 'STI Prevention',
 };
 
 const METHOD_IMAGES: Record<string, any> = {
-  'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpills.png'),
+  'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpatch1.png'),
   'Progestogen-only Pill (POP)': require('../../assets/image/sq_poppills.png'),
   'Injectable (DMPA)': require('../../assets/image/sq_dmpainj.png'),
   'Implant (LNG/ETG)': require('../../assets/image/sq_lngetg.png'),
@@ -98,14 +97,38 @@ const GuestMecResultsScreen = () => {
   };
 
   const handleReturnHome = () => {
-    navigation.navigate('MainDrawer');
+    Alert.alert(
+      'Return to Home?',
+      'You will exit the assessment and return to the home screen.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Return', onPress: () => navigation.navigate('MainDrawer') },
+      ]
+    );
   };
 
   // ── Render helpers ────────────────────────────────────────────────────────
 
+  const getMatchedPreferences = (methodId: string): string[] => {
+    if (!preferences || preferences.length === 0) return [];
+    const attrs = METHOD_ATTRIBUTES.find((m: any) => m.id === methodId);
+    if (!attrs) return [];
+    return preferences
+      .filter((pref) =>
+        (pref === "effectiveness" && attrs.isHighlyEffective) ||
+        (pref === "nonhormonal" && attrs.isNonHormonal) ||
+        (pref === "regular" && attrs.regulatesBleeding) ||
+        (pref === "privacy" && attrs.isPrivate) ||
+        (pref === "client" && attrs.isClientControlled) ||
+        (pref === "longterm" && attrs.isLongActing)
+      )
+      .map((pref) => PREF_LABELS[pref] || pref);
+  };
+
   const renderRecommendedCard = (method: WhoMecMethodResult) => {
     const bgColor = getMECColor(method.mecCategory);
     const methodImage = METHOD_IMAGES[method.name];
+    const matchedPrefs = getMatchedPreferences(method.id);
 
     return (
       <View key={method.id} style={styles.recomCard}>
@@ -115,7 +138,15 @@ const GuestMecResultsScreen = () => {
         </View>
         <View style={styles.recomInfo}>
           <Text style={styles.recomName}>{method.name}</Text>
-          <Text style={styles.mecCategoryLabel}>{getMECLabel(method.mecCategory)}</Text>
+          {matchedPrefs.length > 0 && (
+            <View style={styles.methodPrefRow}>
+              {matchedPrefs.map((prefLabel) => (
+                <View key={`${method.id}_${prefLabel}`} style={styles.methodPrefChip}>
+                  <Text style={styles.methodPrefChipText}>{prefLabel}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
     );
@@ -123,6 +154,7 @@ const GuestMecResultsScreen = () => {
 
   const renderNotRecommendedCard = (method: WhoMecMethodResult) => {
     const bgColor = getMECColor(method.mecCategory);
+    const matchedPrefs = getMatchedPreferences(method.id);
 
     return (
       <View key={method.id} style={[styles.methodCard, { borderLeftColor: bgColor }]}>
@@ -132,7 +164,15 @@ const GuestMecResultsScreen = () => {
             <Text style={styles.methodName}>{method.name}</Text>
           </View>
         </View>
-        <Text style={styles.categoryLabel}>{getMECLabel(method.mecCategory)}</Text>
+        {matchedPrefs.length > 0 && (
+          <View style={styles.methodPrefRow}>
+            {matchedPrefs.map((prefLabel) => (
+              <View key={`${method.id}_${prefLabel}`} style={styles.methodPrefChip}>
+                <Text style={styles.methodPrefChipText}>{prefLabel}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     );
   };
@@ -350,13 +390,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#F3DCE8',
     ...shadows.sm, shadowColor: colors.primary, shadowOpacity: 0.08,
   },
-  summaryTitle: { fontSize: 16, fontWeight: '800', color: colors.text.primary, marginBottom: 10 },
+  summaryTitle: { fontSize: 17, fontWeight: '800', color: colors.text.primary, marginBottom: 10 },
   summarySectionLabel: {
-    fontSize: 12, fontWeight: '700', color: '#8A7A83',
+    fontSize: 14, fontWeight: '700', color: '#8A7A83',
     textTransform: 'uppercase', letterSpacing: 0.4,
     marginTop: 4, marginBottom: 4,
   },
-  summaryAgeValue: { fontSize: 18, fontWeight: '800', color: '#1E293B', marginBottom: 8 },
+  summaryAgeValue: { fontSize: 19, fontWeight: '800', color: '#1E293B', marginBottom: 8 },
   summaryCondition: { fontSize: 13, color: colors.text.secondary, lineHeight: 18 },
   prefChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   prefChip: {
@@ -401,7 +441,7 @@ const styles = StyleSheet.create({
   recomCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFF', borderRadius: 20,
-    padding: 14, marginBottom: 12,
+    padding: 10, marginBottom: 10,
     borderWidth: 1, borderColor: '#F0F0F0',
     elevation: 1, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
   },
@@ -413,8 +453,28 @@ const styles = StyleSheet.create({
   recomIcon: { width: 66, height: 66, resizeMode: 'contain' },
   recomInfo: { flex: 1 },
   recomName: { fontSize: 17, fontWeight: '700', color: '#333', marginBottom: 3 },
-  mecCategoryLabel: { fontSize: 12, color: '#64748B', marginBottom: 5, fontWeight: '500' },
+  mecCategoryLabel: { fontSize: 1, color: '#64748B', marginBottom: 2, fontWeight: '500' },
+  methodPrefRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  methodPrefChip: {
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  methodPrefChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0369A1',
+  },
   matchText: { fontSize: 12, color: colors.primary, fontWeight: '700', marginLeft: 4 },
+  matchedPrefsText: { fontSize: 12.5, color: '#059669', marginTop: 4, fontWeight: '500' },
 
   // Not recommended card
   methodCard: {

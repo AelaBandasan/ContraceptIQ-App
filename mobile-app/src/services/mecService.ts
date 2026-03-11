@@ -188,7 +188,6 @@ export interface MethodAttributes {
     id: string; // matches mecKey
     name: string;
     isHighlyEffective?: boolean;
-    preventsSTI?: boolean;
     isNonHormonal?: boolean;
     regulatesBleeding?: boolean; // Helping with cramps/regularity
     isPrivate?: boolean;
@@ -233,7 +232,6 @@ export function calculateMatchScore(methodId: string, userPrefs: string[]): numb
     let matches = 0;
     userPrefs.forEach(pref => {
         if (pref === 'effectiveness' && attrs.isHighlyEffective) matches++;
-        if (pref === 'sti' && attrs.preventsSTI) matches++;
         if (pref === 'nonhormonal' && attrs.isNonHormonal) matches++;
         if (pref === 'regular' && attrs.regulatesBleeding) matches++;
         if (pref === 'privacy' && attrs.isPrivate) matches++;
