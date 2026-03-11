@@ -1,7 +1,10 @@
-import React from 'react';
-import { Alert, StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Alert, StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth } from '../../config/firebaseConfig';
+import { auth, db, storage } from '../../config/firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import * as ImagePicker from 'expo-image-picker';
 import { LogOut, ChevronRight, Settings, Info, Pencil } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ObHeader from '../../components/ObHeader';
@@ -10,6 +13,30 @@ import { colors } from '../../theme';
 const ProfileScreen = ({ navigation }: any) => {
     const { width } = useWindowDimensions();
     const horizontalPadding = width < 360 ? 14 : 20;
+    const [profilePic, setProfilePic] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+
+    const user = auth.currentUser;
+    const email = user?.email || 'N/A';
+
+    useEffect(() => {
+        fetchUserProfile();
+    }, []);
+
+    const fetchUserProfile = async () => {
+        if (!user) return;
+        try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                if (data.profilePicUrl) {
+                    setProfilePic(data.profilePicUrl);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -23,14 +50,56 @@ const ProfileScreen = ({ navigation }: any) => {
         }
     };
 
-    const user = auth.currentUser;
-    const email = user?.email || 'N/A';
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'We need camera roll permissions to change your profile picture.');
+            return;
+        }
 
-    // Simple placeholder for name logic or passed params
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+        });
+
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            uploadImage(result.assets[0].uri);
+        }
+    };
+
+    const uploadImage = async (uri: string) => {
+        if (!user) return;
+        setUploading(true);
+
+        try {
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            const storageRef = ref(storage, `profile_pics/${user.uid}`);
+
+            await uploadBytes(storageRef, blob);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Update Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                profilePicUrl: downloadURL
+            });
+
+            setProfilePic(downloadURL);
+            Alert.alert('Success', 'Profile picture updated successfully!');
+        } catch (error) {
+            console.error('Upload Error:', error);
+            Alert.alert('Error', 'Failed to upload image. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const doctorName = 'Dr. ' + (email.split('@')[0] || 'Bandasan');
 
     const handleChangePhoto = () => {
-        Alert.alert('Profile Picture', 'Profile photo upload will be available in a future update.');
+        pickImage();
     };
 
     return (
@@ -57,11 +126,23 @@ const ProfileScreen = ({ navigation }: any) => {
                             style={styles.profileTopAccent}
                         />
                         <View style={styles.avatarWrap}>
-                            <TouchableOpacity style={styles.avatar} onPress={handleChangePhoto} activeOpacity={0.85}>
-                                <Image source={require('../../../assets/image/doctorcat.png')} style={styles.avatarImage} />
+                            <TouchableOpacity style={styles.avatar} onPress={handleChangePhoto} activeOpacity={0.85} disabled={uploading}>
+                                {uploading ? (
+                                    <ActivityIndicator size="large" color={colors.primary} />
+                                ) : profilePic ? (
+                                    <Image source={{ uri: profilePic }} style={styles.avatarImage} />
+                                ) : (
+                                    <View style={styles.silhouetteContainer}>
+                                        <Image source={require('../../../assets/image/silhouette.png')} style={styles.avatarImage} />
+                                    </View>
+                                )}
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={handleChangePhoto} style={styles.editPhotoBtn}>
-                                <Pencil size={13} color="#DB2777" />
+                            <TouchableOpacity onPress={handleChangePhoto} style={styles.editPhotoBtn} disabled={uploading}>
+                                {uploading ? (
+                                    <ActivityIndicator size="small" color="#DB2777" />
+                                ) : (
+                                    <Pencil size={13} color="#DB2777" />
+                                )}
                             </TouchableOpacity>
                         </View>
                         <Text style={styles.name}>{doctorName}</Text>
@@ -177,6 +258,13 @@ const styles = StyleSheet.create({
     avatarImage: {
         width: '100%',
         height: '100%',
+    },
+    silhouetteContainer: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#F1F5F9',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     editPhotoBtn: {
         position: 'absolute',

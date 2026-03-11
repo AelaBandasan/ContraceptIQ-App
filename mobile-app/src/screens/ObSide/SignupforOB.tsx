@@ -43,9 +43,9 @@ interface PasswordRule {
 }
 
 const PASSWORD_RULES: PasswordRule[] = [
-  { label: "At least 8 characters",       test: (pw) => pw.length >= 8 },
-  { label: "One uppercase letter (A–Z)",  test: (pw) => /[A-Z]/.test(pw) },
-  { label: "One number (0–9)",            test: (pw) => /[0-9]/.test(pw) },
+  { label: "At least 8 characters", test: (pw) => pw.length >= 8 },
+  { label: "One uppercase letter (A–Z)", test: (pw) => /[A-Z]/.test(pw) },
+  { label: "One number (0–9)", test: (pw) => /[0-9]/.test(pw) },
   { label: "One special character (!@#…)", test: (pw) => /[!@#$%^&*()_\-+=\[\]{}|;:',.<>?/\\]/.test(pw) },
 ];
 
@@ -60,22 +60,22 @@ const isAgeValid = (birthDate: Date): boolean => {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const SignupforOB = ({ navigation }: any) => {
-  const [fullName,          setFullName]          = useState("");
-  const [email,             setEmail]             = useState("");
-  const [password,          setPassword]          = useState("");
-  const [confirmPassword,   setConfirmPassword]   = useState("");
-  const [prcId,             setPrcId]             = useState("");
-  const [birthdate,         setBirthdate]         = useState<Date | null>(null);
-  const [showDatePicker,    setShowDatePicker]    = useState(false);
-  const [showPassword,      setShowPassword]      = useState(false);
-  const [showConfirm,       setShowConfirm]       = useState(false);
-  const [showPwRules,       setShowPwRules]       = useState(false);
-  const [isLoading,         setIsLoading]         = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [prcId, setPrcId] = useState("");
+  const [birthdate, setBirthdate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showPwRules, setShowPwRules] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const logoScale = useSharedValue(0.9);
-  const blob1Pos  = useSharedValue(0);
-  const blob2Pos  = useSharedValue(0);
-  const blob3Pos  = useSharedValue(0);
+  const blob1Pos = useSharedValue(0);
+  const blob2Pos = useSharedValue(0);
+  const blob3Pos = useSharedValue(0);
 
   useEffect(() => {
     logoScale.value = withRepeat(
@@ -86,7 +86,7 @@ const SignupforOB = ({ navigation }: any) => {
       -1,
       true,
     );
-    blob1Pos.value = withRepeat(withTiming(1, { duration: 8000,  easing: Easing.inOut(Easing.sin) }), -1, true);
+    blob1Pos.value = withRepeat(withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.sin) }), -1, true);
     blob2Pos.value = withRepeat(withTiming(1, { duration: 10000, easing: Easing.inOut(Easing.sin) }), -1, true);
     blob3Pos.value = withRepeat(withTiming(1, { duration: 12000, easing: Easing.inOut(Easing.sin) }), -1, true);
   }, [blob1Pos, blob2Pos, blob3Pos, logoScale]);
@@ -149,14 +149,15 @@ const SignupforOB = ({ navigation }: any) => {
       const user = userCredential.user;
 
       await setDoc(doc(db, "users", user.uid), {
-        uid:                user.uid,
-        fullName:           fullName.trim(),
-        email:              email.trim(),
-        prcId:              prcDigits,
-        birthdate:          formattedBirthdate,
-        role:               "OB",
+        uid: user.uid,
+        fullName: fullName.trim(),
+        email: email.trim(),
+        prcId: prcDigits,
+        birthdate: formattedBirthdate,
+        role: "OB",
         verificationStatus: "pending",
-        createdAt:          new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        profilePicUrl: null,
       });
 
       navigation.reset({
@@ -166,7 +167,7 @@ const SignupforOB = ({ navigation }: any) => {
     } catch (error: any) {
       let message = error.message ?? "An error occurred during registration.";
       if (error.code === "auth/email-already-in-use") message = "An account with this email already exists.";
-      else if (error.code === "auth/invalid-email")  message = "Please enter a valid email address.";
+      else if (error.code === "auth/invalid-email") message = "Please enter a valid email address.";
       Alert.alert("Registration Failed", message);
     } finally {
       setIsLoading(false);
@@ -261,7 +262,7 @@ const SignupforOB = ({ navigation }: any) => {
                 <Pressable onPress={() => setShowDatePicker(true)} style={styles.inputWrapper}>
                   <Calendar size={20} color="#9CA3AF" style={styles.inputIcon} />
                   <Text style={[styles.input, !birthdate && { color: "#9CA3AF" }]}>
-                    {birthdate 
+                    {birthdate
                       ? `${birthdate.getDate().toString().padStart(2, '0')}/${(birthdate.getMonth() + 1).toString().padStart(2, '0')}/${birthdate.getFullYear()}`
                       : "Select your birthdate"}
                   </Text>
@@ -304,7 +305,7 @@ const SignupforOB = ({ navigation }: any) => {
                         <View key={rule.label} style={styles.pwRuleRow}>
                           {passed
                             ? <Check size={13} color="#16A34A" strokeWidth={3} />
-                            : <X     size={13} color="#DC2626" strokeWidth={3} />}
+                            : <X size={13} color="#DC2626" strokeWidth={3} />}
                           <Text style={[styles.pwRuleText, passed ? styles.pwRuleOk : styles.pwRuleFail]}>
                             {rule.label}
                           </Text>
