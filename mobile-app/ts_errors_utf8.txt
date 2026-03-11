@@ -1,0 +1,1 @@
+﻿src/screens/ObSide/ProfileScreen.tsx(7,30): error TS2307: Cannot find module 'expo-image-picker' or its corresponding type declarations.
