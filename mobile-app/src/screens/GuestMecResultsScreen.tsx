@@ -21,22 +21,22 @@ const AGE_TO_INDEX: Record<number, number> = { 16: 0, 18: 1, 30: 2, 42: 3, 50: 4
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PREF_LABELS: Record<string, string> = {
-  regular:       'Regular Bleeding',
+  regular: 'Regular Bleeding',
   effectiveness: 'Highly Effective',
-  longterm:      'Long Lasting',
-  privacy:       'Privacy',
-  client:        'Client Controlled',
-  nonhormonal:   'No Hormones',
-  sti:           'STI Prevention',
+  longterm: 'Long Lasting',
+  privacy: 'Privacy',
+  client: 'Client Controlled',
+  nonhormonal: 'No Hormones',
+  sti: 'STI Prevention',
 };
 
 const METHOD_IMAGES: Record<string, any> = {
-  'Combined Hormonal':  require('../../assets/image/sq_chcpills.png'),
-  'Progestin-Only Pill': require('../../assets/image/sq_poppills.png'),
-  'Injectable':         require('../../assets/image/sq_dmpainj.png'),
-  'Implant':            require('../../assets/image/sq_lngetg.png'),
-  'Copper IUD':         require('../../assets/image/sq_cuiud.png'),
-  'Hormonal IUD':       require('../../assets/image/sq_lngiud.png'),
+  'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpills.png'),
+  'Progestogen-only Pill (POP)': require('../../assets/image/sq_poppills.png'),
+  'Injectable (DMPA)': require('../../assets/image/sq_dmpainj.png'),
+  'Implant (LNG/ETG)': require('../../assets/image/sq_lngetg.png'),
+  'Copper IUD (Cu-IUD)': require('../../assets/image/sq_cuiud.png'),
+  'LNG-IUD (Levonorgestrel-IUD)': require('../../assets/image/sq_lngiud.png'),
 };
 
 const AGE_LABEL: Record<number, string> = {
@@ -58,9 +58,9 @@ const STEPS = [
 const CategoryIcon = ({ category }: { category: MECCategory }) => {
   switch (category) {
     case 1: return <CheckCircle size={18} color="#22C55E" />;
-    case 2: return <Info        size={18} color="#EAB308" />;
+    case 2: return <Info size={18} color="#EAB308" />;
     case 3: return <AlertTriangle size={18} color="#F97316" />;
-    case 4: return <XCircle    size={18} color="#EF4444" />;
+    case 4: return <XCircle size={18} color="#EF4444" />;
   }
 };
 
@@ -333,11 +333,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#F3E8EF', borderWidth: 1, borderColor: '#E4CFDB',
   },
-  stepDotDone:   { backgroundColor: colors.primary, borderColor: colors.primary },
+  stepDotDone: { backgroundColor: colors.primary, borderColor: colors.primary },
   stepDotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  stepDotText:       { fontSize: 15, fontWeight: '700', color: '#8A7A83' },
+  stepDotText: { fontSize: 15, fontWeight: '700', color: '#8A7A83' },
   stepDotTextActive: { color: '#FFFFFF' },
-  stepLabel:       { marginTop: 4, fontSize: 13, fontWeight: '600', color: '#8A7A83' },
+  stepLabel: { marginTop: 4, fontSize: 13, fontWeight: '600', color: '#8A7A83' },
   stepLabelActive: { color: colors.primary },
 
   scroll: { flex: 1 },
@@ -414,11 +414,6 @@ const styles = StyleSheet.create({
   recomInfo: { flex: 1 },
   recomName: { fontSize: 17, fontWeight: '700', color: '#333', marginBottom: 3 },
   mecCategoryLabel: { fontSize: 12, color: '#64748B', marginBottom: 5, fontWeight: '500' },
-  matchBadge: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FFF0F6', paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 8, alignSelf: 'flex-start',
-  },
   matchText: { fontSize: 12, color: colors.primary, fontWeight: '700', marginLeft: 4 },
 
   // Not recommended card
