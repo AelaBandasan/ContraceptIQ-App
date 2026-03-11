@@ -49,10 +49,10 @@ const WhoMecResultsScreen = () => {
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
 
-  const { age, conditionIds, preferences } = route.params as {
+  const { age, conditionIds, preferences = [] } = route.params as {
     age: number;
     conditionIds: string[];
-    preferences: string[];
+    preferences?: string[];
   };
 
   const ageLabel =
@@ -104,6 +104,21 @@ const WhoMecResultsScreen = () => {
   const renderMECResults = () => {
     const methodCategories = result.mecCategories;
 
+    const getMatchedPreferenceLabels = (methodId: string): string[] => {
+      const attrs = METHOD_ATTRIBUTES.find((m: any) => m.id === methodId);
+      if (!attrs || !preferences || preferences.length === 0) return [];
+      return preferences
+        .filter((pref) =>
+          (pref === "effectiveness" && attrs.isHighlyEffective) ||
+          (pref === "nonhormonal" && attrs.isNonHormonal) ||
+          (pref === "regular" && attrs.regulatesBleeding) ||
+          (pref === "privacy" && attrs.isPrivate) ||
+          (pref === "client" && attrs.isClientControlled) ||
+          (pref === "longterm" && attrs.isLongActing)
+        )
+        .map((pref) => PREF_LABELS[pref] || pref);
+    };
+
     return (
       <View>
         {([1, 2, 3, 4] as MECCategory[]).map((cat) => {
@@ -132,24 +147,38 @@ const WhoMecResultsScreen = () => {
               </View>
 
               <View style={styles.mecMethodCard}>
-                {methodsInCat.map((m: any, i: number) => (
-                  <View
-                    key={m.id}
-                    style={[
-                      styles.mecMethodItem,
-                      i < methodsInCat.length - 1 && styles.mecMethodItemBorder,
-                    ]}
-                  >
-                    <View style={styles.mecMethodRow}>
-                      <View style={styles.mecMethodImageWrap}>
-                        {m.image ? (
-                          <Image source={m.image} style={styles.mecMethodImage} resizeMode="cover" />
-                        ) : null}
+                {methodsInCat.map((m: any, i: number) => {
+                  const matchedPrefs = getMatchedPreferenceLabels(m.id);
+                  return (
+                    <View
+                      key={m.id}
+                      style={[
+                        styles.mecMethodItem,
+                        i < methodsInCat.length - 1 && styles.mecMethodItemBorder,
+                      ]}
+                    >
+                      <View style={styles.mecMethodRow}>
+                        <View style={styles.mecMethodImageWrap}>
+                          {m.image ? (
+                            <Image source={m.image} style={styles.mecMethodImage} resizeMode="cover" />
+                          ) : null}
+                        </View>
+                        <View style={styles.mecMethodContent}>
+                          <Text style={styles.mecMethodText}>{m.name}</Text>
+                          {matchedPrefs.length > 0 && (
+                            <View style={styles.methodPrefRow}>
+                              {matchedPrefs.map((prefLabel) => (
+                                <View key={`${m.id}_${prefLabel}`} style={styles.methodPrefChip}>
+                                  <Text style={styles.methodPrefChipText}>{prefLabel}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
                       </View>
-                      <Text style={styles.mecMethodText}>{m.name}</Text>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             </View>
           );
@@ -261,11 +290,7 @@ const WhoMecResultsScreen = () => {
           </Text>
         </View>
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Bottom bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}> 
+        {/* Action buttons at bottom of content */}
         <TouchableOpacity style={styles.primaryBtn} onPress={handleStartOver}>
           <Text style={styles.startOverButtonText}>Start New Assessment</Text>
           <ChevronRight size={18} color="#fff" />
@@ -276,7 +301,7 @@ const WhoMecResultsScreen = () => {
         </TouchableOpacity>
 
         <View style={{ height: 28 }} />
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -458,6 +483,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#334155",
+  },
+  mecMethodContent: {
+    flex: 1,
+  },
+  methodPrefRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+  },
+  methodPrefChip: {
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  methodPrefChipText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#0369A1",
   },
 
   disclaimerCard: {

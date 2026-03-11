@@ -19,7 +19,6 @@ const PREFERENCES = [
   { key: 'privacy', label: 'Privacy', description: 'Can be used discreetly without others knowing', icon: EyeOff },
   { key: 'client', label: 'Client Controlled', description: 'Patient can start or stop it themselves', icon: UserCheck },
   { key: 'nonhormonal', label: 'No Hormones', description: 'Hormone-free contraceptive option', icon: Leaf },
-  { key: 'sti', label: 'STI Prevention', description: 'Protects against sexually transmitted infections', icon: Shield },
 ];
 
 const WhoMecPreferencesScreen = () => {
