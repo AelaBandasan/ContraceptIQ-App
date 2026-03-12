@@ -25,7 +25,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
     const isCompact = width < 390;
     const isTablet = width >= 900;
     const horizontalPadding = isCompact ? 14 : isTablet ? 26 : 20;
-    const actionCardWidth = isCompact ? '100%' : isTablet ? '31.5%' : '48%';
+    const actionCardWidth = isTablet ? '31.5%' : '48%';
 
     // Core State
     const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
@@ -184,7 +184,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                             <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Quick Actions</Text>
                             <View style={styles.actionGrid}>
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardSuccess, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
+                                    style={[styles.actionCard, styles.actionCardSuccess, { width: actionCardWidth }]}
                                     onPress={() => navigation.navigate('ObAssessment', { isDoctorAssessment: true })}
                                     activeOpacity={0.88}
                                 >
@@ -198,7 +198,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardInfo, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
+                                    style={[styles.actionCard, styles.actionCardInfo, { width: actionCardWidth }]}
                                     onPress={() => navigation.navigate('ObMethods', { isDoctorAssessment: true })}
                                     activeOpacity={0.88}
                                 >
@@ -212,7 +212,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardWarning, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
+                                    style={[styles.actionCard, styles.actionCardWarning, { width: actionCardWidth }]}
                                     onPress={() => navigation.navigate('ObEducation')}
                                     activeOpacity={0.88}
                                 >
@@ -226,7 +226,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.actionCard, styles.actionCardDanger, { width: actionCardWidth }, isCompact && styles.actionCardCompact]}
+                                    style={[styles.actionCard, styles.actionCardDanger, { width: actionCardWidth }]}
                                     onPress={() => navigation.navigate('ObEmergency')}
                                     activeOpacity={0.88}
                                 >
@@ -408,9 +408,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#F1F5F9',
         ...shadows.sm,
-    },
-    actionCardCompact: {
-        minHeight: 132,
     },
     actionCardSuccess: { backgroundColor: '#ECFDF5' },
     actionCardInfo: { backgroundColor: '#EEF2FF' },

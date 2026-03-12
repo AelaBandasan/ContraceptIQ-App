@@ -153,7 +153,6 @@ const PREFERENCES = [
   { key: "privacy", label: "Privacy", description: "Can be used discreetly without others knowing", icon: EyeOff },
   { key: "client", label: "Client Controlled", description: "Patient can start or stop it themselves", icon: UserCheck },
   { key: "nonhormonal", label: "No Hormones", description: "Hormone-free contraceptive option", icon: Leaf },
-  { key: "sti", label: "STI Prevention", description: "Protects against sexually transmitted infections", icon: Shield },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -533,6 +532,24 @@ const ObAssessment = ({ navigation, route }: any) => {
       "LNG-IUD": { label: "LNG-IUD (Levonorgestrel-IUD)", image: require("../../../assets/image/sq_lngiud.png") },
     };
 
+    const getMatchedPreferenceLabels = (methodId: string): string[] => {
+      const attrs = METHOD_ATTRIBUTES.find((m) => m.id === methodId);
+      if (!attrs || !mecPrefs || mecPrefs.length === 0) return [];
+      return mecPrefs
+        .filter((pref) =>
+          (pref === "effectiveness" && attrs.isHighlyEffective) ||
+          (pref === "nonhormonal" && attrs.isNonHormonal) ||
+          (pref === "regular" && attrs.regulatesBleeding) ||
+          (pref === "privacy" && attrs.isPrivate) ||
+          (pref === "client" && attrs.isClientControlled) ||
+          (pref === "longterm" && attrs.isLongActing)
+        )
+        .map((pref) => {
+          const p = PREFERENCES.find((pItem) => pItem.key === pref);
+          return p?.label || pref;
+        });
+    };
+
     return (
       <View>
         <View style={styles.conditionSummary}>
@@ -576,6 +593,7 @@ const ObAssessment = ({ navigation, route }: any) => {
           const methodsInCat = METHOD_ATTRIBUTES
             .filter(attr => (mecResults as any)[attr.id] === cat)
             .map(attr => ({
+              id: attr.id,
               label: attr.name,
               image: methodMap[attr.id]?.image,
             }));
@@ -594,24 +612,38 @@ const ObAssessment = ({ navigation, route }: any) => {
                 </Text>
               </View>
               <View style={styles.mecMethodCard}>
-                {methodsInCat.map((method, i) => (
-                  <View
-                    key={`${method.label}_${i}`}
-                    style={[
-                      styles.mecMethodItem,
-                      i < methodsInCat.length - 1 && styles.mecMethodItemBorder,
-                    ]}
-                  >
-                    <View style={styles.mecMethodRow}>
-                      {method.image ? (
-                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}> 
-                          <Image source={method.image} style={styles.mecMethodImage} resizeMode="cover" />
+                {methodsInCat.map((method, i) => {
+                  const matchedPrefs = getMatchedPreferenceLabels(method.id);
+                  return (
+                    <View
+                      key={`${method.id}_${i}`}
+                      style={[
+                        styles.mecMethodItem,
+                        i < methodsInCat.length - 1 && styles.mecMethodItemBorder,
+                      ]}
+                    >
+                      <View style={styles.mecMethodRow}>
+                        {method.image ? (
+                          <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}> 
+                            <Image source={method.image} style={styles.mecMethodImage} resizeMode="cover" />
+                          </View>
+                        ) : null}
+                        <View style={styles.mecMethodContent}>
+                          <Text style={styles.mecMethodText}>{method.label}</Text>
+                          {matchedPrefs.length > 0 && (
+                            <View style={styles.methodPrefRow}>
+                              {matchedPrefs.map((prefLabel) => (
+                                <View key={`${method.id}_${prefLabel}`} style={styles.methodPrefChip}>
+                                  <Text style={styles.methodPrefChipText}>{prefLabel}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
                         </View>
-                      ) : null}
-                      <Text style={styles.mecMethodText}>{method.label}</Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             </View>
           );
@@ -1277,6 +1309,28 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: "600",
     color: "#334155",
+  },
+  mecMethodContent: {
+    flex: 1,
+  },
+  methodPrefRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+  },
+  methodPrefChip: {
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  methodPrefChipText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#0369A1",
   },
   mecLoadingCard: {
     marginTop: 8,

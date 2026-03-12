@@ -14,7 +14,6 @@ import { useAssessment } from '../context/AssessmentContext';
 
 const PREFERENCES = [
   { key: 'effectiveness', label: 'Highly Effective',       description: 'Most reliable at preventing pregnancy',       icon: ShieldCheck },
-  { key: 'sti',           label: 'STI Prevention',         description: 'Protects against sexually transmitted infections', icon: Shield },
   { key: 'nonhormonal',  label: 'No Hormones',            description: 'Hormone-free contraceptive option',           icon: Leaf },
   { key: 'regular',      label: 'Regular Bleeding',       description: 'Helps regulate periods and reduce cramps',    icon: Heart },
   { key: 'privacy',      label: 'Privacy',                description: 'Can be used discreetly without others knowing', icon: EyeOff },
@@ -113,6 +112,22 @@ const GuestMecPreferencesScreen = () => {
           <Text style={styles.summaryTitle}>Step 1 Summary</Text>
           <Text style={styles.summarySectionLabel}>Age Group</Text>
           <Text style={styles.summaryAgeValue}>{ageLabel}</Text>
+          
+          {selectedPrefs.length > 0 && (
+            <>
+              <Text style={[styles.summarySectionLabel, { marginTop: 12 }]}>Selected Preferences</Text>
+              <View style={styles.prefChipRow}>
+                {selectedPrefs.map((key) => {
+                  const pref = PREFERENCES.find((p) => p.key === key);
+                  return (
+                    <View key={key} style={styles.prefChip}>
+                      <Text style={styles.prefChipText}>{pref?.label || key}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
         </View>
 
         {/* Instructions */}
@@ -236,6 +251,25 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   summaryAgeValue: { fontSize: 18, fontWeight: '800', color: '#1E293B' },
+  prefChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  prefChip: {
+    backgroundColor: colors.primary + '15',
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  prefChipText: {
+    color: colors.primary,
+    fontWeight: '600',
+    fontSize: 13,
+  },
 
   instructionText: {
     fontSize: 15,
