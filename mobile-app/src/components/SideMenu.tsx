@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
-import { Ionicons } from '@expo/vector-icons';
 import {
   Home as HomeIcon,
   List,
@@ -11,7 +10,6 @@ import {
   AlertTriangle,
   HelpCircle,
   Info,
-  Mail,
   ShieldCheck,
   LogOut
 } from 'lucide-react-native';
@@ -77,16 +75,6 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
     },
   ];
 
-  const handleFeedback = async () => {
-    const url = 'mailto:feedback@contraceptiq.com?subject=App Feedback';
-    const canOpen = await Linking.canOpenURL(url);
-    if (canOpen) {
-      Linking.openURL(url);
-    } else {
-      Alert.alert('Error', 'Could not open email client.');
-    }
-  };
-
   const handleExit = () => {
     Alert.alert(
       "Exit to Start",
@@ -151,15 +139,6 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
         </View>
 
         <View style={styles.divider} />
-
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.menuItem} onPress={handleFeedback}>
-            <View style={styles.iconContainer}>
-              <Mail size={22} color={colors.primary} strokeWidth={2.5} />
-            </View>
-            <Text style={styles.menuLabel}>Send Feedback</Text>
-          </TouchableOpacity>
-        </View>
       </DrawerContentScrollView>
 
       {/* Footer */}

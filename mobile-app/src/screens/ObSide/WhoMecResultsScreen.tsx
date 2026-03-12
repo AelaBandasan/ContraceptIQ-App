@@ -128,7 +128,9 @@ const WhoMecResultsScreen = () => {
               id: attr.id,
               name: attr.name,
               image: METHOD_IMAGES[attr.name],
-            }));
+              matchedPrefCount: getMatchedPreferenceLabels(attr.id).length,
+            }))
+            .sort((a, b) => b.matchedPrefCount - a.matchedPrefCount);
 
           if (methodsInCat.length === 0) return null;
 
@@ -462,9 +464,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   mecMethodImageWrap: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 10,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#F1F5F9",

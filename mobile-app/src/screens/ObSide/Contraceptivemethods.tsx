@@ -33,7 +33,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
   const methods: MethodItem[] = [
     {
       id: 'chc',
-      name: 'Combined Hormonal Contraception (CHC)',
+      name: 'Combined Hormonal Contraceptive (CHC)',
       shortName: 'Combined Pills',
       description: 'Contains both estrogen and progestin.',
       effectiveness: '93% Effective',
@@ -45,7 +45,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
     },
     {
       id: 'pop',
-      name: 'Progestin-Only Pill (POP)',
+      name: 'Progestogen-only Pill (POP)',
       shortName: 'Mini-pill',
       description: 'Hormone-free of estrogen; daily use.',
       effectiveness: '93% Effective',
@@ -81,7 +81,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
     },
     {
       id: 'lng-ius',
-      name: 'Hormonal IUD (LNG-IUD)',
+      name: 'LNG-IUD (Levonorgestrel-IUD)',
       shortName: 'Hormonal IUD',
       description: 'T-shaped device; lasts 3-8 years.',
       effectiveness: '>99% Effective',
@@ -93,7 +93,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
     },
     {
       id: 'dmpa',
-      name: 'Injectable Contraceptives (DMPA)',
+      name: 'Injectable (DMPA)',
       shortName: 'The Shot',
       description: 'Progestin injection; every 3 months.',
       effectiveness: '94% Effective',
@@ -109,8 +109,13 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
   return (
     <View style={styles.safeArea}>
       {!isDoctorAssessment && (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
-          <View style={styles.headerTitleContainer}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.menuButton}>
+            <View style={styles.menuButtonSolid}>
+              <Ionicons name="menu" size={24} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.titleContainer}>
             <Text style={styles.screenTitle}>Contraceptive Methods</Text>
           </View>
         </View>
@@ -198,24 +203,25 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  headerTitleContainer: {
+  menuButton: {
+    zIndex: 10,
+  },
+  menuButtonSolid: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  titleContainer: {
     marginLeft: 0,
   },
-  // headerAppTitle: { // Removed as per instruction
-  //   fontSize: 20,
-  //   fontWeight: 'bold',
-  //   color: '#FFF',
-  // },
-  headerTagline: {
-    fontSize: 14,
-    color: '#FFDBEB',
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  screenTitle: { // Added as per instruction
+  screenTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#FFF',
+    paddingLeft: 15
   },
 
 

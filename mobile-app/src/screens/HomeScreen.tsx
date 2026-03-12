@@ -31,12 +31,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
 
   const contraceptiveMethods = [
-    { id: '1', name: 'Pills', image: require('../../assets/image/sq_poppills.png') },
-    { id: '2', name: 'Patch', image: require('../../assets/image/sq_chcpatch1.png') },
-    { id: '3', name: 'Cu-IUD', image: require('../../assets/image/sq_cuiud.png') },
-    { id: '4', name: 'Lng-IUD', image: require('../../assets/image/sq_lngiud.png') },
-    { id: '5', name: 'Implants', image: require('../../assets/image/sq_lngetg.png') },
-    { id: '6', name: 'Injections', image: require('../../assets/image/sq_dmpainj.png') },
+    { id: 'pop', name: 'POP', image: require('../../assets/image/sq_poppills.png') },
+    { id: 'chc', name: 'CHC', image: require('../../assets/image/sq_chcpills.png') },
+    { id: 'cu-iud', name: 'Cu-IUD', image: require('../../assets/image/sq_cuiud.png') },
+    { id: 'lng-ius', name: 'Lng-IUD', image: require('../../assets/image/sq_lngiud.png') },
+    { id: 'implant', name: 'Implants', image: require('../../assets/image/sq_lngetg.png') },
+    { id: 'dmpa', name: 'DMPA', image: require('../../assets/image/sq_dmpainj.png') },
   ];
 
   // Animation values
@@ -184,7 +184,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             >
               <TouchableOpacity
                 style={styles.methodCard}
-                onPress={() => (navigation as any).navigate('Contraceptive Methods')}
+                onPress={() => (navigation as any).navigate('MethodDetail', { methodId: method.id })}
                 activeOpacity={0.7}
               >
                 <View style={styles.methodImageWrapper}>

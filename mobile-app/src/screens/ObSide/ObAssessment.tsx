@@ -50,6 +50,7 @@ import { auth } from "../../config/firebaseConfig";
 import { saveAssessment, AssessmentRecord } from "../../services/doctorService";
 import ObHeader from "../../components/ObHeader";
 import { WHO_MEC_CONDITIONS } from "../../data/whoMecData";
+import { CONTRACEPTIVE_DETAILS } from "../../data/contraceptiveData";
 import { MecTreeSelector } from "../../components/MecTreeSelector";
 import { colors, shadows } from "../../theme";
 
@@ -142,6 +143,15 @@ const METHOD_NAME_TO_INDEX: Record<string, number> = {
   Implant: 4,
   Patch: 5,
   Injectable: 6,
+};
+
+const METHOD_NAME_TO_DATA_KEY: Record<string, string> = {
+  Pills: "chc",
+  Patch: "chc",
+  Injectable: "dmpa",
+  Implant: "implant",
+  "Copper IUD": "cu-iud",
+  "Intrauterine Device (IUD)": "lng-ius",
 };
 
 // ─── Preferences ─────────────────────────────────────────────────────────────
@@ -272,6 +282,24 @@ const ObAssessment = ({ navigation, route }: any) => {
 
       return [...prev, key];
     });
+
+  const getMatchedPreferenceLabels = (methodId: string): string[] => {
+    const attrs = METHOD_ATTRIBUTES.find((m) => m.id === methodId);
+    if (!attrs || !mecPrefs || mecPrefs.length === 0) return [];
+    return mecPrefs
+      .filter((pref) =>
+        (pref === "effectiveness" && attrs.isHighlyEffective) ||
+        (pref === "nonhormonal" && attrs.isNonHormonal) ||
+        (pref === "regular" && attrs.regulatesBleeding) ||
+        (pref === "privacy" && attrs.isPrivate) ||
+        (pref === "client" && attrs.isClientControlled) ||
+        (pref === "longterm" && attrs.isLongActing)
+      )
+      .map((pref) => {
+        const p = PREFERENCES.find((pItem) => pItem.key === pref);
+        return p?.label || pref;
+      });
+  };
 
   // ─── Validation ───────────────────────────────────────────────────────────
 
@@ -532,23 +560,7 @@ const ObAssessment = ({ navigation, route }: any) => {
       "LNG-IUD": { label: "LNG-IUD (Levonorgestrel-IUD)", image: require("../../../assets/image/sq_lngiud.png") },
     };
 
-    const getMatchedPreferenceLabels = (methodId: string): string[] => {
-      const attrs = METHOD_ATTRIBUTES.find((m) => m.id === methodId);
-      if (!attrs || !mecPrefs || mecPrefs.length === 0) return [];
-      return mecPrefs
-        .filter((pref) =>
-          (pref === "effectiveness" && attrs.isHighlyEffective) ||
-          (pref === "nonhormonal" && attrs.isNonHormonal) ||
-          (pref === "regular" && attrs.regulatesBleeding) ||
-          (pref === "privacy" && attrs.isPrivate) ||
-          (pref === "client" && attrs.isClientControlled) ||
-          (pref === "longterm" && attrs.isLongActing)
-        )
-        .map((pref) => {
-          const p = PREFERENCES.find((pItem) => pItem.key === pref);
-          return p?.label || pref;
-        });
-    };
+
 
     return (
       <View>
@@ -590,13 +602,18 @@ const ObAssessment = ({ navigation, route }: any) => {
 
         {([1, 2, 3, 4] as MECCategory[]).map((cat) => {
           // Use METHOD_ATTRIBUTES to ensure identical ordering and naming
-          const methodsInCat = METHOD_ATTRIBUTES
+          const resultMethods = METHOD_ATTRIBUTES
             .filter(attr => (mecResults as any)[attr.id] === cat)
             .map(attr => ({
               id: attr.id,
               label: attr.name,
               image: methodMap[attr.id]?.image,
+              matchedPrefCount: getMatchedPreferenceLabels(attr.id).length,
             }));
+
+          // Sort by matched preference count descending
+          const methodsInCat = resultMethods.sort((a, b) => b.matchedPrefCount - a.matchedPrefCount);
+
           if (methodsInCat.length === 0) return null;
           return (
             <View key={cat} style={{ marginBottom: 8 }}>
@@ -879,9 +896,22 @@ const ObAssessment = ({ navigation, route }: any) => {
             </View>
           ) : (
             <>
-              {Object.entries(allMethodResults).map(([methodName, result]) => {
-                if (!result) return null;
-                const mecKey = MODEL_KEY_TO_MEC_ID[methodName];
+              {Object.entries(allMethodResults)
+                .sort(([nameA], [nameB]) => {
+                  const keyA = MODEL_KEY_TO_MEC_ID[nameA];
+                  const keyB = MODEL_KEY_TO_MEC_ID[nameB];
+                  const catA = (mecResults as any)[keyA] || 1;
+                  const catB = (mecResults as any)[keyB] || 1;
+
+                  if (catA !== catB) return catA - catB;
+
+                  const prefA = getMatchedPreferenceLabels(keyA).length;
+                  const prefB = getMatchedPreferenceLabels(keyB).length;
+                  return prefB - prefA;
+                })
+                .map(([methodName, result]) => {
+                  if (!result) return null;
+                  const mecKey = MODEL_KEY_TO_MEC_ID[methodName];
                 const mecCat = mecResults && mecKey ? (mecResults as any)[mecKey] : null;
 
                 const mecCardStyle = mecCat
@@ -904,8 +934,10 @@ const ObAssessment = ({ navigation, route }: any) => {
                     <RiskAssessmentCard
                       riskLevel={result.risk_level}
                       confidence={result.confidence}
+                      probability={result.xgb_probability}
                       recommendation={result.recommendation}
                       contraceptiveMethod={methodName}
+                      priceRange={CONTRACEPTIVE_DETAILS[METHOD_NAME_TO_DATA_KEY[methodName]]?.priceRange}
                       keyFactors={generateKeyFactors(formData, result.risk_level)}
                       upgradedByDt={result.upgraded_by_dt}
                       mecCategory={mecCat as 1 | 2 | 3 | 4 | undefined}
