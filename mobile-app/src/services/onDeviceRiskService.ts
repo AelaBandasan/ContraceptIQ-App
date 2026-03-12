@@ -178,9 +178,18 @@ export async function assessOffline(
         isLowConfidence,
     });
 
+    // Confidence: how far the prediction is from the decision boundary (threshold=0.25),
+    // normalized to [0, 1].  0 = borderline case, 1 = maximally certain.
+    // This is always distinct from xgb_probability (which is the raw discontinuation %).
+    const distFromThreshold = Math.abs(xgbProbability - HYBRID_CONFIG.threshold);
+    const maxDist = hybridPred === 1
+        ? (1 - HYBRID_CONFIG.threshold)   // HIGH: max distance = 1.0 − 0.25 = 0.75
+        : HYBRID_CONFIG.threshold;         // LOW:  max distance = 0.25 − 0.0 = 0.25
+    const confidence = Math.round((distFromThreshold / maxDist) * 10000) / 10000;
+
     return {
         risk_level: riskLevel as 'LOW' | 'HIGH',
-        confidence: Math.round(Math.max(xgbProbability, 1 - xgbProbability) * 10000) / 10000,
+        confidence,
         recommendation,
         xgb_probability: Math.round(xgbProbability * 10000) / 10000,
         upgraded_by_dt: upgradedByDt,

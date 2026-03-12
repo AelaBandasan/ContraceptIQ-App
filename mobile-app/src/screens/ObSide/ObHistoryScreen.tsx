@@ -1,14 +1,14 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
     StyleSheet, View, Text, TouchableOpacity, FlatList,
-    RefreshControl, ScrollView, ActivityIndicator, LayoutAnimation, UIManager, Platform
+    RefreshControl, ActivityIndicator, LayoutAnimation, UIManager, Platform
 } from 'react-native';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
-    CheckCircle2, AlertTriangle, ChevronDown, ChevronUp,
+    ChevronDown, ChevronUp,
     User as UserIcon, Baby, Cigarette, Calendar,
     Activity, Stethoscope, BookOpen,
-    Clock, Heart, MessageSquare, WifiOff,
+    Clock, MessageSquare, WifiOff,
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
 import { fetchDoctorAssessments, loadAssessmentsCache, AssessmentRecord } from '../../services/doctorService';
@@ -32,21 +32,6 @@ const formatRelativeTime = (ms: number): string => {
 };
 
 // --- Helpers ---
-const getRiskColor = (risk?: string) => {
-    switch ((risk || '').toLowerCase()) {
-        case 'high': return '#EF4444';
-        case 'moderate': return '#F59E0B';
-        case 'low': return '#10B981';
-        default: return '#64748B';
-    }
-};
-
-const getStatusMeta = (status: string, riskLevel?: string) => {
-    const risk = (riskLevel || '').toLowerCase();
-    if (risk === 'high' || status === 'critical') return { label: 'HIGH RISK', bg: '#FEF2F2', text: '#EF4444', icon: AlertTriangle };
-    if (status === 'completed') return { label: 'LOW RISK', bg: '#F0FDF4', text: '#10B981', icon: CheckCircle2 };
-    return { label: 'REVIEWED', bg: '#F0F9FF', text: '#0EA5E9', icon: Activity };
-};
 
 const formatDate = (iso?: string) => {
     if (!iso) return '—';
@@ -58,10 +43,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
     const [expanded, setExpanded] = useState(initialExpanded);
 
     const pd = item.patientData || {};
-    const riskLevel = item.status === 'critical' ? 'high' : 'low';
-    const riskColor = getRiskColor(riskLevel);
-    const statusMeta = getStatusMeta(item.status, riskLevel);
-    const StatusIcon = statusMeta.icon;
+    const riskColor = '#E45A92';
     const smokerLabel = pd.SMOKE_CIGAR && pd.SMOKE_CIGAR !== 'Never' && pd.SMOKE_CIGAR !== 'No' ? 'Smoker' : 'Non-Smoker';
     const riskResults = item.riskResults || {};
 
@@ -94,10 +76,6 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                         </View>
                     </View>
                     <View style={styles.headerRight}>
-                        <View style={[styles.statusBadge, { backgroundColor: statusMeta.bg }]}>
-                            <StatusIcon size={10} color={statusMeta.text} />
-                            <Text style={[styles.statusLabel, { color: statusMeta.text }]}>{statusMeta.label}</Text>
-                        </View>
                         <View style={[styles.chevronBtn, { backgroundColor: riskColor + '12' }]}>
                             {expanded
                                 ? <ChevronUp size={16} color={riskColor} />
@@ -200,7 +178,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                                     <Text style={styles.sectionTitle}>Discontinuation Risk</Text>
                                 </View>
                                 {Object.entries(riskResults).map(([method, result]) => {
-                                    const mColor = getRiskColor(result.riskLevel);
+                                    const mColor = result.riskLevel?.toLowerCase() === 'high' ? '#EF4444' : '#10B981';
                                     const pct = result.probability != null
                                         ? Math.min(result.probability * 100, 100)
                                         : 0;
@@ -259,7 +237,6 @@ const ObHistoryScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [isOffline, setIsOffline] = useState(false);
     const [cachedAt, setCachedAt] = useState<number | null>(null);
-    const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'High'>('All');
 
     const doctorUid = auth.currentUser?.uid;
 
@@ -300,17 +277,9 @@ const ObHistoryScreen = () => {
 
     useFocusEffect(useCallback(() => { loadHistory(); }, [loadHistory]));
 
-    const stats = useMemo(() => {
-        const high = history.filter(item => item.status === 'critical').length;
-        const low = Math.max(history.length - high, 0);
-        return { total: history.length, high, low };
-    }, [history]);
+    const stats = useMemo(() => ({ total: history.length }), [history]);
 
-    const filtered = history.filter(item => {
-        if (filterRisk === 'All') return true;
-        const risk = item.status === 'critical' ? 'High' : 'Low';
-        return risk === filterRisk;
-    });
+    const filtered = history;
 
     return (
         <View style={styles.container}>
@@ -326,14 +295,6 @@ const ObHistoryScreen = () => {
                     <Text style={styles.summaryLabel}>Total Cases</Text>
                     <Text style={styles.summaryValue}>{stats.total}</Text>
                 </View>
-                <View style={styles.summaryCard}>
-                    <Text style={styles.summaryLabel}>High Risk</Text>
-                    <Text style={[styles.summaryValue, { color: '#EF4444' }]}>{stats.high}</Text>
-                </View>
-                <View style={styles.summaryCard}>
-                    <Text style={styles.summaryLabel}>Low Risk</Text>
-                    <Text style={[styles.summaryValue, { color: '#10B981' }]}>{stats.low}</Text>
-                </View>
             </View>
 
             {/* Offline Banner */}
@@ -346,26 +307,6 @@ const ObHistoryScreen = () => {
                     </Text>
                 </View>
             )}
-
-            {/* Filter Chips */}
-            <View style={styles.filterBar}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
-                    {(['All', 'Low', 'High'] as const).map(risk => (
-                        <TouchableOpacity
-                            key={risk}
-                            style={[styles.chip, filterRisk === risk && styles.chipActive]}
-                            onPress={() => setFilterRisk(risk)}
-                        >
-                            {risk !== 'All' && (
-                                <View style={[styles.chipDot, { backgroundColor: getRiskColor(risk) }]} />
-                            )}
-                            <Text style={[styles.chipText, filterRisk === risk && styles.chipTextActive]}>
-                                {risk === 'All' ? 'All Patients' : `${risk} Risk`}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
 
             <FlatList
                 data={filtered}
@@ -443,7 +384,8 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     summaryCardPrimary: {
-        flex: 1,
+        alignSelf: 'flex-start',
+        minWidth: 120,
         backgroundColor: '#FDF2F8',
         borderRadius: 14,
         borderWidth: 1,
