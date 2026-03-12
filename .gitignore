@@ -46,3 +46,5 @@ mobile-app/ios/
 # Large Auto-generated Data Files
 mobile-app/src/data/mecConditionOutputs.json
 nul
+EXPLAINABILITY_ANALYSIS.md
+CLAUDE.md
