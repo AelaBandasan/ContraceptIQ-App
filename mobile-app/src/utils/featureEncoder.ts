@@ -49,11 +49,17 @@ const N_OHE_FEATURES = OHE_SCHEMA.reduce((acc, e) => acc + ("isNum" in e ? 1 : e
 
 /** PATTERN_USE: how the patient currently uses contraception */
 const PATTERN_USE_MAP: Record<string, string> = {
-    "Current user":                          "Consistent",
+    // Display strings → training categories
+    "Current/Regular user":                   "1",              // cat__PATTERN_USE_1 (highest SHAP: 4.092)
+    "Irregular/Occasional user":              "Intermittent",
+    "New user (first time)":                  "New user",
+    "Stopped using (within 12 months)":       "Stopped recently",
+    // Legacy display strings (backward-compat with saved records)
+    "Current user":                           "1",
     "Recent user (stopped within 12 months)": "Stopped recently",
-    "Past user (stopped >12 months ago)":    "Intermittent",
-    // numeric fallback codes from legacy encoder
-    "1": "Consistent",
+    "Past user (stopped >12 months ago)":     "Intermittent",
+    // Numeric fallback codes from legacy encoder
+    "1": "1",
     "2": "Stopped recently",
     "3": "Intermittent",
 };

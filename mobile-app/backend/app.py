@@ -165,10 +165,17 @@ def assess_discontinuation_risk():
         else:
             recommendation = "Continue monitoring contraceptive use"
         
+        # Confidence: threshold-relative distance, normalised to [0, 1].
+        # Mirrors onDeviceRiskService.ts formula: 0 = borderline, 1 = maximally certain.
+        threshold = config.get('threshold_v3', 0.25)
+        dist = abs(xgb_probability - threshold)
+        max_dist = (1 - threshold) if prediction == 1 else threshold
+        confidence = round(dist / max_dist, 4) if max_dist > 0 else 0.0
+
         # Build response
         response = {
             'risk_level': risk_level,
-            'confidence': round(xgb_probability, 4),
+            'confidence': confidence,
             'recommendation': recommendation,
             'xgb_probability': round(xgb_probability, 4),
             'upgraded_by_dt': upgraded_by_dt,

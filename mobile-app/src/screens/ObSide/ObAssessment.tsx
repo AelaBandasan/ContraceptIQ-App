@@ -22,7 +22,6 @@ import {
   EyeOff,
   UserCheck,
   Leaf,
-  Shield,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -127,9 +126,10 @@ const FORM_FIELDS = [
     label: "Pattern of Use",
     type: "select",
     options: [
-      "Current user",
-      "Recent user (stopped within 12 months)",
-      "Past user (stopped >12 months ago)",
+      "Current/Regular user",
+      "Irregular/Occasional user",
+      "New user (first time)",
+      "Stopped using (within 12 months)",
     ],
   },
 ];
@@ -141,13 +141,11 @@ const METHOD_NAME_TO_INDEX: Record<string, number> = {
   "Copper IUD": 2,
   "Intrauterine Device (IUD)": 3,
   Implant: 4,
-  Patch: 5,
   Injectable: 6,
 };
 
 const METHOD_NAME_TO_DATA_KEY: Record<string, string> = {
   Pills: "chc",
-  Patch: "chc",
   Injectable: "dmpa",
   Implant: "implant",
   "Copper IUD": "cu-iud",
@@ -304,10 +302,37 @@ const ObAssessment = ({ navigation, route }: any) => {
   // ─── Validation ───────────────────────────────────────────────────────────
 
   const validateForm = (): boolean => {
-    if (!formData.AGE || isNaN(Number(formData.AGE))) {
+    // Name validation
+    const name = (formData.NAME || "").trim();
+    if (!name || name.length < 2) {
+      Alert.alert("Required", "Please enter the patient's full name (at least 2 characters).");
+      return false;
+    }
+    if (/\d/.test(name)) {
+      Alert.alert("Invalid Name", "Patient name must not contain numbers.");
+      return false;
+    }
+
+    // Age validation — WHO reproductive age range: 15–55
+    const age = Number(formData.AGE);
+    if (!formData.AGE || isNaN(age)) {
       Alert.alert("Required", "Please enter a valid patient age.");
       return false;
     }
+    if (age < 15 || age > 55) {
+      Alert.alert("Invalid Age", "Patient age must be between 15 and 55 years (WHO reproductive age range).");
+      return false;
+    }
+
+    // Husband/Partner age validation — 15–80 if provided
+    if (formData.HUSBAND_AGE) {
+      const hAge = Number(formData.HUSBAND_AGE);
+      if (isNaN(hAge) || hAge < 15 || hAge > 80) {
+        Alert.alert("Invalid Age", "Partner age must be between 15 and 80 years.");
+        return false;
+      }
+    }
+
     if (!formData.ETHNICITY) {
       Alert.alert("Required", "Please select the patient's ethnicity.");
       return false;
@@ -477,7 +502,12 @@ const ObAssessment = ({ navigation, route }: any) => {
           placeholder={field.placeholder}
           placeholderTextColor="#94A3B8"
           value={formData[field.id] || ""}
-          onChangeText={(val) => updateVal(val, field.id)}
+          onChangeText={(val) => {
+            const formatted = field.id === "NAME"
+              ? val.replace(/\b\w/g, (c) => c.toUpperCase())
+              : val;
+            updateVal(formatted, field.id);
+          }}
           keyboardType={field.type === "numeric" ? "numeric" : "default"}
         />
       ) : (
@@ -938,7 +968,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                       recommendation={result.recommendation}
                       contraceptiveMethod={methodName}
                       priceRange={CONTRACEPTIVE_DETAILS[METHOD_NAME_TO_DATA_KEY[methodName]]?.priceRange}
-                      keyFactors={generateKeyFactors(formData, result.risk_level)}
+                      keyFactors={generateKeyFactors({ ...formData, CONTRACEPTIVE_METHOD: methodName }, result.risk_level)}
                       upgradedByDt={result.upgraded_by_dt}
                       mecCategory={mecCat as 1 | 2 | 3 | 4 | undefined}
                       style={mecCardStyle}

@@ -10,7 +10,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ViewStyle } from "react-native";
 import { colors as themeColors } from "../theme";
-import SHAP_DATA from "../../assets/models/risk_factors_v4.json";
+import SIGNED_SHAP_DATA from "../../assets/models/risk_factors_v4_signed.json";
 
 // ============================================================================
 // TYPES
@@ -112,16 +112,9 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
             {isHighRisk ? "High Risk" : "Low Risk"}
           </Text>
         </View>
-        <View style={styles.statusMetaWrap}>
-          {mecCategory ? (
-            <View style={[styles.mecMiniBadge, { backgroundColor: mecAccent || COLORS.warning }]}> 
-              <Text style={styles.mecMiniBadgeText}>MEC {mecCategory}</Text>
-            </View>
-          ) : null}
-          <Text style={styles.headerConfidenceText}>
-            Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{confPercent}%</Text>
-          </Text>
-        </View>
+        <Text style={styles.headerConfidenceText}>
+          Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{confPercent}%</Text>
+        </Text>
       </View>
 
       {/* ── PART 2: THE METRIC ── */}
@@ -173,13 +166,6 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
         </View>
       )}
 
-      {recommendation ? (
-        <View style={styles.recommendationContainer}>
-          <Text style={styles.recommendationLabel}>Recommendation</Text>
-          <Text style={styles.recommendationValue}>{recommendation}</Text>
-        </View>
-      ) : null}
-
       {/* DT Upgrade Indicator */}
       {upgradedByDt && (
         <View style={[styles.dtBadge, { backgroundColor: COLORS.warningBg }]}>
@@ -196,70 +182,182 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
 // FACTOR GENERATOR — call this from the assessment screen
 // ============================================================================
 
+// Display value → training value maps (mirrors featureEncoder.ts for OB form inputs)
+const _DISPLAY_TO_TRAINING: Record<string, Record<string, string>> = {
+  PATTERN_USE: {
+    "Regular/consistent user": "1",
+    "Irregular/inconsistent user": "Intermittent",
+    "New user (never used before)": "New user",
+    "Previously used (stopped within 12 months)": "Stopped recently",
+    "Current user": "1",
+    "Recent user (stopped within 12 months)": "Stopped recently",
+    "Past user (stopped >12 months ago)": "Stopped recently",
+    "1": "1", "2": "Stopped recently", "3": "Intermittent", "4": "New user",
+    "Consistent": "Consistent", "Intermittent": "Intermittent",
+    "Stopped recently": "Stopped recently", "New user": "New user",
+  },
+  SMOKE_CIGAR: {
+    "Never": "No", "Former smoker": "No",
+    "Occasional smoker": "Yes", "Current daily": "Yes",
+    "No": "No", "Yes": "Yes", "0": "No", "1": "Yes",
+  },
+  HOUSEHOLD_HEAD_SEX: {
+    "Male": "Male", "Female": "Female",
+    "Shared/Both": "Male", "Others": "Male",
+    "1": "Male", "2": "Female",
+  },
+  DESIRE_FOR_MORE_CHILDREN: {
+    "Wants more children": "Yes",
+    "Wants no more children": "No",
+    "Undecided/ambivalent": "Undecided",
+    "Not Sure": "Undecided",
+    "Sterilised (self or partner)": "No",
+    "Not applicable": "No",
+    "Yes": "Yes", "No": "No", "Undecided": "Undecided",
+  },
+  ETHNICITY: {
+    "Tagalog": "Tagalog", "Ilocano": "Ilocano",
+    "Cebuano": "Bisaya", "Bisaya/Cebuano": "Bisaya", "Bisaya": "Bisaya",
+    "Hiligaynon/Ilonggo": "Others", "Bikol/Bicol": "Bicolano",
+    "Bicolano": "Bicolano", "Waray": "Others", "Kapampangan": "Others",
+    "Pangasinan": "Others", "Other Filipinos": "Others", "Other ethnicity": "Others",
+  },
+  CONTRACEPTIVE_METHOD: {
+    "Pills": "Pills", "Pill": "Pills",
+    "Copper IUD": "IUD", "Intrauterine Device (IUD)": "IUD", "IUD": "IUD",
+    "Injectable": "Injectables", "Injectables": "Injectables",
+    "Implant": "Implants", "Implants": "Implants",
+    "Condom": "Condom", "Withdrawal": "Withdrawal",
+    "Female sterilisation": "Withdrawal", "Male sterilisation": "Withdrawal",
+    "NFP/Periodic abstinence": "Withdrawal",
+  },
+};
+
+// OB-readable labels for feature names
+const _FEAT_LABELS: Record<string, string> = {
+  PATTERN_USE: "Use pattern",
+  SMOKE_CIGAR: "Smoking status",
+  HOUSEHOLD_HEAD_SEX: "Household head",
+  DESIRE_FOR_MORE_CHILDREN: "More children",
+  ETHNICITY: "Ethnicity",
+  CONTRACEPTIVE_METHOD: "Proposed method",
+  HUSBAND_AGE: "Partner age",
+  AGE: "Patient age",
+  PARITY: "No. of children",
+};
+
+// Training value → short display for OB readability
+const _VAL_LABELS: Record<string, Record<string, string>> = {
+  PATTERN_USE: {
+    "1": "regular use", "Consistent": "consistent use",
+    "Intermittent": "irregular/intermittent use",
+    "Stopped recently": "stopped recently",
+    "New user": "new user",
+  },
+  SMOKE_CIGAR: { "No": "non-smoker", "Yes": "smoker" },
+  HOUSEHOLD_HEAD_SEX: { "Male": "male-headed", "Female": "female-headed" },
+  DESIRE_FOR_MORE_CHILDREN: {
+    "Yes": "wants more children",
+    "No": "no more children",
+    "Undecided": "undecided",
+  },
+  CONTRACEPTIVE_METHOD: {
+    "Pills": "pills", "IUD": "IUD", "Injectables": "injectables",
+    "Implants": "implants", "Condom": "condom", "Withdrawal": "withdrawal",
+  },
+};
+
 /**
- * Generate human-readable key factors from the patient's form data using SHAP importance.
- * These explain WHY the model predicted LOW or HIGH risk based on globally important features.
+ * Generate OB-readable directional key factors using signed per-value SHAP.
+ *
+ * Each returned string is formatted as:
+ *   "↑ Use pattern: irregular use — raises discontinuation risk"
+ *   "↓ Smoking status: non-smoker — lowers discontinuation risk"
+ *
+ * Sign of SHAP (log-odds space):
+ *   positive → this patient feature pushes risk UP from baseline
+ *   negative → this patient feature pushes risk DOWN from baseline
+ *
+ * Returns top 4 factors by |SHAP| magnitude, noise-filtered.
  */
 export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LOW' | 'HIGH'): string[] {
-  const activeFeatures: { label: string; importance: number }[] = [];
+  const shapData = SIGNED_SHAP_DATA as {
+    baseline_log_odds: number;
+    baseline_probability: number;
+    features: Record<string, number>;
+  };
+  const featureMap = shapData.features;
 
-  const shapMap = SHAP_DATA as Record<string, number>;
+  type Factor = { label: string; shap: number };
+  const factors: Factor[] = [];
 
-  // 1. Map Categorical Features
-  const catFeatures = [
-    { feat: "PATTERN_USE", label: "Contraceptive use pattern" },
-    { feat: "ETHNICITY", label: "Ethnicity" },
-    { feat: "HOUSEHOLD_HEAD_SEX", label: "Household head sex" },
-    { feat: "CONTRACEPTIVE_METHOD", label: "Proposed method" },
-    { feat: "SMOKE_CIGAR", label: "Smoking habits" },
-    { feat: "DESIRE_FOR_MORE_CHILDREN", label: "Future child plans" },
-    { feat: "HUSBAND_AGE", label: "Husband/Partner age" },
+  // ── Categorical features ──────────────────────────────────────────────────
+  const CAT_FEATS = [
+    "PATTERN_USE", "SMOKE_CIGAR", "HOUSEHOLD_HEAD_SEX",
+    "DESIRE_FOR_MORE_CHILDREN", "ETHNICITY", "CONTRACEPTIVE_METHOD",
   ];
 
-  catFeatures.forEach(({ feat, label }) => {
-    const val = formData[feat];
-    if (val !== undefined && val !== null) {
-      // The SHAP keys are "cat__FEAT_VALUE"
-      const shapKey = `cat__${feat}_${val}`;
-      if (shapMap[shapKey] !== undefined) {
-        activeFeatures.push({
-          label: `${label}: ${val}`,
-          importance: shapMap[shapKey]
-        });
+  for (const feat of CAT_FEATS) {
+    const displayVal = formData[feat];
+    if (displayVal == null || displayVal === "") continue;
+
+    const trainingMap = _DISPLAY_TO_TRAINING[feat];
+    const trainingVal = trainingMap
+      ? (trainingMap[String(displayVal)] ?? String(displayVal))
+      : String(displayVal);
+
+    const shapVal = featureMap[`cat__${feat}_${trainingVal}`];
+    if (shapVal == null) continue;
+
+    const featLabel = _FEAT_LABELS[feat] || feat;
+    const valLabel = _VAL_LABELS[feat]?.[trainingVal] ?? String(displayVal).toLowerCase();
+    factors.push({ label: `${featLabel}: ${valLabel}`, shap: shapVal });
+  }
+
+  // ── HUSBAND_AGE (bucketed categorical in model) ────────────────────────────
+  if (formData.HUSBAND_AGE != null && formData.HUSBAND_AGE !== "") {
+    const ageNum = Math.round(parseFloat(String(formData.HUSBAND_AGE)));
+    if (!isNaN(ageNum)) {
+      const shapVal = featureMap[`cat__HUSBAND_AGE_${ageNum}`];
+      if (shapVal != null) {
+        factors.push({ label: `Partner age (${ageNum})`, shap: shapVal });
       }
     }
-  });
-
-  // 2. Map Numerical Features
-  if (formData['AGE'] !== undefined) {
-    activeFeatures.push({
-      label: `Patient age: ${formData['AGE']}`,
-      importance: shapMap['num__AGE'] || 0
-    });
-  }
-  if (formData['PARITY'] !== undefined) {
-    activeFeatures.push({
-      label: `Number of children: ${formData['PARITY']}`,
-      importance: shapMap['num__PARITY'] || 0
-    });
   }
 
-  // 3. Sort and filter
-  // Only keep features that actually contribute (importance > 0)
-  const sorted = activeFeatures
-    .filter(f => f.importance > 0.01) // Filter out noise
-    .sort((a, b) => b.importance - a.importance);
+  // ── Numeric features ──────────────────────────────────────────────────────
+  if (formData.AGE != null && formData.AGE !== "") {
+    const shapVal = featureMap["num__AGE"];
+    if (shapVal != null) {
+      factors.push({ label: `Patient age (${formData.AGE})`, shap: shapVal });
+    }
+  }
+  if (formData.PARITY != null && formData.PARITY !== "") {
+    const shapVal = featureMap["num__PARITY"];
+    if (shapVal != null) {
+      factors.push({ label: `No. of children (${formData.PARITY})`, shap: shapVal });
+    }
+  }
 
-  if (sorted.length === 0) {
+  // ── Sort by |SHAP|, filter noise, take top 4 ─────────────────────────────
+  const top = factors
+    .filter(f => Math.abs(f.shap) > 0.005)
+    .sort((a, b) => Math.abs(b.shap) - Math.abs(a.shap))
+    .slice(0, 4);
+
+  if (top.length === 0) {
     return [
       riskLevel === 'HIGH'
         ? 'Overall profile suggests higher likelihood of discontinuation'
-        : 'Overall profile suggests good potential for continued use'
+        : 'Overall profile suggests good potential for continued use',
     ];
   }
 
-  // Return top 3 impactful factors
-  return sorted.slice(0, 3).map(f => f.label);
+  return top.map(f => {
+    const arrow = f.shap > 0 ? '↑' : '↓';
+    const direction = f.shap > 0 ? 'raises discontinuation risk' : 'lowers discontinuation risk';
+    return `${arrow} ${f.label} — ${direction}`;
+  });
 }
 
 // ============================================================================

@@ -8,7 +8,7 @@ import {
     Plus, Clock, AlertTriangle,
     ChevronDown, ChevronUp, Palette, Info, Book,
     Baby, Cigarette, User as UserIcon,
-    Eye, CheckCircle2,
+    Eye,
     ChevronRight, Clipboard, HelpCircle
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
@@ -33,7 +33,6 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
     // UI State
     const [mecExpanded, setMecExpanded] = useState(false);
-    const [filterRisk, setFilterRisk] = useState<'All' | 'Low' | 'High'>('All');
 
     // Computed stats from local assessment cache
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -70,37 +69,9 @@ const DoctorDashboardScreen = ({ route }: any) => {
         }, [loadAssessments])
     );
 
-    const getOverallRisk = (item: AssessmentRecord): string => {
-        const hasCritical = item.status === 'critical';
-        return hasCritical ? 'High' : 'Low';
-    };
-
-    const filteredQueue = assessments
-        .filter(item => {
-            if (filterRisk === 'All') return true;
-            return getOverallRisk(item) === filterRisk;
-        })
-        .slice(0, 10); // show latest 10 on dashboard
-
-    const getRiskColor = (risk: string) => {
-        switch (risk?.toLowerCase()) {
-            case 'high': return '#EF4444';
-            case 'low': return '#10B981';
-            default: return '#64748B';
-        }
-    };
-
-    const getStatusBadge = (item: AssessmentRecord) => {
-        if (item.status === 'critical') return { label: 'HIGH RISK', color: '#FEF2F2', textColor: '#EF4444', icon: AlertTriangle };
-        return { label: 'LOW RISK', color: '#F0FDF4', textColor: '#10B981', icon: CheckCircle2 };
-    };
+    const filteredQueue = assessments.slice(0, 10); // show latest 10 on dashboard
 
     const renderCard = (item: AssessmentRecord) => {
-        const risk = getOverallRisk(item);
-        const riskColor = getRiskColor(risk);
-        const status = getStatusBadge(item);
-        const StatusIcon = status.icon;
-
         const smoker = item.patientData?.SMOKE_CIGAR && item.patientData.SMOKE_CIGAR !== 'Never' && item.patientData.SMOKE_CIGAR !== 'No';
         const topMethod = Object.keys(item.riskResults || {})[0] || '—';
 
@@ -113,7 +84,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
                     }}
                     activeOpacity={0.88}
                 >
-                    <View style={[styles.mecStrip, { backgroundColor: riskColor }]} />
+                    <View style={[styles.mecStrip, { backgroundColor: '#E45A92' }]} />
                     <View style={styles.cardContent}>
                         <View style={styles.rowBetween}>
                             <View style={{ flex: 1 }}>
@@ -122,10 +93,6 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     {new Date(item.createdAt).toLocaleDateString()}
                                     {item.pendingSync ? ' · Pending sync' : ''}
                                 </Text>
-                            </View>
-                            <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-                                <StatusIcon size={10} color={status.textColor} />
-                                <Text style={[styles.statusLabel, { color: status.textColor }]}>{status.label}</Text>
                             </View>
                         </View>
 
@@ -147,17 +114,14 @@ const DoctorDashboardScreen = ({ route }: any) => {
                         <View style={styles.rowBetween}>
                             <View style={styles.recBox}>
                                 <Text style={styles.recTitle}>Assessed Method:</Text>
-                                <View style={styles.row}>
-                                    <Text style={styles.recValue}>{topMethod}</Text>
-                                    <View style={[styles.riskDotMini, { backgroundColor: riskColor }]} />
-                                </View>
+                                <Text style={styles.recValue}>{topMethod}</Text>
                             </View>
                             <View style={styles.cardActions}>
                                 <TouchableOpacity
-                                    style={[styles.miniActionBtn, { backgroundColor: riskColor + '15' }]}
+                                    style={[styles.miniActionBtn, { backgroundColor: '#E45A9215' }]}
                                     onPress={() => navigation.navigate('ObHistory', { recordId: item.id })}
                                 >
-                                    <Eye size={18} color={riskColor} />
+                                    <Eye size={18} color="#E45A92" />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -284,28 +248,6 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     </View>
                                 </TouchableOpacity>
                             </View>
-
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                style={styles.filterScroll}
-                            >
-                                {['All', 'Low', 'High'].map((risk) => (
-                                    <TouchableOpacity
-                                        key={risk}
-                                        style={[
-                                            styles.filterChip,
-                                            filterRisk === risk && styles.filterChipActive
-                                        ]}
-                                        onPress={() => setFilterRisk(risk as 'All' | 'Low' | 'High')}
-                                    >
-                                        {risk !== 'All' && <View style={[styles.smallDot, { backgroundColor: getRiskColor(risk) }]} />}
-                                        <Text style={[styles.filterText, filterRisk === risk && styles.filterTextActive]}>
-                                            {risk} Risk
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
 
                             <View style={styles.recentList}>
                                 {filteredQueue.map(item => renderCard(item))}
