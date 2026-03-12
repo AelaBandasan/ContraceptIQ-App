@@ -12,7 +12,6 @@ import WhoMecConditionsScreen from '../screens/ObSide/WhoMecConditionsScreen';
 import WhoMecPreferencesScreen from '../screens/ObSide/WhoMecPreferencesScreen';
 import WhoMecResultsScreen from '../screens/ObSide/WhoMecResultsScreen';
 import MecGuideScreen from '../screens/ObSide/MecGuideScreen';
-import FeedbackScreen from '../screens/ObSide/FeedbackScreen';
 import Contrafaqs from '../screens/Contrafaqs';
 import EmergencyContraception from '../screens/EmergencyContraception';
 import AboutUs from '../screens/AboutUs';
@@ -130,11 +129,6 @@ const ObTabNavigator = () => {
             <Tab.Screen
                 name="ObMecGuide"
                 component={MecGuideScreen}
-                options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
-            />
-            <Tab.Screen
-                name="ObFeedback"
-                component={FeedbackScreen}
                 options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
             />
             <Tab.Screen

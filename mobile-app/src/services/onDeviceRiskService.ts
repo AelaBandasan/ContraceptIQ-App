@@ -180,7 +180,7 @@ export async function assessOffline(
 
     return {
         risk_level: riskLevel as 'LOW' | 'HIGH',
-        confidence: Math.round(xgbProbability * 10000) / 10000,
+        confidence: Math.round(Math.max(xgbProbability, 1 - xgbProbability) * 10000) / 10000,
         recommendation,
         xgb_probability: Math.round(xgbProbability * 10000) / 10000,
         upgraded_by_dt: upgradedByDt,

@@ -18,12 +18,14 @@ import SHAP_DATA from "../../assets/models/risk_factors_v4.json";
 
 export interface RiskAssessmentCardProps {
   riskLevel: "LOW" | "HIGH";
-  confidence: number; // 0-1 (discontinuation probability from XGBoost)
+  confidence: number; // 0-1 (model certainty)
+  probability: number; // 0-1 (discontinuation likelihood)
   recommendation: string;
   contraceptiveMethod?: string;
   keyFactors?: string[]; // Plain-language factors explaining the result
   upgradedByDt?: boolean; // Whether Decision Tree upgraded the prediction
   mecCategory?: 1 | 2 | 3 | 4;
+  priceRange?: string; // Price range from contraceptiveData
   onPress?: () => void;
   style?: ViewStyle;
 }
@@ -60,17 +62,20 @@ const RADIUS = { sm: 4, md: 8, lg: 12, xl: 16, full: 9999 };
 export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   riskLevel,
   confidence,
+  probability,
   recommendation,
   contraceptiveMethod,
   keyFactors = [],
   upgradedByDt,
   mecCategory,
+  priceRange,
   onPress,
   style,
 }) => {
   const isHighRisk = riskLevel === "HIGH";
-  const prob = (confidence * 100).toFixed(1);
-  const progressPercent = Math.max(0, Math.min(100, confidence * 100));
+  const confPercent = (confidence * 100).toFixed(1);
+  const probPercent = (probability * 100).toFixed(1);
+  const progressPercent = Math.max(0, Math.min(100, probability * 100));
 
   const riskAccent = isHighRisk ? COLORS.error : COLORS.success;
   const riskBadgeBg = isHighRisk ? COLORS.errorBg : COLORS.successBg;
@@ -114,7 +119,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
             </View>
           ) : null}
           <Text style={styles.headerConfidenceText}>
-            Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{prob}%</Text>
+            Confidence <Text style={[styles.headerConfidenceValue, { color: theme.accent }]}>{confPercent}%</Text>
           </Text>
         </View>
       </View>
@@ -122,7 +127,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
       {/* ── PART 2: THE METRIC ── */}
       <View style={styles.metricContainer}>
         <Text style={[styles.metricValue, { color: theme.accent }]}>
-          {prob}%
+          {probPercent}%
         </Text>
         <Text style={styles.metricLabel}>
           Probability of Discontinuation
@@ -137,11 +142,21 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
         </View>
       </View>
 
-      {/* Method (if provided) */}
-      {contraceptiveMethod && (
+      {/* Method & Price */}
+      {(contraceptiveMethod || priceRange) && (
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Method</Text>
-          <Text style={styles.infoValue}>{contraceptiveMethod}</Text>
+          {contraceptiveMethod && (
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <Text style={styles.infoLabel}>Method</Text>
+              <Text style={styles.infoValue}>{contraceptiveMethod}</Text>
+            </View>
+          )}
+          {priceRange && (
+            <View style={{ flex: 1, alignItems: "center", borderLeftWidth: contraceptiveMethod ? 1 : 0, borderLeftColor: COLORS.border }}>
+              <Text style={styles.infoLabel}>Price Range</Text>
+              <Text style={styles.infoValue}>{priceRange}</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -355,7 +370,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#6B7280",
     fontWeight: "700",
     textTransform: "uppercase",

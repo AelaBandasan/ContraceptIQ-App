@@ -98,7 +98,6 @@ export type ObTabParamList = {
   ObMethods: { isDoctorAssessment?: boolean };
   ObProfile: undefined;
   ObMecGuide: undefined;
-  ObFeedback: undefined;
   ObSettings: undefined;
   ObEducation: undefined;
   ObEmergency: undefined;

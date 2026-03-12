@@ -11,7 +11,6 @@ import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanim
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
-  sti: "STI Prevention",
   nonhormonal: "Non-hormonal",
   regular: "Regular Bleeding",
   privacy: "Privacy",
@@ -41,37 +40,37 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
   // Define contraceptives with their MEC key mapping
   const baseContraceptives = [
     {
-      name: 'LNG - ETG ( Implant)',
+      name: 'Implant (LNG/ETG)',
       mecKey: 'Implant' as const,
       image: require('../../assets/image/sq_lngetg.png'),
       description: 'Long-acting, highly effective',
     },
     {
-      name: 'DMPA (Injectable)',
+      name: 'Injectable (DMPA)',
       mecKey: 'DMPA' as const,
       image: require('../../assets/image/sq_dmpainj.png'),
       description: 'Injection every 3 months',
     },
     {
-      name: 'CHC (Patch/Pills/Ring)',
+      name: 'Combined Hormonal Contraceptive (CHC)',
       mecKey: 'CHC' as const,
       image: require('../../assets/image/sq_chcpills.png'),
       description: 'Combined hormonal methods',
     },
     {
-      name: 'Cu-IUD (Copper-IUD)',
+      name: 'Copper IUD (Cu-IUD)',
       mecKey: 'Cu-IUD' as const,
       image: require('../../assets/image/sq_cuiud.png'),
       description: 'Non-hormonal, long-acting',
     },
     {
-      name: 'POP (Progestin-Only Pills)',
+      name: 'Progestogen-only Pill (POP)',
       mecKey: 'POP' as const,
       image: require('../../assets/image/sq_poppills.png'),
       description: 'Daily progestin pill',
     },
     {
-      name: 'LNG-IUD (Hormonal - IUD)',
+      name: 'LNG-IUD (Levonorgestrel-IUD)',
       mecKey: 'LNG-IUD' as const,
       image: require('../../assets/image/sq_lngiud.png'),
       description: 'Hormonal IUD, long-acting',

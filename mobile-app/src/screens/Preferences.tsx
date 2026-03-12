@@ -14,7 +14,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
-  sti: "STI Prevention",
   nonhormonal: "Non-hormonal",
   regular: "Regular Bleeding",
   privacy: "Privacy",
@@ -38,12 +37,12 @@ const Preferences = ({ navigation }: Props) => {
   ];
 
   const METHOD_IMAGES: Record<string, any> = {
-    'Combined Hormonal':   require('../../assets/image/sq_chcpatch1.png'),
-    'Progestin-Only Pill': require('../../assets/image/sq_poppills.png'),
-    'Injectable':          require('../../assets/image/sq_dmpainj.png'),
-    'Implant':             require('../../assets/image/sq_lngetg.png'),
-    'Copper IUD':          require('../../assets/image/sq_cuiud.png'),
-    'Hormonal IUD':        require('../../assets/image/sq_lngiud.png'),
+    'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpills.png'),
+    'Progestogen-only Pill (POP)':           require('../../assets/image/sq_poppills.png'),
+    'Injectable (DMPA)':                     require('../../assets/image/sq_dmpainj.png'),
+    'Implant (LNG/ETG)':                     require('../../assets/image/sq_lngetg.png'),
+    'Copper IUD (Cu-IUD)':                   require('../../assets/image/sq_cuiud.png'),
+    'LNG-IUD (Levonorgestrel-IUD)':          require('../../assets/image/sq_lngiud.png'),
   };
 
   // Calculate recommendations using the same WHO MEC tool as the Results screen
