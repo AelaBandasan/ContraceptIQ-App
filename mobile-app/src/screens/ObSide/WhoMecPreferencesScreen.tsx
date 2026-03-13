@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react-native';
 import { colors, shadows, spacing, borderRadius } from '../../theme';
 import { WHO_MEC_CONDITIONS } from '../../data/whoMecData';
+import { useAlert } from '../../context/AlertContext';
 import ObHeader from '../../components/ObHeader';
 
 const PREFERENCES = [
@@ -23,6 +24,7 @@ const PREFERENCES = [
 
 const WhoMecPreferencesScreen = () => {
   const navigation = useNavigation<any>();
+  const { showAlert } = useAlert();
   const route = useRoute<any>();
 
   const { age, conditionIds, preferences: initialPreferences } = route.params as {
@@ -49,7 +51,7 @@ const WhoMecPreferencesScreen = () => {
     setSelectedPrefs(prev => {
       if (prev.includes(key)) return prev.filter(k => k !== key);
       if (prev.length >= 3) {
-        Alert.alert('Limit Reached', 'You can select up to 3 preferences only.');
+        showAlert('Limit Reached', 'You can select up to 3 preferences only.');
         return prev;
       }
       return [...prev, key];

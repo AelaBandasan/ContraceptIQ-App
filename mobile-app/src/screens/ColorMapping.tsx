@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
@@ -81,9 +81,8 @@ const ColorMapping: React.FC<Props> = ({ navigation }) => {
                 {categories.map((category, index) => {
                     const IconComponent = category.icon;
                     return (
-                        <Animated.View
+                        <View
                             key={index}
-                            entering={FadeInDown.delay(200 + index * 100).duration(600).withInitialValues({ opacity: 1 })}
                             style={[styles.card, { borderLeftColor: category.color }]}
                         >
                             <View style={styles.cardHeader}>
@@ -104,7 +103,7 @@ const ColorMapping: React.FC<Props> = ({ navigation }) => {
                                     </Text>
                                 </View>
                             </View>
-                        </Animated.View>
+                        </View>
                     );
                 })}
 

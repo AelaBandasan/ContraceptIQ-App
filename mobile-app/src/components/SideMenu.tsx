@@ -15,9 +15,11 @@ import {
 } from 'lucide-react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
 import { useAssessmentData } from '../context/AssessmentContext';
+import { useAlert } from '../context/AlertContext';
 
 const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
   const { state, navigation } = props;
+  const { showAlert } = useAlert();
   const assessmentData = useAssessmentData();
   const hasAssessment =
     !!assessmentData && Object.keys(assessmentData).length > 0;
@@ -76,14 +78,13 @@ const SideMenu: React.FC<DrawerContentComponentProps> = (props) => {
   ];
 
   const handleExit = () => {
-    Alert.alert(
-      "Exit to Start",
-      "Are you sure you want to return to the start screen?",
+    showAlert(
+      "Exit",
+      "Are you sure you want to exit the app?",
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Exit", onPress: () => navigation.navigate('UserStartingScreen' as never) },
-      ],
-      { cancelable: true },
+        { text: "Stay", style: "cancel" },
+        { text: "Exit", style: "destructive", onPress: () => navigation.navigate('UserStartingScreen' as never) },
+      ]
     );
   };
 

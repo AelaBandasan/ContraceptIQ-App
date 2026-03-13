@@ -19,7 +19,6 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors } from '../theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -108,7 +107,7 @@ const AboutUs = ({ navigation, route }: any) => {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(80).duration(420).withInitialValues({ opacity: 1 })} style={styles.brandCard}>
+        <View style={styles.brandCard}>
           <View style={styles.brandMark}>
             <Ionicons name="heart" size={22} color={colors.primary} />
           </View>
@@ -116,14 +115,14 @@ const AboutUs = ({ navigation, route }: any) => {
             <Text style={styles.brandTitle}>ContraceptIQ</Text>
             <Text style={styles.brandSubtitle}>Evidence-based contraceptive guidance, designed for clarity.</Text>
           </View>
-        </Animated.View>
+        </View>
 
         <View style={styles.accordionList}>
           {ABOUT_ITEMS.map((item, index) => {
             const isOpen = openId === item.id;
 
             return (
-              <Animated.View key={item.id} entering={FadeInDown.delay(120 + index * 60).duration(360).withInitialValues({ opacity: 1 })} style={[styles.accordionCard, isOpen && styles.accordionCardOpen]}>
+              <View key={item.id} style={[styles.accordionCard, isOpen && styles.accordionCardOpen]}>
                 <TouchableOpacity
                   style={styles.accordionHeader}
                   activeOpacity={0.85}
@@ -149,15 +148,15 @@ const AboutUs = ({ navigation, route }: any) => {
                     ) : null}
                   </View>
                 ) : null}
-              </Animated.View>
+              </View>
             );
           })}
         </View>
 
-        <Animated.View entering={FadeInDown.delay(420).duration(420).withInitialValues({ opacity: 1 })} style={styles.bannerCard}>
+        <View style={styles.bannerCard}>
           <Sparkles size={18} color="#166534" />
           <Text style={styles.bannerText}>You deserve clear, trusted information to make confident reproductive health decisions.</Text>
-        </Animated.View>
+        </View>
 
         <View style={{ height: 34 }} />
       </ScrollView>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react-native';
 import { colors, shadows, spacing } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
+import { useAlert } from '../context/AlertContext';
 
 const PREFERENCES = [
   { key: 'effectiveness', label: 'Highly Effective',       description: 'Most reliable at preventing pregnancy',       icon: ShieldCheck },
@@ -37,6 +38,7 @@ const AGE_LABEL: Record<number, string> = {
 
 const GuestMecPreferencesScreen = () => {
   const navigation = useNavigation<any>();
+  const { showAlert } = useAlert();
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
   // Read context only to pre-fill from a previously saved selection.
@@ -52,7 +54,7 @@ const GuestMecPreferencesScreen = () => {
     setLocalPrefs(prev => {
       if (prev.includes(key)) return prev.filter(k => k !== key);
       if (prev.length >= 3) {
-        Alert.alert('Limit Reached', 'You can select up to 3 preferences only.');
+        showAlert('Limit Reached', 'You can select up to 3 preferences only.');
         return prev;
       }
       return [...prev, key];

@@ -25,7 +25,9 @@ const DoctorDashboardScreen = ({ route }: any) => {
     const isCompact = width < 390;
     const isTablet = width >= 900;
     const horizontalPadding = isCompact ? 14 : isTablet ? 26 : 20;
-    const actionCardWidth = isTablet ? '31.5%' : '48%';
+    const GAP = 14;
+    const containerWidth = width - (horizontalPadding * 2);
+    const actionCardWidth = (containerWidth - GAP) / 2;
 
     // Core State
     const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     rowBetweenNoMargin: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     row: { flexDirection: 'row', alignItems: 'center' },
-    actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'space-between' },
+    actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
     actionCard: {
         borderRadius: 20,
         padding: 16,

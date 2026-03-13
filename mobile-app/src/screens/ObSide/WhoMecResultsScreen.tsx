@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, Alert,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import {
   calculateWhoMecTool, getMECColor, getMECLabel,
   type WhoMecMethodResult, type MECCategory, METHOD_ATTRIBUTES,
 } from '../../services/mecService';
+import { useAlert } from '../../context/AlertContext';
 import ObHeader from '../../components/ObHeader';
 
 const PREF_LABELS: Record<string, string> = {
@@ -46,6 +47,7 @@ const CategoryIcon = ({ category }: { category: MECCategory }) => {
 
 const WhoMecResultsScreen = () => {
   const navigation = useNavigation<any>();
+  const { showAlert } = useAlert();
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
 
@@ -91,12 +93,12 @@ const WhoMecResultsScreen = () => {
   };
 
   const handleReturnToDashboard = () => {
-    Alert.alert(
+    showAlert(
       'Return to Dashboard?',
       'You will leave the WHO MEC tool and go back to dashboard.',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Return to Dashboard', onPress: () => navigation.navigate('ObHome') },
+        { text: 'Stay', style: 'cancel' },
+        { text: 'Return', onPress: () => navigation.navigate('ObHome') },
       ]
     );
   };

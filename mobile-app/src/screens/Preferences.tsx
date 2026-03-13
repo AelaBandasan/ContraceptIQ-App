@@ -10,7 +10,6 @@ import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { typography, spacing, colors, borderRadius, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
 import { calculateWhoMecTool, getMECColor } from '../services/mecService';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
@@ -89,21 +88,19 @@ const Preferences = ({ navigation }: Props) => {
           </View>
 
           {/* Preferences Summary */}
-          <Animated.View
-            entering={FadeIn.delay(200).duration(800).withInitialValues({ opacity: 1 })}
+          <View
             style={styles.summaryCard}
           >
             <View style={styles.cardHeaderLine} />
             <Text style={styles.summaryTitle}>Selected Preferences</Text>
             <View style={styles.prefsChipContainer}>
               {chosenPrefs.length > 0 ? chosenPrefs.map((p, idx) => (
-                <Animated.View
+                <View
                   key={p}
-                  entering={FadeIn.delay(400 + (idx * 100)).withInitialValues({ opacity: 1 })}
                   style={styles.prefChip}
                 >
                   <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
-                </Animated.View>
+                </View>
               )) : <Text style={styles.emptyText}>No preferences selected.</Text>}
             </View>
 
@@ -112,18 +109,17 @@ const Preferences = ({ navigation }: Props) => {
               <Text style={styles.ageLabel}>Age Range:</Text>
               <Text style={styles.ageValue}>{selectedAgeIndex !== null ? ageRanges[selectedAgeIndex].label : 'Not set'}</Text>
             </View>
-          </Animated.View>
+          </View>
 
           {/* Personalized Recommendations */}
-          <Animated.View entering={FadeIn.delay(400).duration(800).withInitialValues({ opacity: 1 })}>
+          <View>
             <Text style={[styles.header2, { marginTop: 25 }]}>Recommended for You</Text>
             <Text style={styles.header3}>Based on your preferences and age</Text>
-          </Animated.View>
+          </View>
 
           {topRecommendations.map((item, index) => (
-            <Animated.View
+            <View
               key={index}
-              entering={FadeIn.delay(600 + (index * 150)).duration(600).withInitialValues({ opacity: 1 })}
             >
               <TouchableOpacity
                 style={styles.recomCard}
@@ -144,7 +140,7 @@ const Preferences = ({ navigation }: Props) => {
                   <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                 </View>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -335,7 +331,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   recomName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: '#333',
     marginBottom: 4,

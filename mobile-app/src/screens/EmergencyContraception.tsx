@@ -21,7 +21,6 @@ import {
     ChevronDown,
     ChevronUp,
 } from 'lucide-react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, shadows } from '../theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -55,7 +54,7 @@ const EmergencyContraception = () => {
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <Animated.View entering={FadeInDown.delay(140).duration(420).withInitialValues({ opacity: 1 })} style={[styles.infoCard, styles.primaryInfoCard]}>
+                <View style={[styles.infoCard, styles.primaryInfoCard]}>
                     <View style={styles.cardHeader}>
                         <View style={styles.infoIconWrap}>
                             <Info size={22} color={colors.primary} />
@@ -71,9 +70,9 @@ const EmergencyContraception = () => {
                     <View style={styles.cardLabelBottom}>
                         <Text style={styles.cardLabelText}>For urgent situations</Text>
                     </View>
-                </Animated.View>
+                </View>
 
-                <Animated.View entering={FadeInDown.delay(200).duration(420).withInitialValues({ opacity: 1 })} style={[styles.infoCard, styles.usageInfoCard]}>
+                <View style={[styles.infoCard, styles.usageInfoCard]}>
                     <View style={styles.cardHeader}>
                         <View style={styles.clockIconWrap}>
                             <Clock size={22} color="#2563EB" />
@@ -101,9 +100,9 @@ const EmergencyContraception = () => {
                         <Clock size={22} color="#0F766E" />
                         <Text style={styles.urgencyBadgeBottomText}>Use as soon as possible</Text>
                     </View>
-                </Animated.View>
+                </View>
 
-                <Animated.View entering={FadeInDown.delay(260).duration(420).withInitialValues({ opacity: 1 })}>
+                <View>
                     <TouchableOpacity
                         style={[styles.infoCard, styles.cautionCard]}
                         onPress={toggleBmi}
@@ -126,9 +125,9 @@ const EmergencyContraception = () => {
                             </View>
                         )}
                     </TouchableOpacity>
-                </Animated.View>
+                </View>
 
-                <Animated.View entering={FadeInDown.delay(320).duration(420).withInitialValues({ opacity: 1 })} style={[styles.infoCard, styles.reassuranceCard]}>
+                <View style={[styles.infoCard, styles.reassuranceCard]}>
                     <View style={styles.cardHeader}>
                         <CheckCircle2 size={22} color="#15803D" />
                         <Text style={[styles.cardTitle, { color: '#166534' }]}>Common and usually temporary</Text>
@@ -139,9 +138,9 @@ const EmergencyContraception = () => {
                     <Text style={styles.reassuranceText}>
                         These effects are usually short-term and not harmful.
                     </Text>
-                </Animated.View>
+                </View>
 
-                <Animated.View entering={FadeInDown.delay(380).duration(420).withInitialValues({ opacity: 1 })} style={styles.adviceCard}>
+                <View style={styles.adviceCard}>
                     <View style={styles.cardHeader}>
                         <AlertTriangle size={22} color="#C2410C" />
                         <Text style={[styles.cardTitle, { color: '#9A3412' }]}>When to Seek Medical Advice</Text>
@@ -150,7 +149,7 @@ const EmergencyContraception = () => {
                     <Text style={styles.adviceText}>- Severe lower abdominal pain develops</Text>
                     <Text style={styles.adviceText}>- Unusually heavy bleeding occurs</Text>
                     <Text style={styles.adviceText}>- Concern about possible pregnancy</Text>
-                </Animated.View>
+                </View>
 
                 <View style={{ height: 40 }} />
             </ScrollView>

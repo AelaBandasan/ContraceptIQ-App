@@ -71,7 +71,14 @@ export const MecTreeSelector: React.FC<MecTreeSelectorProps> = ({
                 <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
                     {isSelected && <Check size={12} color="#fff" />}
                 </View>
-                <Text style={[styles.leafLabel, isSelected && styles.leafLabelSelected]} numberOfLines={2}>
+                <Text 
+                    style={[
+                        styles.leafLabel, 
+                        indent === 0 && styles.leafLabelBold,
+                        isSelected && styles.leafLabelSelected
+                    ]} 
+                    numberOfLines={2}
+                >
                     {label}
                 </Text>
             </TouchableOpacity>
@@ -207,7 +214,7 @@ const styles = StyleSheet.create({
     searchInput: { flex: 1, height: 44, marginLeft: 8, fontSize: 15, color: '#1E293B' },
     parentContainer: { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
     parentHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
-    parentLabel: { fontSize: 15, fontWeight: '600', color: colors.text.primary, flex: 1, marginLeft: 6 },
+    parentLabel: { fontSize: 15, fontWeight: '800', color: colors.text.primary, flex: 1, marginLeft: 6 },
     subHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingRight: 16 },
     subLabel: { fontSize: 14, fontWeight: '500', color: colors.text.secondary, flex: 1, marginLeft: 6 },
     leafItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingRight: 16 },
@@ -216,6 +223,7 @@ const styles = StyleSheet.create({
     checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1.5, borderColor: colors.border.main, alignItems: 'center', justifyContent: 'center', marginRight: 10, backgroundColor: '#fff' },
     checkboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
     leafLabel: { fontSize: 14, color: colors.text.primary, flex: 1 },
+    leafLabelBold: { fontWeight: '800' },
     leafLabelSelected: { color: colors.primary, fontWeight: '500' },
     selectedChip: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

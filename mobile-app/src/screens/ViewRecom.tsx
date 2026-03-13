@@ -7,7 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getMECColor, getMECLabel, MECCategory, calculateMatchScore, calculateMEC } from '../services/mecService';
 import { colors, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
-import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
+
 
 const prefLabels: Record<string, string> = {
   effectiveness: "Effectiveness",
@@ -170,7 +170,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 20, paddingBottom: 90 }}
       >
-        <Animated.View entering={FadeInDown.delay(120).duration(500).withInitialValues({ opacity: 1 })} style={styles.heroCard}>
+        <View style={styles.heroCard}>
           <LinearGradient
             colors={['#FFFFFF', '#FFF7FB']}
             start={{ x: 0, y: 0 }}
@@ -239,7 +239,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
             )}
           </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
         {/* SAVE RESULT BUTTON / DOCTOR ACTION */}
         {isDoctorAssessment ? (
@@ -266,7 +266,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         )}
 
-        <Animated.View entering={FadeInUp.delay(220).duration(500).withInitialValues({ opacity: 1 })} style={styles.listContainer}>
+        <View style={styles.listContainer}>
           <View style={styles.listHeadingRow}>
             <Text style={styles.listHeading}>All Methods</Text>
             <View style={styles.listCountPill}>
@@ -274,7 +274,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
           {contraceptives.map((item, index) => (
-            <Animated.View key={item.name} entering={FadeInRight.delay(260 + index * 70).duration(360).withInitialValues({ opacity: 1 })}>
+            <View key={item.name}>
               <TouchableOpacity
                 style={[
                   styles.listItem,
@@ -292,9 +292,9 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
                   <Ionicons name="checkmark-circle" size={20} color={item.color} />
                 )}
               </TouchableOpacity>
-            </Animated.View>
+            </View>
           ))}
-        </Animated.View>
+        </View>
       </ScrollView>
     </View>
   );

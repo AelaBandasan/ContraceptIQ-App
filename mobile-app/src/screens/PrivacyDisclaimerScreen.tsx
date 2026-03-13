@@ -11,7 +11,6 @@ import type { DrawerScreenProps } from "@react-navigation/drawer";
 import type { DrawerParamList } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 import { Sparkles } from "lucide-react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors } from "../theme";
 
 export type PrivacyDisclaimerScreenProps = DrawerScreenProps<
@@ -93,7 +92,7 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(80).duration(420).withInitialValues({ opacity: 1 })} style={styles.brandCard}>
+        <View style={styles.brandCard}>
           <View style={styles.brandMark}>
             <Ionicons name="shield-outline" size={22} color={colors.primary} />
           </View>
@@ -101,14 +100,13 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
           <Text style={styles.brandSubtitle}>
             Transparent privacy practices and clear medical guidance limits.
           </Text>
-        </Animated.View>
+        </View>
 
         {BLOCKS.map((block, index) => {
           const isMedical = block.tone === "medical";
           return (
-            <Animated.View
+            <View
               key={block.id}
-              entering={FadeInDown.delay(130 + index * 55).duration(360).withInitialValues({ opacity: 1 })}
               style={[
                 styles.infoCard,
                 isMedical ? styles.infoCardMedical : styles.infoCardPrivacy,
@@ -124,16 +122,16 @@ const PrivacyDisclaimerScreen: React.FC<PrivacyDisclaimerScreenProps> = ({
               </View>
               <Text style={styles.cardTitle}>{block.title}</Text>
               <Text style={styles.cardContent}>{block.content}</Text>
-            </Animated.View>
+            </View>
           );
         })}
 
-        <Animated.View entering={FadeInDown.delay(460).duration(420).withInitialValues({ opacity: 1 })} style={styles.bannerCard}>
+        <View style={styles.bannerCard}>
           <Sparkles size={18} color="#166534" />
           <Text style={styles.bannerText}>
             If you are making medical decisions, please consult a qualified healthcare professional.
           </Text>
-        </Animated.View>
+        </View>
 
         <View style={{ height: 34 }} />
       </ScrollView>
