@@ -1,0 +1,2258 @@
+CONTRACEPTIQ: An Android App-Based Decision Support System for Predicting
+Contraceptive Discontinuation Risk using Decision Tree and eXtreme Gradient
+Boosting
+Michaela Joy Bandasan, Shan Cai Castañas, and John Carlos Nanoy
+Computer Science Department, Technological Institute of the Philippines Quezon City
+CS 307: Thesis 1
+Ms. Janice Capule
+October 2025
+TABLE OF CONTENTS
+INTRODUCTION........................................................................................................................... 1
+Background of the Study......................................................................................................... 2
+Project Objectives....................................................................................................................6
+Significance of the Study......................................................................................................... 6
+Scope and Delimitations.......................................................................................................... 8
+Scope.................................................................................................................................8
+Delimitations.....................................................................................................................11
+THEORETICAL FRAMEWORK..................................................................................................13
+Review of Related Literature................................................................................................. 13
+Contraceptive Use and Discontinuation...........................................................................13
+Factors Influencing Contraceptive Discontinuation..........................................................14
+Decision-Support and Counseling Frameworks in Family Planning................................ 16
+Contraceptive Decision Aids and Digital Tools.................................................................17
+Binary Outcome in Healthcare.........................................................................................18
+Machine Learning and Algorithmic Approaches in Predictive Healthcare....................... 19
+Hybrid Modelling Approaches for Risk Prediction............................................................22
+Design Concept..................................................................................................................... 24
+System Architecture...............................................................................................................27
+Definition of Terms................................................................................................................. 36
+RESEARCH METHODOLOGY...................................................................................................39
+Project Materials.................................................................................................................... 39
+Software.................................................................................................................................39
+Hardware............................................................................................................................... 41
+Dataset.................................................................................................................................. 42
+Project Design....................................................................................................................... 44
+Project Development............................................................................................................. 45
+Multiple Constraints and Tradeoff Analysis............................................................................48
+Accuracy.......................................................................................................................... 49
+Recall...............................................................................................................................49
+F1-Score.......................................................................................................................... 50
+AUC-ROC........................................................................................................................ 50
+Design Trade-offs.................................................................................................................. 51
+Trade-Off Analysis................................................................................................................. 53
+Sensitivity Analysis................................................................................................................ 56
+Algorithm Implementation...................................................................................................... 61
+Testing and Operating Procedure.......................................................................................... 66
+Model Validation Strategy................................................................................................ 67
+Comprehensive Testing Methodology..............................................................................68
+Project Evaluation..................................................................................................................69
+Scale Interpretation..........................................................................................................70
+Survey Questionnaire for Information Technology Respondents...........................................71
+Survey Questionnaire for Non–Information Technology Respondents.................................. 73
+Work Plan.............................................................................................................................. 74
+Potential for Commercialization............................................................................................. 76
+Market Model................................................................................................................... 76
+Measurable Benefits........................................................................................................ 77
+Go-to-Market Strategy..................................................................................................... 78
+Business Model................................................................................................................79
+References................................................................................................................................. 81
+List of Tables
+Table 1 Hardware Requirements................................................................................................. 42
+Table 2 Tradeoff Analysis for LR, SVM, and Decision Tree.........................................................54
+Table 3 Tradeoff Analysis for Random Forest and XGBoost....................................................... 55
+Table 4 Tradeoff Analysis of Hybrid Model.................................................................................. 55
+Table 5 Sensitivity Analysis Trial 1...............................................................................................57
+Table 6 Sensitivity Analysis Trial 2...............................................................................................58
+Table 7 Sensitivity Analysis Trial 3...............................................................................................59
+Table 8 Sensitivity Analysis Trial 4...............................................................................................60
+Table 9 Sensitivity Analysis Trial 5...............................................................................................61
+Table 10 Likert Scale Interpretation............................................................................................. 71
+Table 11 Three-year Product Roadmap.......................................................................................78
+List of Figures
+Figure 1 Design Concept.............................................................................................................25
+Figure 2 Conceptual Framework................................................................................................. 27
+Figure 3 System Architecture...................................................................................................... 29
+Figure 4 Initial System Flowchart.................................................................................................30
+Figure 5 Data Sync Flowchart..................................................................................................... 31
+Figure 6 User Screen Flowchart..................................................................................................32
+Figure 7 Expert Screen Flowchart............................................................................................... 33
+Figure 8 Hybrid Model Flowchart.................................................................................................34
+Figure 9 Expert Login and Verification Flowcharts...................................................................... 35
+Figure 10 Agile Software Development Life Cycle...................................................................... 46
+Figure 11 0.5 AUC-ROC that shows randomness.......................................................................51
+Figure 12 Decision Tree Framework........................................................................................... 63
+Figure 13 XGBoost Framework................................................................................................... 64
+Figure 14 Work Plan....................................................................................................................76
+Figure 15 TAMSAMSOM Mode................................................................................................... 77
+Figure 16 Go-To-Market (GTM) Strategy.....................................................................................79
+Figure 17 Business Model Canvas..............................................................................................80
+1
+CHAPTER 1
+INTRODUCTION
+The World Health Organization (WHO), in collaboration with the United Nations’ Special
+Programme in Human Reproduction (HRP) and The Pleasure Projects highlights a crucial yet
+often overlooked factor in contraceptive use—its impact on sexual well-being. Analyzing the 64
+studies and over 125,000 participants, found that 1 in 20 individuals who discontinue
+contraception while still needing it do so because they perceive negative effects on their sex
+lives. It also underscores that sexual satisfaction plays a significant role in contraceptive
+continuation and overall reproductive health. When people have access to contraceptive
+methods that align with both their physical and sexual needs, it not only promotes consistent
+use but also helps reduce unintended pregnancies, maternal mortality, and sexually transmitted
+infections (World, 2025).
+The Center for Communication Programs in the Philippines is working to understand why
+some women stop using contraceptives and how to get them back on track. Findings from the
+Demographic and Health Survey found that women who have used contraception in the past
+make up about 38% of the total unmet need for contraception across 34 countries. Many of
+these women who discontinued contraception were because of misconceptions, misinformation
+or uncomfortable side effects associated with certain contraceptive methods. Although some
+may wish to use contraception again, they often face barriers such as a lack of accurate
+information, limited access to healthcare guidance, or uncertainty about which method would
+better suit their needs (Desmon, 2025)
+Informed contraceptive choice, or the ability to freely access and choose from methods
+of contraception is recognized as a necessary component of reproductive autonomy, understood
+as people being able to control and decide their own on when and how to have a child. Users’
+preferences for these attributes are the important thing to the process of making informed
+contraceptive choices.
+2
+Background of the Study
+Family planning continues to be an important role in promoting reproductive health and
+empowering Filipino women to make informed choices about their fertility and well-being. Over
+the years, national programs in the Philippines have evolved from simply providing
+contraceptive supplies to implementing more holistic approaches that emphasize client-centered
+counseling and consideration of women’s medical eligibility and preferences. Despite these
+advancements, significant challenges remain. The 2022 National Demographic and Health
+Survey (NDHS) reported that 65% of currently married women use some form of contraception,
+where 50% are modern methods and 15% are traditional methods. However, nearly one in three
+women aged 15-49 discontinue contraceptive use within 12 months, most commonly due to side
+effects, health concerns, or method dissatisfaction. (Philippine Statistics Authority [PSA] & ICF,
+2022). These discontinuation rates contribute to unmet contraceptive needs, unintended
+pregnancies, and, in some cases, unsafe abortions that lead to health consequences.
+There are several family planning methods available to Filipino women, ranging from
+traditional approaches such as withdrawal, periodic abstinence, and the Standard Days Method,
+as well as modern methods like pills, injectables, intrauterine devices (IUDs), implants, and
+sterilization. Modern contraceptives are globally recognized as the most effective, with
+typical-use failure rates below 9%, compared to over 20% among traditional methods (Bertrand
+et al., 2021). However, many Filipino women continue to rely on traditional methods due to
+limited access to healthcare facilities and strong cultural or religious influences (Laksono et al.,
+2022; Flores et al., 2025). This continued dependence on less effective methods, together with
+high discontinuation rates, hinders the progress of the Philippines toward achieving universal
+access to reproductive health services and sustainable family planning.
+The 2022 National Demographic and Health Survey (NDHS) conducted by the Philippine
+Statistics Authority (PSA) and ICF International (2023) revealed that the top contraceptive
+3
+methods used by Filipino women are pills, injectables, female sterilization, and male condoms.
+The pill remains the most widely used method, chosen by 20% of married women and 7% of
+unmarried women, with most obtaining it from private medical sectors. Injectables (9%) and
+female sterilization (9%) follow as the next most common methods, primarily accessed through
+the public sector. On the other hand, male condoms are the leading modern method among
+sexually active unmarried women (12%), providing protection against both pregnancy and
+sexually transmitted infections. Despite the availability of these modern contraceptives, around
+17–18% of women continue to rely on traditional methods such as withdrawal and rhythm.
+These findings emphasize that while modern contraceptive use dominates family planning
+practices in the Philippines, there remains a crucial need to further strengthen access,
+awareness, and education on effective and safe family planning methods (Philippine Statistics
+Authority (PSA) & ICF, 2023).
+From the healthcare provider’s perspective, family planning counseling often faces
+challenges such as time constraints, limited access to digital tools, and difficulty in continuously
+monitoring patients after initiation (Dominguez et al., 2023).Providers are required to balance
+medical eligibility, personal preferences, and side-effect considerations while promoting
+informed choice which is a task that is complex. Moreover, many healthcare facilities,
+particularly in rural and geographically isolated areas of the Philippines, experience unstable or
+limited internet connectivity, hindering the consistent use of web-based health systems
+(Department of Information and Communications Technology [DICT], 2023). Studies have
+shown that offline-capable mobile health applications can help overcome connectivity barriers
+by allowing providers to access decision support tools even without internet access (Afolabi et
+al., 2021; Omondi et al., 2022). On the other hand, patients frequently struggle with
+misconceptions, fear of side effects, and weak follow-up systems, which contribute to premature
+4
+contraceptive discontinuation (Ontiri et al., 2021). Therefore, a mobile application that operates
+offline offers a practical and sustainable solution for both healthcare providers and patients,
+enabling risk assessment even in limited connectivity places.
+The World Health Organization’s Medical Eligibility Criteria for Contraceptive Use (MEC)
+serves as an important framework that provides evidence-based recommendations to ensure
+the medical safety of contraceptive selection. It assists healthcare providers in identifying which
+contraceptive methods are appropriate for women based on their individual health conditions
+and risk factors. The MEC has been widely adopted in many countries, including the
+Philippines, to standardize family planning counseling and reduce the risk of adverse outcomes
+(WHO, 2022). However, while the MEC effectively ensures medical safety, it does not assess
+factors influencing method continuation. This shows the need for complementary tools that
+integrate predictive analytics to assess discontinuation risk.
+Decision Tree models are widely used in healthcare applications for their ability to
+generate clear, rule-based classifications making them suitable when classifying binary
+outcomes such as “discontinue” vs. “continue” contraceptive use. For example, Zeng & Cheng
+(2021) highlights how decision trees offer flexibility and strong interpretability when classifying
+medical data, noting that internal nodes represent decision rules based on features (e.g., side
+effect occurrence, patient age, partner influence) and leaf nodes map directly to the target class.
+In a study of hematologic disorders, tree-based classification achieved higher accuracy and
+provided easily understandable decision rules compared to conventional indices (Rahim et al.,
+2021).
+These models allow healthcare professionals to trace exactly how input factors lead to a
+given output, which is critical for clinical environments that emphasize transparency and trust.
+However, decision trees also face known drawbacks, especially the risk of overfitting to training
+data when the tree grows too deep or when numerous features with many levels are used. This
+5
+can lower the performance on diverse datasets if not appropriately constrained by simplifying
+the model, limiting depth, or feature selection. Thus, while decision trees can serve as a strong
+foundation for binary classification in the proposed system, it is important to carefully balance
+their interpretability with model design practices to ensure consistent, reliable prediction in real
+world settings.
+On the other hand, eXtreme Gradient Boosting, an ensemble algorithm, has
+demonstrated superior performance in structured health datasets by combining many weak
+learners, applying regularization, and managing missing data more effectively. Yehuala (2024)
+applied the XGBoost algorithm to reproductive health data and reported higher discrimination
+and robustness compared to other models such as Random Forest, Support Vector Machine,
+and Decision Tree. However, XGBoost’s complexity and many tuning requirements make its
+logic harder to explain to non-technical users such as clinicians.
+Given these complementary strengths and weaknesses, this study proposes a hybrid
+approach that merges the interpretability of Decision Trees with the predictive strength of
+XGBoost. Through this hybrid integration, the system aims to provide an app-based decision
+support tool capable of predicting contraceptive discontinuation risk while remaining
+interpretable enough for healthcare providers to trust and act upon its recommendations. This
+model, incorporated within the system, seeks to complement the World Health Organization’s
+Medical Eligibility Criteria (MEC) by first ensuring medical suitability and then identifying users at
+higher risk of discontinuation. This not only complements the MEC tool by enhancing its
+predictive capability but also provides both healthcare providers and patients with an accessible,
+evidence-based platform for informed contraceptive decision-making.
+6
+Project Objectives
+The general objective of this study is to develop a mobile-based contraceptive decision
+support system that utilizes machine learning algorithms to predict the risk of contraceptive
+discontinuation and provide data-driven recommendations that reduce discontinuation and
+support contraceptive use.
+The specific objectives of this study are as follows:
+1. To utilize Decision Tree and eXtreme Gradient Boosting algorithms for accurately
+predicting contraceptive discontinuation risk through binary classification of users as Low
+Risk or High Risk for discontinuation.
+2. To implement a data processing and model integration pipeline that analyzes users’
+demographic, health, lifestyle, and contraceptive-related data to identify significant
+predictors of contraceptive discontinuation and generate risk estimates in alignment with
+Medical Eligibility Criteria (MEC) guidelines.
+3. To develop a mobile-based decision support system featuring a dual-module interface
+consisting of a user module that enable self-assessment and contraceptive
+recommendations, and an OB-GYN module that enables healthcare professionals to
+review assessment results, interpret risk of discontinuation, and provide professional
+guidance with detailed contraceptive information to support informed choices.
+4. To evaluate the quality of the mobile application using ISO/IEC 25010 standard metrics
+such as functional suitability, performance efficiency, interaction capability,
+maintainability, and compatibility.
+Significance of the Study
+Contraceptive discontinuation remains a major challenge to achieving sustained family
+planning outcomes in the Philippines, often resulting in unintended pregnancies and hindering
+7
+reproductive health goals. This study is significant as it introduces a machine learning–based
+predictive model to estimate the likelihood of contraceptive discontinuation, integrated into a
+decision-support system that aligns with the World Health Organization’s (WHO) Medical
+Eligibility Criteria (MEC) for contraceptive method selection. While patients will only receive
+evidence-based contraceptive recommendations generated through the WHO MEC tool,
+discontinuation risk predictions will be accessible exclusively to family planning service
+providers, enabling them to deliver more targeted, data-driven counseling, implement proactive
+interventions, and support improved continuation outcomes without directly influencing patient
+decision-making.
+The study’s significance extends to several stakeholders:
+Family Planning Service Providers.The predictive system acts as a decision-support
+tool, equipping providers with patients’ risk of discontinuation. By integrating risk prediction into
+counseling, providers can deliver more personalized advice, identify clients needing additional
+support, and implement timely follow-ups. This proactive approach enhances counseling quality,
+reduces method switching, and promotes long-term contraceptive use.
+Women of Reproductive Age. While users primarily receive contraceptive
+recommendations guided by the WHO Medical Eligibility Criteria (MEC), the system indirectly
+benefits them through improved counseling quality and better-aligned contraceptive choices. By
+identifying women at higher risk of discontinuation early, healthcare providers can address
+concerns, side effects, or misconceptions before discontinuation occurs. This contributes to
+lower rates of unintended pregnancies and empowers women to make informed choices.
+Family Planning Program Policymakers. Insights from model predictions can inform
+the design of targeted interventions, resource allocation, and training programs for healthcare
+providers. The supports the national goal of reducing unmet contraceptive needs and improving
+continuity of care within family planning programs.
+8
+Healthcare Institutions and Clinics. The system can improve counseling workflows
+and ensure consistency in method eligibility assessment. For clinics in areas with limited digital
+infrastructure, the system’s mobile-based, offline functionality allows continuous use even
+without internet connectivity which helps in ensuring accessibility and usability in low resource
+settings.
+Department of Health. This study contributes to strengthening reproductive health
+outcomes in the Philippines. By integrating predictive modeling into family planning services, it
+supports the Department of Health (DOH) and related agencies in achieving Sustainable
+Development Goal (SDG) 3 ensuring universal access to sexual and reproductive healthcare
+services, including family planning and information dissemination.
+Future Researchers. By establishing a methodological framework that integrates
+machine learning based discontinuation prediction with the WHO MEC tool, the study provides a
+foundation for future exploration and refinement. Researchers can expand this work by testing
+additional algorithms, evaluating user experience, and applying the framework to larger or more
+diverse populations, contributing to the advancement of digital health innovation in reproductive
+health.
+Scope and Delimitations
+Scope
+This study focuses on the development of a contraceptive decision support system that
+combines two distinct algorithms: Decision Tree and eXtreme Gradient Boosting into one
+hybrid model that is able to predict the binary outcome of discontinuation: true or false, and its
+probability. The main objective is to assist individuals in making informed choices regarding
+contraceptive methods based on their personal health profiles, preferences, and accessibility to
+products. The study will use the Medical Eligibility Criteria (MEC) Wheel to identify and filter
+9
+contraceptive methods that are medically safe and aligned with the patient’s preferences and
+health conditions. Furthermore, the system will provide a consistent reminder for users to
+consult licensed healthcare professionals before making any contraceptive decisions based on
+the recommendations generated by the MEC tool within the application. Additionally, Quezon
+City has been selected as the initial implementation site for the proposed application, utilizing its
+status as the most populous city in the Philippines and its recorded count of 277,872 family
+planning users.
+Security will be implemented through authentication and the implementation of
+role-based access control. The mobile application will have three defined roles: user, expert,
+and administrator. Patients, or users, will be able to access only the basic functionalities of the
+system without the need to log in. This includes access to the MEC tool, where age and
+preferences serve as required inputs for determining the appropriateness of a contraceptive
+method. The login functionality will be exclusive to expert and administrator roles. Expert
+accounts are intended for licensed medical professionals authorized to provide family planning.
+Authentication is specifically designed to verify these professionals and enable them to perform
+secure storing of records. Authentication will be manually verified through the Professional
+Regulation Commission (PRC) using the license verification method, which requires the
+professional’s name, license number, and birthdate. These details will be among the required
+information during registration in the system as a medical professional.This also ensures that
+clients cannot self-diagnose or access professional tools without proper credentials.
+Administrator accounts are assigned to the system developers, who are responsible for
+performing updates, maintenance, and managing the technical aspects of the application. They
+will have access to advanced system features, including database management and system
+configuration.
+Hybrid prediction modeling will utilize two algorithms: the CART Decision Tree and
+eXtreme Gradient Boosting. The algorithms are evaluated using classification metrics: accuracy,
+10
+recall, AUC-ROC, and F1-score. The hybrid model built from both of these algorithms used
+ensemble techniques, specifically sklearn’s VotingClassifier, to determine the appropriate
+output. It will employ hard voting when soft voting is not supported. The model is evaluated via
+10-fold stratified cross-validation, calculating mean and standard deviation for accuracy, recall,
+F1-score, and AUC-ROC, with recall prioritized to assess optimal performance. For clinical
+implementation, a fixed 0.50 probability threshold, as recommended by the OBGYN
+Reproductive Endocrinologist and Infertility (REI) specialist, is used to classify users as “High
+Risk” or “Low Risk.” The system provides two primary outputs. The first is the predictive
+outcome, which provides a categorical risk classification together with its probability score. The
+second is an interpretability report, generated using SHAP, which quantifies how individual
+features such as socioeconomic status, age, method type, education level, and usage intention
+contribute to increasing or decreasing a user's predicted risk. This SHAP-based analysis
+provides a transparent decision making by detailing the factors influencing each classification.
+MEC tool is a criteria developed by WHO to standardize the assessment of
+contraceptive methods. The results of the criteria are directly dependent on the conditions and
+preferences of the user. Specifically, the contraceptive methods that will be included are:
+combined hormonal contraception (CHC) such as the contraceptive patch, progestogen-only
+pills (POP) like Norethindrone, progestogen-only injectables (DMPA) such as Depot
+Medroxyprogesterone Acetate, progesterone-only implants (LNG/ETG) such as Etonogestrel
+implant, levonorgestrel IUD (LNG-IUD) like Mirena or Kyleena, and the Paragard for copper
+intrauterine device (Cu-IUD). The MEC tool’s assessments will be entirely based on the
+standardized conditions and classifications provided in the WHO framework.
+The mobile application will be developed with React Native 0.81.4 along with
+Typescript 5.9.2 for type safety. Compatibility will be limited to the Android platform. The
+client-side part of the application will aid informed choice for contraceptive methods. Upon
+11
+information input from the user, the application will fetch the stored JSON containing the
+matched usability based on conditions and preferences. If for example the user inputted two
+different conditions, the lower rating will be displayed. The system is an offline-first architecture
+meaning that the models are stored locally. When connected to the internet the system will
+check for any unsynced data and will sync as needed. This ensures that the application will be
+available even in places with little to no internet connection. The evaluation for the system will
+be based on ISO/IEC 25010 specifically the criterias functional suitability, performance
+efficiency, interaction capability, maintainability, and compatibility. Lastly, the application will be
+deployed at Google Playstore. It will be called ContraceptIQ similar to the title of this study and
+will undergo a closed test with at least 20 voluntary testers who will try the application within 14
+days. Additionally, it must align with the policies of Google Playstore and must be stable,
+engaging, and responsive.
+Delimitations
+The system will not require basic users to create accounts or log in to access the
+application. The login functionality will be limited to expert and administrator roles only. Basic
+users will not handle sensitive or identifiable data, therefore, user level access will not involve
+local data storage or encryption requirements.
+The hybrid prediction model will not employ additional machine learning algorithms
+beyond Decision Tree and eXtreme Gradient Boosting. Other ensemble techniques such as
+Random Forest, AdaBoost, or Bagging, as well as deep learning models like neural networks or
+convolutional architectures, will not be included in the implementation. Parameter optimization
+will be constrained to model tuning within the chosen algorithms.
+The system will not accommodate traditional contraceptive methods, nor will it include
+conditions, criteria, or modern methods that are not officially recognized by the World Health
+Organization (WHO) Medical Eligibility Criteria (MEC) guidelines. Any emerging or specific to
+12
+region contraceptive options, off-label uses, or unlisted medical conditions will not be analyzed,
+processed, or predicted by the system.
+The mobile application will not function as a replacement for professional consultation.
+The generated outputs will not serve as medical prescriptions or definitive medical advice, but
+as supplementary decision-support information for professionals. The study does not involve
+real-time clinical testing or patient trials, and therefore will not assess medical outcomes, side
+effects, or behavioral responses of users following the system’s suggestions.
+The mobile application will not be developed for iOS or other operating systems and no
+web or desktop versions will be deployed. Furthermore, the application will not support
+continuous real-time server communication, instead, it will operate primarily offline, with
+synchronization limited to available internet connectivity. Integration with external APIs, hospital
+management systems, or electronic health record (EHR) systems will not be implemented.
+The study will not include the development of a backend server for real-time analytics or
+cloud-based computation. Data storage will be stored to local or device-level environments
+during testing.
+13
+CHAPTER 2
+THEORETICAL FRAMEWORK
+This chapter presents the theoretical foundation and related literature that support the
+development of the system. It explores the existing research, models, and technologies relevant
+to contraceptive use, discontinuation, and decision support systems. The framework integrates
+theories from reproductive health, decision science, and machine learning to establish the
+conceptual basis of the study. This also emphasizes the importance of assessing the risk of
+contraceptive discontinuation through predictive modeling while providing rule-based and
+evidence-based recommendations guided by the World Health Organization’s Medical Eligibility
+Criteria (MEC) for Contraceptive use. Additionally, the chapter presents the system’s conceptual
+framework illustrating how predictive algorithms and clinical guidelines work together to support
+informed and sustainable contraceptive decision-making.
+Review of Related Literature
+Contraceptive Use and Discontinuation
+Contraceptive use in the Philippines has increased by 58% from 1993 to 2022, yet
+discontinuation remains a challenge for family planning providers. The 2022 National
+Demographic and Health Survey found that one in three Filipino women aged 15-49
+discontinued a contraceptive method within 12 months of initiation.
+High rates of contraceptive discontinuation hinder progress in family planning programs,
+as pregnancies following method-related discontinuation are frequently reported as unintended,
+contributing significantly to unmet contraceptive needs (Gemmill et al., 2023).
+Recent evidence shows that portions of contraceptive discontinuations occur within the
+initial three months of use, with bleeding disturbances accounting for 48.2% of these cases.
+Such menstrual changes often subside within three to five months, suggesting the importance of
+comprehensive counseling on potential side effects and their expected duration to mitigate
+premature discontinuation (Compton et al., 2023).
+14
+The leading reasons for discontinuation of modern methods were side effects or health
+concerns, reported by almost half of IUD users (48%), injectable users (47%), implant users
+(42%), and pill users (31%).By contrast, discontinuation of traditional methods such as the
+rhythm method (33%) and withdrawal (34%) was mostly due to unintended pregnancies
+(Philippine Statistics Authority [PSA] & ICF, 2022).
+Studies on long-acting reversible contraceptives (LARCs) show similar trends, with
+69.8% of 1,050 women discontinuing use before the recommended duration and 30.2%
+switching to other modern methods, primarily short-acting contraceptives (38.8%). The main
+reasons for discontinuation and switching were method-specific side effects and the desire to
+become pregnant, and women with only one child were 1.61 times more likely to discontinue
+than those with five or more children, highlighting the influence of parity on continuation (Bereku
+et al., 2022).
+These findings emphasize that side effects, health concerns, and limited counseling on
+expected physical changes are major factors of discontinuation, particularly within the first few
+months of use. These findings call for interventions that extend beyond ensuring medical
+eligibility, emphasizing the importance of discontinuation risk assessment to support sustained
+contraception. Integrating predictive tools into family planning programs could help healthcare
+providers to personalize counseling and ultimately improve contraceptive continuation rates.
+Factors Influencing Contraceptive Discontinuation
+A secondary analysis of Demographic and Health Survey (DHS) data from nine
+high-fertility rate countries was examined by Coulibaly et al. (2025) to determine the factors
+associated with contraceptive discontinuation among lactating women with children under 24
+months of age. Analyzing data from 5,599 lactating women collected between 2018-2021 were
+employed to identify individual and community-level factors associated with contraceptive
+discontinuation. Side effects with 29.1% emerged as the primary reason for discontinuation,
+followed by 24.7% due to lack of partner or rare sexual activity, 7.9% desire for more effective
+15
+methods, and 7.5% for wanting to become pregnant. The multivariate analysis revealed that the
+shorting method was the strongest predictor showing significantly higher discontinuation rates
+than long-term contraceptives.
+Lama et al. (2024) conducted a study examining the factors associated with hormonal
+contraceptive discontinuation among women of childbearing age attending the La Libertad
+Health Center in Lima, Peru. The study found that educational level, distance to health centers,
+experiencing adverse events, and inadequate provider counseling were all significantly
+associated with discontinuation. Women who experienced adverse events with hormonal
+contraceptives showed a prevalence ratio of 26.38 for discontinuation using bivariate analysis.
+More importantly, when all variables were introduced to the multivariate analysis regression
+model, adverse events remained the only independent factor with an adjusted prevalence ratio
+of 3.33. This finding underscores that despite the influence of educational, geographic, and
+healthcare system factors, the experience of side effects represents the major reason for
+hormonal contraceptive discontinuation.
+Marista et al. (2022) review that multiple factors associated with contraceptive
+discontinuation were marital status, education, counseling quality, age, parity, occupation,
+contraceptive satisfaction, partner support, desire for pregnancy, and side effects. The study
+shows that health problems and side effects were the most common reason for Long-Acting
+Reversible Contraceptive (LARC) discontinuation. The findings highlight the critical need for
+healthcare workers to provide comprehensive counseling about common side effects and
+effective management strategy to reduce discontinuation rates and prevent unintended
+pregnancies.
+The mentioned studies collectively highlight that contraceptive discontinuation is a
+multifactorial issue influenced by individual, social, and healthcare related factors. These
+underscore the importance of improving patient education and addressing unfavorable
+experiences proactively. For the current study, understanding these factors supports the
+16
+integration of predictive analytics into a contraceptive discontinuation prediction allowing
+healthcare providers to identify high-risk users early, tailor counseling to individual needs, and
+promote better continuation outcomes in reproductive health programs.
+Decision-Support and Counseling Frameworks in Family Planning
+Decision support tools have emerged as a promising strategy to facilitate shared
+decision-making in contraceptive counseling. Such tools help women clarify their preferences,
+compare methods, and communicate effectively with OB professionals ultimately supporting
+method continuation and reproductive goal achievement. The World Health Organization
+developed Medical Eligibility Criteria (MEC) for Contraceptive Use, an evidence-based guidance
+used as a decision support tool for OB professionals and users which assess the eligibility,
+discuss methods, and make informed choices to determine which contraceptive methods are
+suitable for users given her specific medical and personal conditions.
+Decision support interventions such as patient decision aids and general patient
+education materials improved individuals’ knowledge of contraceptive methods, strengthened
+their confidence in the option they selected, and reduced decisional conflict. These tools support
+informed and value-consistent choices, thereby improving the overall quality of the
+contraceptive decision-making process (De Bortoli et al., 2024).
+In the study of Meekers et al. (2024) Six tools have been developed to support family
+planning counselling functioning as a decision support tool. Although existing tools are effective
+in supporting information exchange and decision-making, they have different limitations. These
+include insufficient guidance in dealing uncertainties, lack of provider-patient relationship, and
+enabling self-management. While these tools show promise in aligning contraceptive
+counselling with clients’ goals and preferences, more rigorous and context-sensitive research is
+needed to establish their impact on contraceptive uptake, satisfaction, and continuation.
+The reviewed literature emphasizes that decision-support frameworks play a crucial role
+in improving the quality and personalization of contraceptive counseling. However, despite their
+17
+effectiveness, existing decision aids often lack additional features that consider contraceptive
+continuation . This underscores the need for systems that not only align with MEC guidance but
+also predict discontinuation risks, thereby empowering healthcare providers to offer proactive,
+tailored counseling and improve contraceptive continuation outcomes.
+Contraceptive Decision Aids and Digital Tools
+Choosing the right contraceptive method can be difficult, especially because there are
+many options, each with different ingredients, ways of use, and goals. Some are short-term like
+pills or condoms, while others are long-acting like IUDs or injectables. Many people struggle to
+pick the best one for their body and lifestyle. That’s why decision aids are helpful tools. They
+give users clear, personalized information to help them make smarter and more confident
+choices.
+Today, many of these aids are made using digital technology like apps or websites.
+These tools are more interactive and easier to use than printed brochures or standard
+counseling alone. For example, a 2022 study by Goueth et al. reviewed many technology-based
+decision aids and found that users of these tools were more likely to continue using their chosen
+contraceptive method. This means tech-based aids help people stick with what works best for
+them.
+Another tool called “My Contraceptive Choice” was tested on young women. It asked
+questions about the user’s health, lifestyle, and concerns, and then suggested methods that fit
+best. After using the tool, 88% of users said they learned more about birth control, and 91% said
+it was easy to use. It was also very accurate matching the right method with user preferences in
+about 72% of cases (Redman et al., 2022).
+The reviewed study shows that choosing the right contraceptive can be challenging due
+to the variety of options available and individual needs. Decision tools like apps and websites
+provide clear, personalized guidance that helps users make informed choices. Studies indicate
+that technology-based aids improve method continuation rates (Goueth et al., 2022) and
+18
+enhance user knowledge and satisfaction. Tools such as My Contraceptive Choice
+demonstrated high usability and effectively matched methods to user preferences (Redman et
+al., 2022).
+Binary Outcome in Healthcare
+Adem et al. (2025) utilized explainable machine learning algorithms to model women’s
+intention to use family planning in Ethiopia, classifying whether respondents intended to use
+contraceptive methods or not. The study compared algorithms such as Logistic Regression,
+Random Forest, AdaBoost, XGBoost, and SVM, reporting that Random Forest achieved the
+highest predictive accuracy of 77% with an AUC of 0.65. Their findings show that interpretable
+machine learning models can effectively handle binary health outcomes while providing
+transparency through feature importance and decision explanations.
+Badawy et al. (2023) discussed the application of machine learning and deep learning
+techniques in healthcare predictive analytics, emphasizing that many clinical problems are
+formulated as binary classification tasks such as the presence or absence of a disease,
+treatment success or failure, or patient adherence versus discontinuation. Their study
+highlighted the effectiveness of algorithms such as Logistic Regression, Decision Tree, Random
+Forest, and Support Vector Machine (SVM) in modeling binary health outcomes due to their
+capacity to uncover complex and nonlinear patterns in clinical data. These models have
+improved early diagnosis, personalized treatment, and risk assessment which are key aspects
+of preventive and precision medicine. However, Badawy et al. also emphasized persistent
+challenges in data imbalance, quality, and interpretability, stressing the importance of adopting
+explainable AI models to build clinician trust and ensure transparency in healthcare predictions.
+Agbana et al. (2022) focused specifically on contraceptive discontinuation among
+Nigerian women of reproductive age using data from the 2018 Nigeria Demographic and Health
+Survey (NDHS). The researchers applied binary logistic regression to identify key predictors of
+discontinuation and found that over 60% of respondents discontinued family planning methods
+19
+for reasons unrelated to pregnancy. The main factors influencing discontinuation included side
+effects (15.2%), method failure (12.9%), education level, religion, number of children,
+employment status, and regional differences. This study demonstrates the practical use of
+binary modeling to reveal critical determinants of contraceptive behavior and discontinuation
+risks.
+These studies establish that binary outcome modeling is a powerful approach in
+healthcare predictive analytics, particularly for reproductive health applications such as
+contraceptive use and discontinuation. The works of Adam et al. (2025) and Badawy et al.
+(2023) demonstrate how machine learning algorithms can enhance prediction accuracy and
+support decision-making, while Agbana et al. (2022) provides empirical evidence of the key
+socio-demographic and behavioral predictors associated with contraceptive discontinuation.
+Despite their effectiveness, the recurring issues of data imbalance and model interpretability
+underscore the necessity of hybrid and explainable approaches, such as combining
+interpretable models like Decision Trees with performance-oriented models like XGBoost, to
+achieve both accuracy and transparency in predictive reproductive health systems.
+Machine Learning and Algorithmic Approaches in Predictive Healthcare
+Machine learning has emerged as a powerful approach to enhance contraceptive
+counseling and predict user outcomes. Population-based surveys, such as the Demographic
+and Health Surveys (DHS), traditionally rely on multinomial logistic regression to examine how
+demographic and socioeconomic factors like age, parity, education, and wealth shape
+contraceptive choices.
+Recent advancements in predictive analytics have demonstrated the potential of
+machine learning algorithms in improving health-related decision support. A study applied seven
+classification algorithms which are AdaBoost, XGB Classifier, Random Forest (RF), Naive
+Bayes, Light Gradient Boosting Machine (LGBM), Extreme Gradient Boosting (XGBoost), and
+Decision Tree to predict informed contraceptive choice among women in Sub-Saharan African
+20
+countries. Ensemble methods like boosting and bagging helped avoid overfitting, reflecting
+hybrid modeling principles that integrate multiple algorithms for robust predictions. Among
+these, the LGBM achieved the highest predictive accuracy of 73%, with an AUC of 0.80,
+precision of 71, and recall of 77, effectively identifying influential factors for informed
+contraceptive choice (Melaku et al., 2025).
+The application of explainable artificial intelligence in healthcare continues to expand. An
+explainable Decision Tree model was implemented to predict breast cancer malignancy,
+outperforming other models such as Discriminant Analysis, Logistic Regression, Support Vector
+Machines (SVM), Naive Bayes, K-Nearest Neighbors (KNN), Ensemble Learning, and Artificial
+Neural Networks (ANN), with an accuracy of 91.7%. The study further enhanced interpretability
+by integrating SHAP (SHapley Additive exPlanations) to visualize feature importance (Akben &
+Yumrutaş, 2025). Similarly, Wiens et al. (2025) discussed the broad applicability of machine
+learning algorithms, particularly XGBoost, in predicting clinical outcomes such as patient risk
+and treatment response. Logistic regression remains widely used for its interpretability, though it
+often struggles to capture complex nonlinear relationships within datasets (Prachi et al., 2025).
+Recent analyses of large-scale datasets have compared predictive performance across
+algorithms in contraceptive behavior research. Using DHS data from nine high-fertility countries,
+researchers identified key determinants of contraceptive discontinuation among lactating
+women. Side effects, lack of partner involvement, and preference for more effective methods
+emerged as major predictors, with short-term methods showing significantly higher
+discontinuation rates than long-term ones (Coulibaly et al., 2025).
+Modhugua and Ponnusamy (2024) demonstrated that among SVM, Logistic
+Regression, and Decision Tree models for liver disease prediction, the SVM achieved the
+highest recall, precision, and F1-score (0.85), indicating its robustness for clinical classification
+tasks.
+21
+The increasing role of decision tree-based models in medical prediction has also been
+noted. Comparative studies have demonstrated that ensemble and tree-based methods such as
+CART and C5.0 can outperform traditional regression approaches under specific conditions. A
+comparative evaluation of Decision Tree algorithms—CART, C5.0, and CHAID—against Logistic
+Regression for predicting COVID-19 mortality found that CART achieved a recall of 75%, higher
+than other models, underscoring its suitability in contexts where minimizing false negatives is
+crucial (Mohammadi-Pirouz et al., 2024).
+In a separate analysis, multiple algorithms including logistic regression, random forests,
+naïve Bayes, LASSO, classification trees, AdaBoost, and neural networks were tested to predict
+contraceptive practices. The neural network model outperformed the others, achieving 79.34%
+accuracy, an 83.44% F1-score, and an AUC of 86.90, underscoring its potential in contraceptive
+decision support (Haq et al., 2023). Another predictive modeling study on contraceptive
+discontinuation utilized eight algorithms such as Logistic Regression, Random Forest, KNN,
+Artificial Neural Network, Support Vector Machine, Naive Bayes, Extreme Gradient Boosting,
+and AdaBoost—trained with tenfold cross-validation and SMOTE balancing. Random Forest
+produced the highest accuracy of 67.9% and an AUC of 0.74, identifying age, fertility
+preference, decision-making dynamics, employment, and husband’s education as critical
+predictors (Kebede et al., 2023).
+Methodologically, logistic regression remains an essential foundation in clinical and
+social research due to its interpretability and capacity to analyze binary outcomes. However, its
+limitations in handling complex, nonlinear relationships have driven the rise of tree-based and
+ensemble approaches. Studies have further emphasized the importance of proper model
+validation, handling of missing data, and sample size determination to ensure reliable,
+generalizable predictive systems (Battista et al., 2023; Zabor et al., 2022; Arista, 2022).
+The reviewed studies highlight that machine learning offers greater accuracy and
+predictive power than statistical models in understanding contraceptive discontinuation. While
+22
+multinomial logistic regression remains useful for analyzing demographic and socioeconomic
+influences, advanced ML models such as neural networks, random forests, and
+gradient-boosted trees better capture complex, non-linear relationships. Haq et al. (2023) and
+Kebede et al. (2023) achieved accuracies above 79% to 85%, showing ML’s potential in
+improving contraceptive decision support. Additionally, Zabor et al. (2022) emphasize proper
+model validation and data handling, which are vital for developing reliable and interpretable
+predictive systems.
+Hybrid Modelling Approaches for Risk Prediction
+Recent research highlights the effectiveness of hybrid machine learning models in
+enhancing predictive performance across various domains. A study developed a hybrid
+framework combining Logistic Regression, Random Forest, and Random Search (LR + RF +
+RS), which achieved significantly higher accuracy and robustness than the individual models
+alone. This hybrid approach was particularly effective in handling imbalanced data, obtaining an
+accuracy of 0.9574, precision of 0.9665, recall of 0.9576, and a high F1-score. The findings
+demonstrated the model’s applicability in scenarios like student grade prediction, where uneven
+data distribution is common (Rohman et al., 2025).
+Sindhuja et al. (2025) used a hybrid XGBoost and Decision Tree model for Intrusion
+Detection Systems, achieving the highest accuracy, precision, recall, and F1 scores compared
+to other ensemble approaches such as CNN+LSTM, standalone XGBoost, and LightGBM.
+Idhom et at. (2025) compared other hybrid models like LSTM, RNN, SVM, and traditional
+Decision Tree and Random Forest, their CART with XGBoost model demonstrated superior
+results across all performance metrics. Notably, recall improved from 88% to 90%, indicating
+that the hybrid approach exhibited greater sensitivity in accurately identifying actual loan
+defaults.
+In comparative analyses of multiple hybrid structures, soft voting ensembles were found
+to outperform hard voting combinations. A study that assessed SVM + LR, XGBoost + LR, and
+23
+RF + LR hybrid models demonstrated that soft voting consistently achieved better accuracy,
+precision, recall, and F1-scores across all tests. Among the top-performing configurations,
+combinations like XGB + RF, RF + LR, and RF + LGBM reached accuracies of up to 96.97%
+and recall rates of 96%, underscoring the effectiveness of probabilistic ensemble integration for
+balanced model output (Cao-Van et al., 2024).
+Dey & Das (2022) reported that the hybrid LR-XGBoost model achieved superior
+performance in slope instability assessment, obtaining an AUC of 80.5% on the training dataset,
+surpassing the standalone LR (77.9%) and XGBoost (77.5%) models. On the validation dataset,
+the hybrid also performed best with an AUC of 78.3%, compared to 76.8% for both LR and
+XGBoost.
+Overall, these studies highlight that hybrid ensemble models, particularly those utilizing
+soft voting mechanisms and combinations like XGBoost, Decision Trees, and Logistic
+Regression provide improved generalization, better handling of imbalanced data, and enhanced
+sensitivity across various predictive tasks. This makes them highly suitable for domains
+requiring both accuracy and reliability, such as healthcare, education, and agriculture.
+Existing Contraceptive Discontinuation Prediction Systems
+In the study conducted by Kebede et al. (2023), the researchers tested eight different
+machine learning algorithms: logistic regression (LR), random forest (RF), k-nearest neighbors
+(KNN), artificial neural network (ANN), support vector machine (SVM), naïve Bayes (NB),
+XGBoost, and AdaBoost. The researchers used a sample of 6,737 women to predict
+contraceptive discontinuation. Among these, the Random Forest model achieved the highest
+performance, with an accuracy of 68% and Area Under the ROC Curve of 74%. The study also
+identified key predictors of discontinuation, such as age, primary education, and the husband’s
+desire for children, through feature importance analysis.
+However, while the study by Kebede et al. (2023) successfully implemented multiple
+predictive algorithms, it did not integrate these models into clinical decision-support or
+24
+mobile-based systems for contraceptive counseling. Furthermore, the authors noted several
+limitations, including the difficulty of interpreting the strength of associations between predictors
+and outcomes. Moreover, this study relies on a single algorithm rather than employing a hybrid
+framework that balances interpretability and predictive performance. Hence, the present study
+addresses these gaps by proposing a hybrid Decision Tree and XGBoost framework embedded
+within a mobile application for discontinuation risk prediction, designed to function as a decision
+support tool alongside WHO MEC recommendations.
+Design Concept
+The proposed system is an Android-based application designed to predict the likelihood
+of contraceptive method discontinuation and assist healthcare providers and patients in making
+informed and sustainable contraceptive choices. It utilizes a hybrid prediction model that
+integrates CART Decision Tree and eXtreme Gradient Boosting models through a Soft Voting
+Ensemble, balancing interpretability and predictive performance. The system also incorporates
+the World Health Organization (WHO) Medical Eligibility Criteria (MEC) to ensure that all
+recommendations are medically appropriate and safe. The architecture is composed of
+interconnected modules that follow a cyclical process of prediction, recommendation, and
+feedback.
+Through the interface, healthcare providers input patient demographic, medical, and
+reproductive data including age, parity, health conditions, contraceptive preferences. Data
+preprocessing and feature engineering operations, such as cleaning, encoding, scaling, and
+ensure consistent data suitable for machine learning. Selected features are stored and used to
+train the DT and XGBoost models independently, with cross-validation and hyperparameter
+tuning optimizing accuracy and generalization. The predictions from both models are then
+combined through a Soft Voting Ensemble, producing a final risk score. The system presents
+predicted discontinuation risk with an explainability layer using SHAP values to highlight key
+contributing factors. Simultaneously, the WHO MEC assessment evaluates patient eligibility for
+25
+contraceptive methods, and the system integrates these assessments with model-based
+predictions to generate recommendations that prioritize both medical safety and behavioral
+sustainability. The decision support interface displays suitable contraceptive options, eligibility
+categories, and discontinuation risks, enabling providers to counsel patients effectively with
+evidence-based, personalized guidance.
+A feedback mechanism allows providers to update patient outcomes, supporting model
+retraining and continuous learning to improve predictive accuracy and system utility over time.
+Overall, this design concept establishes an interpretable clinical decision-support framework
+that integrates machine learning prediction with clinical eligibility assessment, identifies patients
+at risk of contraceptive discontinuation, and continuously evolves to enhance both predictive
+accuracy and clinical utility.
+Figure 1
+Design Concept
+26
+Conceptual Framework
+The Input-Process-Output (IPO) diagram in Figure 2.0 for the system provides a
+structured view of its workflow. In the Input stage, patients are asked to provide personal and
+health-related information through an application. The questions are designed to be simple and
+easily understandable for patients, covering aspects such as age and preferences regarding
+contraceptive methods. On the other hand, doctors are provided with a more detailed form
+where they can input additional clinical information including ongoing health conditions. The
+primary requirement for this stage is a mobile phone.
+During the Process stage, the system uses a Soft Voting Hybrid Ensemble that
+combines a Decision Tree (DT) and eXtreme Gradient Boosting (XGBoost) to perform binary
+classification on the collected data, predicting the likelihood of contraceptive discontinuation.
+Both models are trained in parallel, each generating a predicted probability that a patient
+belongs to the discontinuation class. These probabilities are then combined using soft voting,
+typically as an equal or weighted average of the two model outputs. By integrating the predictive
+accuracy of XGBoost with the interpretability and stabilizing influence of the Decision Tree, the
+ensemble produces a more generalizable probability, which is subsequently used for risk
+assessment and to generate personalized counseling recommendations.
+In the Output stage, the system produces tailored contraceptive method suggestions.
+For patients, the output consists of contraceptive options that align with their lifestyle,
+preferences, and general health. For doctors, the output is more comprehensive, integrating
+both the patient’s preferences and their medical conditions to ensure safety and effectiveness.
+This dual-level recommendation supports informed decision-making and shared discussions
+between patients and healthcare providers.
+27
+Finally, in the Evaluation stage, the system’s accuracy, usability, and safety must be
+assessed. OB-Gyne doctors play the main role in evaluating the clinical validity and reliability of
+the recommendations by comparing system outputs with their medical guidelines. Additionally,
+compliance with ISO 25010 for software quality should be incorporated to ensure the system
+meets international standards for performance, reliability, and safety. Combining professional
+medical evaluation with ISO compliance guarantees that the system is both clinically effective
+and globally standardized, ensuring reliability.
+Figure 2
+Conceptual Framework
+System Architecture
+The presentation tier of the system architecture represents the interfaces the user will
+interact with and the key tools behind it. This tier highlights the use of React Native version
+0.81.4 for the user interfaces. It was chosen due to its developmental efficiency. Mainly, it has
+hot reloading, a useful tool for development that shows changes without losing app state. It also
+28
+has native components through a bridge that increases performance, responsiveness, and a
+configured touch handling. More importantly, React Native has built-in TypeScript support,
+perfect as the same language will be utilized for preventing type-based errors.
+The logic tier shows how data is processed inside the system using the hybrid models.
+The input coming from the user/client shows that it only passes through the MEC tool. Here, the
+system checks into the local storage accessing the data regarding contraceptive method
+recommendation that is affected by preferences and demographic information like age. When
+the system finally finds the correct results for the input, it will then send it back to the user
+through the use of React Native. When the input is coming from an expert-based role, it is
+passed into the hybrid model that predicts the discontinuation of the client. It is the decision
+support tool of the system. Inside the hybrid model consists of two algorithms: Decision Tree
+and eXtreme Gradient Boosting. Both will independently try to predict the classification given the
+input. Upon completion, both predictions are sent to the Voting Classifier that uses soft voting in
+essentially summarizing the prediction in case there is a difference. The output of this classifier
+will be the actual response sent by the system to the expert’s screen. Additionally, the logic tier
+shows that data syncing occurs every time the application receives internet connectivity.
+The data tier is responsible for data management, where the data is stored and received.
+Its main function is to become the basis of the application regarding data accuracy. The
+administrators/developers will update relevant information through the database that will sync to
+the user's devices. The system will use Firebase as it easily connects with React Native, making
+it reliable for development and production. The key service that will be used is Firebase Media
+Storage that will store images for the application. This tier will ensure that the necessary data
+will be stored and retrieved to satisfy the functions of the application.
+29
+Figure 3
+System Architecture
+Figure 3 shown above features the architecture of the system divided into three different
+tiers: presentation, logic, and data. It represents the flow of data, structure of the system, and
+30
+the interactions between these components. The technologies used are displayed using their
+respective logos and the specific data are described along the lines. Mainly, the presentation tier
+shows the difference in inputs between the user side and the expert side of the application. The
+logic tier focuses on displaying the process that takes place within the hybrid model. Meanwhile,
+the data tier defines the source of the data needed for information updates.
+Figure 4
+Initial System Flowchart
+Figure 4 above depicts the flow of the system from the start to the role based access
+feature of the application. As seen, the first thing the system checks is internet connectivity.
+When internet connection is present, the application compares the data inside the local storage
+from the data inside the online database. Data syncing is accomplished when all of the
+information is up-to-date. If there is no connection it can proceed to either the user or the
+expert-only features.
+31
+Figure 5
+Data Sync Flowchart
+This part of the flowchart shows a detailed visualization of how the data sync is
+accomplished. The system will first fetch the data from both the local storage and database.
+Then each information is checked for differences. A presence of indifference means the system
+will replace the local storage information into the information from the database. This feature
+32
+ensures that the system is offline compatible allowing increased availability whilst being
+up-to-date on information.
+Figure 6
+User Screen Flowchart
+Figure 6 shows the flow of user screens. It starts when a user inputs their basic
+information such as their age and preferences regarding the type of contraceptive they prefer.
+Then the system will fetch the information of contraceptives based on the input. The response
+33
+will be based on the MEC guidelines. The output of this process is handled client-side to better
+fit the needed format before being displayed to the user’s screen.
+Figure 7
+Expert Screen Flowchart
+The expert side begins by requiring the expert to login to ensure validated professionals
+are using this part of the system. After authentication they are now possible to interact with the
+advanced features of the application which is a more sensitive MEC and the hybrid model
+essential to aid the expert in early detection of client discontinuation.
+34
+Figure 8
+Hybrid Model Flowchart
+The flowchart above shows the flow of the hybrid model mainly depicting how the input
+data is processed to acquire the final output. The chart informs that the input data, client
+35
+information, are passed to both the machine learning algorithms: Decision Tree and eXtreme
+Gradient Boosting. Then, when both the algorithms are finished predicting the outcome, the
+answers are combined using soft voting to determine the amalgamation of these answers. The
+result is the prediction that will be displayed to the screen of the expert.
+Figure 9
+Expert Login and Verification Flowcharts
+This part of the flowchart depicts the system's flow regarding logging in. Before an expert
+can log in into the system, they must first be eligible. This means that they have proven that
+36
+they have the license to provide contraceptive consultation. The right flowchart depicts the flow
+of verification. It features a manual process where the developers will verify the inputted license
+number or their name through the official Professional Regulation Commission (PRC) website.
+The left flowchart shows the login process after the verification is finished. Here, the usual
+information such as the email and passwords are requested in order to continue. Finishing this
+part of the system will let the expert proceed and access the MEC and Hybrid Prediction Model
+shown in earlier flowcharts.
+Definition of Terms
+The following are the unique terms used in this study.
+Accuracy A performance metric used in machine learning to
+measure how often a model correctly predicts instances
+(both positive and negative) out of all predictions it makes.
+It indicates the overall correctness of a predictive model.
+App-Based System A software application that is hosted on a server and
+accessed via the internet through a web browser, allowing
+users to utilize the platform without the need for local
+installation.
+Decision Support System (DSS) A computer program used to improve the decision-making
+processes by analyzing input data and providing
+evidence-based recommendations or solutions.
+Decision Tree A machine learning algorithm that uses an ensemble of
+decision trees to improve predictive accuracy and handle
+complex, non-linear relationships among variables.
+37
+Extreme Gradient Boosting
+(XGBoost)
+A statistical method that helps us determine the helps us
+estimate a probability of falling into a certain level of the
+categorical response given a set of predictors.
+F1-Score A performance metric used to measure a classification
+model's accuracy, specifically the harmonic mean of its
+precision and recall.
+Kernel A function that calculates the similarity between a given
+two data points, it is done by implicitly mapping them to a
+higher-dimensional space where they become more easily
+separable.
+Long-Acting Reversible
+Contraception (LARC)
+A contraceptive method that provides long term pregnancy
+prevention. Provides protection for 3 - 10 years or more,
+depending on the birth control brand. It comes in two
+forms, a device your provider can insert into your uterus
+and a device that can be inserted into your arm.
+Recall A performance metric used to measure the performance
+of a model in finding all the relevant positive cases
+SHAP (SHapley Additive
+exPlanations)
+A technique used to interpret the output of machine
+learning models. It assigns each feature an importance
+value representing its contribution to a specific prediction
+based on cooperative game theory principles.
+38
+Short-Acting Contraceptive
+Methods
+A contraceptive method that requires regular use of action
+(daily, weekly, or monthly). This contraceptive option falls
+into two categories: Barrier methods and Hormonal
+methods. These methods are effective if used correctly,
+they are only as reliable as you are.
+Stratified k-Fold Cross-Validation
+(10-fold)
+A model evaluation technique that divides the dataset into
+10 equal parts (folds) while maintaining the same
+proportion of classes as the original dataset in each fold.
+The model is trained on 9 folds and tested on the
+remaining 1, repeating the process 10 times to ensure
+reliable and unbiased performance results.
+Unmet Contraception Needs Refers to a woman who wants to avoid pregnancy but is
+not using any method of contraception.
+39
+CHAPTER 3
+RESEARCH METHODOLOGY
+This chapter outlines the research methodology developed to achieve the study's
+objectives, detailing the tools and methods employed for the system's implementation, testing,
+and evaluation. It provides an overview of the processes involved in designing, developing, and
+validating the system to ensure compliance with the ISO/IEC 25010 standard metrics.
+Additionally, it discusses the methods for analyzing, testing, and assessing the system's
+performance, as well as the validation procedures followed. Furthermore, this chapter
+emphasizes considerations for the system's potential applications and future development,
+which include the market model, market strategy, and business model.
+Project Materials
+The system's development requires software, hardware, datasets, and documentation. A
+variety of programs and libraries will be utilized as the foundation for building, training, testing,
+and deploying the application.
+Software
+This section discusses the software tools and technologies used in the development of
+the system. Each software plays a vital role in ensuring that the system operates efficiently,
+securely, accurately across multiple platforms.
+React Native 0.81.4
+React Native is a cross-platform application framework used to develop the system for
+Android. It enables the creation of both user and OB-GYN interfaces using a single codebase,
+allowing efficient development and ensuring a seamless, native-like experience for all users.
+Firebase 12.10.1
+Firebase is a backend as a Service (BaaS) that provides secure data storage, real-time
+database management, and user authentication, supporting the system in handling the patient
+information and contraceptive records safely and efficiently.
+40
+Typescript 5.9.2
+Typescript is a language for application-scale JavaScript. This is employed to build the
+front-end components of the system using React Native, ensuring type safety, reducing runtime
+errors, and enabling a smoother and more stable development process.
+Python 3.13.7
+Python is employed to implement and train the machine learning models, Decision Tree
+and eXtreme Gradient Boosting that are used in the system to predict the likelihood of
+contraceptive discontinuation based on the user’s data.
+Scikit-Learn 1.7.2
+Scikit-Learn is an open source Python library for machine learning that provides efficient
+tools for data preprocessing, classification, regression, and model evaluation. It supports the
+implementation of the Decision Tree and eXtreme Gradient Boosting.
+Open Neural Network Exchange 1.2.0
+Open Neural Network Exchange (ONNX) is an open-source framework that allows
+machine learning models to be shared and used across different platforms. ONNX enables the
+seamless integration and deployment of trained models such as Decision Tree and eXtreme
+Gradient Boosting ensuring compatibility, efficiency, and flexibility during model execution within
+the Android environment.
+Visual Studio Code 1.104
+Visual Studio Code is the main integrated development environment (IDE) used by the
+developers for coding, debugging, and managing both the frontend and backend.
+Expo Go
+Expo Go is a mobile development tool that enables real-time preview and testing of the
+system directly on Android devices, allowing faster debugging and real-time updates during
+development.
+41
+Github
+Github is a version control and collaboration platform used to store, manage, and track
+the system’s source code, documentation, and updates, ensuring organized and efficient
+teamwork.
+Lucidchart
+Lucidchart is an online diagramming and flowchart software for the creation of system
+diagrams, system architecture, UML, and flowcharts that represents the process and workflows
+of the system.
+Figma
+Figma is a collaborative design platform used to create mockups and prototypes of the
+systems interface, ensuring a visually appealing and user-friendly interface for both users and
+providers.
+Hardware
+The hardware requirements presented in Table 1 are to be used in the development and
+testing of the proposed system. These specifications ensure that the system performs efficiently
+during data processing, model training, and application development. The minimum
+specifications are Windows 10, AMD Ryzen 3 processor, AMD Radeon Graphics, and 4 GB of
+RAM which represent the lowest configuration capable of running the system. This setup
+supports basic development and testing but may experience slower performance, especially
+when handling large datasets.
+On the other hand, the recommended specifications such as Windows 11, AMD Ryzen 5
+processor, Nvidia GeForce GTX 1650 or AMD Radeon Graphics, and 16 GB of RAM offer a
+better processing speed, system stability, and overall system performance. This setup ensures
+smoother performance, faster computation in machine learning tasks, and improved
+visualization rendering. The difference between the minimum and recommended specifications
+42
+lies in the performance capability, the minimum ensures system functionality, while the
+recommended provides an optimal environment for efficient development and testing.
+For the implementation, an Android 13 mobile device with an octa-core 2.0 GHz
+processor and 8 GB RAM was utilized to ensure smooth execution, seamless Firebase
+integration, and stable functionality of the system. Development tasks were conducted using
+laptops such as the HP Laptop 14s for general coding, the ASUS TUF FX505DT for high
+performance computing, and the ASUS VivoBook 16 for system testing and interface
+development.
+Table 1
+Hardware Requirements
+Hardware Specification Minimum
+Specification
+Recommended
+Specification
+Operating System Windows 11 Windows 10 Windows 11
+CPU AMD Ryzen 5 AMD Ryzen 3 AMD Ryzen 5
+GPU Nvidia GeForce GTX
+1650
+AMD Radeon
+Graphics
+Nvidia GeForce
+GTX 1650/AMD
+Radeon Graphics
+RAM 16 GB 4 GB 16 GB
+Dataset
+The proposed system utilizes data from the 2022 Demographic and Health Survey
+(DHS) conducted in the Philippines by the Philippine Statistics Authority (PSA) in collaboration
+with the Department of Health (DOH) from May 2022 to July 2022. The DHS supports countries
+worldwide in collecting and utilizing data. This survey is nationally representative and is
+designed to provide reliable estimates on key demographic and health indicators, such as
+fertility, family planning, maternal and child health, and reproductive practices. This dataset was
+43
+selected because it offers comprehensive and validated information essential for analyzing
+contraceptive use, discontinuation, and socio-demographic characteristics of Filipino women
+aged 15–49 years. To fully capture the trends regarding contraceptive use the proponents
+decided to aggregate by synthesizing a dataset that reflects the statistics of the original dataset.
+It captures the similar data types per each feature. Statistic wise the additional data has the
+same description and values compared to the original data and has 1,119 records . This
+ensures that the data will not overcome the insights inherent from the NDHS dataset. To
+validate the expansion, a professional will analyze it providing an experienced guidance towards
+dataset aggregation.
+For this study, variables related to contraceptive use, discontinuation, and
+socio-demographic characteristics were extracted from the DHS dataset. These variables
+capture demographic, socio-economic, and behavioral factors influencing contraceptive
+behavior. Prior to model training, the dataset underwent preprocessing, including cleaning,
+handling missing values, encoding categorical variables, and normalizing continuous features to
+ensure compatibility with the Decision Tree and eXtreme Gradient Boosting (XGBoost)
+algorithms. This preprocessing step was crucial to enhance the accuracy and efficiency of
+model training.
+By utilizing the 2022 DHS dataset, this study ensures that the system’s
+recommendations are evidence-based data reflecting the contraceptive behaviors and
+reproductive health landscape of Filipino women.
+The system utilized both primary and secondary data sources related to contraceptive
+use and demographic factors. The primary data were obtained from the Demographic and
+Health Survey (DHS) conducted by the Philippine Statistics Authority (PSA), which contains
+structured information on variables such as age, marital status, number of children, educational
+attainment, employment status, and contraceptive use. Meanwhile, secondary data came from
+peer-reviewed journals, published studies, and government health reports, which were utilized
+44
+to validate the selection of variables and enhance the model’s accuracy and reliability. These
+combined data sources, along with professional validation by an OB-GYN, ensured that the
+system’s predictive and recommendation components were based on medically accurate and
+context-specific information, providing a strong evidence-based foundation for understanding
+contraceptive behavior and discontinuation patterns among Filipino women.
+Project Design
+The project design of the system provides the structural and functional framework for
+developing an android-based decision support system that predicts the risk of contraceptive
+discontinuation using Decision Tree and eXtreme Gradient Boosting. The system is designed
+with a three-layer architecture, composed of Presentation, Application, and Data. The
+presentation layer will be developed using React Native, which ensures cross-platform
+compatibility for both Android and iOS, and provides an intuitive interface for users and
+healthcare providers. The application layer will use Firebase and Python APIs, manage user
+authentication, database management, and communication with predictive models. The
+data-model layer contains the datasets, preprocessing pipelines, and trained Decision Tree and
+XGBoost models, which analyze user’s inputs such as demographic and health-related data to
+generate the probability of contraceptive discontinuation.
+The flow begins when users enter their personal and health information into the mobile
+application, which is securely transmitted to the backend. After preprocessing, the data is
+analyzed by predictive models, and the results are sent back to the frontend for display. The app
+presents users with contraceptive risk of discontinuation, contraceptive options, WHO MEC
+guidelines, and additional information such as costs, usage instructions, and possible side
+effects. While users benefit from accessible and personalized guidance, healthcare providers
+gain access to a clinical support dashboard that presents detailed prediction results to assist in
+evidence-based counseling.
+45
+The integration of Decision Tree and eXtreme Gradient Boosting ensures both
+interpretability and predictive accuracy. Both models are accurately trained and validated using
+relevant datasets, with evaluation metrics such as AUCROC, accuracy, and recall, and F-1
+score . To assure sensitive information, the system incorporates strong privacy and security
+measures, including encrypted data transmission, secure login mechanisms, and adherence to
+regulatory frameworks such as the Philippine Data Privacy Act and HIPAA standards.
+As the system is designed with maintainability and scalability in mind, the system adopts
+a modular structure that allows easy updates to predictive models, datasets, and system
+features as medical guidelines evolve or new contraceptive methods emerge. Its flexible
+architecture also supports future expansion, such as integration with electronic health records
+(EHRs) or the addition of reproductive health decision-support features, positioning
+ContraceptIQ as a reliable, user-centered, and clinically relevant decision support tool.
+Project Development
+The development of the android-based decision support system for contraceptive
+selection will employ Agile Software Development Life Cycle. This approach supports
+continuous refinement of predictive models, integration of updated medical guidelines, and
+active feedback from healthcare providers and users. Its flexibility, iterative development, and
+collaboration make it ideal for health applications that require accuracy, usability, and
+adaptability. It also aligns with ISO/IEC 25010, ensuring that the system meets critical attributes
+of software quality. Functional Suitability to provide accurate contraceptive information;
+Performance Efficiency to provide timely results during consultations; Interaction Capability to
+ensure an intuitive and user-friendly interface that supports both patients and providers;
+Maintainability to allow modular updates based on evolving medical guidelines and user
+feedback; and Compatibility to achieve smooth operation on mobile devices, making it
+accessible across diverse healthcare settings. These considerations ensure that the system will
+remain reliable, user-centered, and medically sound.
+46
+Figure 10
+Agile Software Development Life Cycle
+Planning. The planning phase involves identifying the system’s objectives and scope.
+This includes defining the purpose of the system as an mobile-based decision support tool for
+contraceptive method selection, with emphasis on its role in predicting the risk of discontinuation
+for each contraceptive method. During this stage, the team outlined the system’s goal of
+predicting the risk of discontinuation for various contraceptive methods and supporting informed
+decision-making. The required software, hardware, datasets, and development tools were also
+identified and prepared. This phase has already been completed, as the project now has a clear
+roadmap, well-defined requirements, and allocated resources. However, continuous refinement
+of goals and timelines may still be done as development progresses to ensure alignment with
+project needs.
+Analysis. During the analysis phase, detailed requirements are gathered and
+documented for key stakeholders, including obstetricians, gynecologists, and users. The system
+47
+requirements were categorized into functional and non-functional aspects such as prediction
+accuracy, usability, data security, and compatibility. This phase has been completed, as the
+team already defined the system’s core functionalities and ensured they align with healthcare
+standards set by the WHO and DOH. The dataset used in the system has also been reviewed
+and validated by obstetricians and gynecologists to ensure medical accuracy and relevance.
+Remaining tasks include obtaining additional feedback from early users and other domain
+experts to further refine the system and confirm its effectiveness in addressing real-world
+healthcare challenges, particularly in providing accurate contraceptive information and reliable
+risk assessments for informed decision-making.
+Design. In this phase, this translates the analyzed requirements into a structured
+framework for system development using a three-tier architecture consisting of the Presentation,
+Logic, and Data tiers. Tools such as Figma and Lucidchart were used to create wireframes,
+system diagrams, and flowcharts that guided both frontend and backend design. This stage has
+already been completed, with the user interface and data flow finalized. However, minor design
+refinements are still planned to improve responsiveness, accessibility, and user experience
+before the system’s final deployment.
+Implementation. The implementation phase focuses on the actual development of the
+system. The system will use React Native for mobile app development, Firebase for the
+backend integration, and Python for training predictive models. The system is being developed
+iteratively following the Agile approach. Features such as user registration, contraceptive
+information have already been implemented. The discontinuation risk prediction feature is still
+under development. Remaining tasks include completing this prediction module, integrating all
+components, and enhancing system performance based on testing feedback.
+Testing. The testing phase is conducted throughout the development cycle to ensure the
+reliability, accuracy, and usability of the system. This involves unit testing of individual
+components, integration testing of the mobile app with backend services and machine learning
+48
+models, and system testing for overall functionality. The predictive performance of the machine
+learning models is validated using evaluation metrics such as AUROC, accuracy, and F1-score.
+Future testing activities will focus on full-scale user acceptance testing (UAT) with healthcare
+providers and target users to verify that the system meets its intended goals and adheres to
+medical standards.
+Maintenance. The maintenance phase ensures that the system remains reliable,
+accurate, and up to date after deployment. This involves fixing bugs, optimizing performance,
+and continuously retraining predictive models with new datasets to improve accuracy in
+estimating the risk of contraceptive discontinuation. Although this phase has not yet begun, it is
+an essential part of the system’s lifecycle, ensuring that updates align with evolving medical
+guidelines, new datasets, and mobile operating system changes. Regular maintenance will
+guarantee the long-term stability and reliability of the system.
+Multiple Constraints and Tradeoff Analysis
+This section of the study aims at assessing the different algorithms appropriate for the
+objective. The Accuracy, Recall, and F1-scores and AUC-ROC of the models will be evaluated
+and documented in order to determine which model will be best chosen for the study. Accuracy
+defines the overall percentage of correct predictions out of all samples advantageous when
+classes are balanced along with its ease of interpretability. Recall is how well the model can
+predict the positive cases correctly, a prioritized metric in situations where false positives can
+result in impactful consequences. F1-score is the middle ground between recall and precision. A
+higher recall means more false positives while a higher precision results more in false
+negatives. The F1-score balances these two metrics. Lastly, AUC-ROC or Area Under the
+Receiver Operating Characteristic curve evaluates the performance of the model in
+distinguishing between the classes. A good model will result in an AUC close to 1.0 while a
+model that is simply guessing will result in low AUC such as 0.2.
+49
+Constraints Definition
+The constraints of this study will help in determining the best model for the study. The
+metrics that will be used are Accuracy, Recall, and F1-Score, and AUC-ROC metrics used to
+identify the performance of a classification model. Its definitions are listed below:
+Accuracy
+Accuracy refers to the proportion of correctly classified predictions out of the total
+number of predictions made by the model. It measures the overall effectiveness of the
+predictive algorithm in identifying whether a user is at high or low risk of contraceptive
+discontinuation. Mathematically, it is defined as the number of correct classifications
+divided by the total number of classifications performed. A perfect model would achieve
+an accuracy of 1.00 or 100%, indicating zero misclassifications.
+Where:
+Correct Classifications = Positive and negative classes in the test data
+that are correctly classified.
+Total Classifications = The no. of instances in the dataset.
+Recall
+Also known as the true positive rate, recall measures the proportion of actual
+positive cases that are correctly identified by the model. It is particularly important in
+detecting positive outcomes such as identifying users at risk of contraceptive
+discontinuation. A higher recall indicates that the model successfully captures most of
+the true positive instances, minimizing cases that are positive but classified as negative.
+Mathematically, recall is calculated as the ratio of true positives to the sum of true
+positives and false negatives.
+50
+Where:
+Correct actual positives = positive predictions that are correct.
+All actual positives = The no. of positive classes in the dataset.
+F1-Score
+This metric combines both precision and recall into a single value, which provides
+the balanced measure of a model’s accuracy, especially when dealing with imbalanced
+datasets. It is calculated as the harmonic mean of precision and recall, ensuring that
+both false positives and false negatives are considered. In the context of contraceptive
+discontinuation prediction, the F1-Score is particularly useful because it evaluates how
+well the model identifies users at risk while maintaining accuracy in its positive
+predictions. A higher F1-Score indicates a better trade-off between recall and precision,
+reflecting the model’s overall reliability in determining the patient's likelihood to
+discontinue a contraceptive method.
+Where:
+Precision = Precision Score
+Recall = Recall Score
+AUC-ROC
+AUC-ROC, or the Area Under the Receiver Operating Characteristic Curve, is a
+performance metric used to assess how effectively a classification model distinguishes
+between users who will discontinue and those who will not. The ROC curve visually
+51
+represents the trade-off between the true positive rate and the false positive rate across
+different threshold values. The AUC, on the other hand, provides a single numeric score
+summarizing the model’s overall ability to correctly classify both classes, with values
+closer to 1.0 indicating excellent classification. In this study, the AUC-ROC metric is
+crucial for identifying the optimal threshold that balances sensitivity and specificity,
+enabling healthcare providers to effectively detect users at high risk of discontinuation
+while maintaining accurate overall predictions.
+Figure 11
+0.5 AUC-ROC that shows randomness
+Design Trade-offs
+The Decision Tree algorithm was selected for its simplicity, interpretability, and ease of
+deployment in healthcare-related decision systems. A Decision Tree models decisions in a
+hierarchical structure where internal nodes represent features, branches represent conditions,
+and leaf nodes represent predicted outcomes. This transparency makes it highly suitable for
+52
+medical contexts where explainability is critical, allowing healthcare providers to understand why
+the system assigns a particular risk classification. However, Decision Trees are prone to
+overfitting, especially when dealing with complex, nonlinear relationships or noisy data.
+Consequently, while a single Decision Tree offers interpretability, it often sacrifices predictive
+performance and generalizability when used on heterogeneous datasets such as those
+involving health behaviors and contraceptive use.
+In contrast, the eXtreme Gradient Boosting (XGBoost) algorithm was used for its
+predictive power and robustness to data irregularities. XGBoost is an ensemble method based
+on boosting, where multiple weak learners are combined sequentially to minimize prediction
+errors. Each iteration focuses on correcting the mistakes of the previous one, resulting in a
+model that can effectively capture complex patterns in data. This makes XGBoost particularly
+advantageous for modeling multifactorial behaviors such as contraceptive discontinuation,
+which may depend on subtle interactions among medical, demographic, and behavioral factors.
+However, eXGBoost is computationally intensive, less interpretable, and requires extensive
+hyperparameter tuning to prevent overfitting or bias.
+To balance these trade-offs, the study implements a hybrid modeling approach that
+combines the interpretability of Decision Tree and the predictive strength of XGBoost. In this
+configuration, both models are trained using the same dataset, and their predictions are
+aggregated through a voting mechanism to form a more stable and reliable classification of
+contraceptive discontinuation risk. The Decision Tree contributes clear and interpretable
+decision boundaries, while XGBoost enhances generalization and accuracy by capturing
+nonlinear feature interactions. This hybrid strategy leverages the strengths of both algorithms
+achieving a balance between explainability and performance which makes it an optimal design
+for a clinical decision support system, where both model interpretability and predictive reliability
+are essential for informed medical decision-making.
+53
+Trade-Off Analysis
+Logistic Regression is a simple and interpretable algorithm that models the probability
+of a binary outcome using a linear combination of input features. Its main advantage is ease of
+implementation and transparency, making it suitable for healthcare applications where
+explainability is important. However, LR assumes linear relationships between features and the
+log-odds of the outcome, which can limit its predictive power for complex, non-linear patterns. It
+is computationally efficient and robust for small datasets.
+SVM (Support Vector Machine) is effective for classification tasks, particularly when
+classes are separable in high-dimensional space. It can handle non-linear relationships, offering
+flexibility beyond linear models. Its main strength is maximizing the margin between classes,
+improving generalization. However, SVMs can be computationally intensive for large datasets,
+sensitive to the choice of kernel and hyperparameters, and less interpretable than logistic
+regression, which can limit their practical use in clinical decision-making.
+Decision Trees offer clear and interpretable decision rules, making them particularly
+valuable in healthcare settings where transparency and explainability are essential. They can
+effectively handle both numerical and categorical data while capturing non-linear relationships
+between variables. However, their main limitation lies in their tendency to overfit, especially
+when the tree becomes too deep or complex, which can reduce their performance on new data.
+.Random Forest is an ensemble method that builds multiple decision trees and
+combines their predictions, improving accuracy and robustness. It handles non-linearities and
+feature interactions well while reducing overfitting compared to single decision trees. The
+trade-offs include higher computational cost and reduced interpretability compared to individual
+trees. This algorithm is particularly suitable when high predictive performance is prioritized over
+model transparency.
+XGBoost (eXtreme Gradient Boosting) is a high-performance gradient boosting
+algorithm that sequentially builds decision trees to minimize prediction errors. It is highly
+54
+accurate, robust to overfitting, and efficient for structured data. This algorithm requires a large
+number of hyperparameters requiring tuning, limited interpretability, and longer training time
+compared to simpler algorithms. XGBoost is ideal when maximizing predictive performance is
+critical, particularly for identifying high-risk users in discontinuation prediction.
+Table 2
+Tradeoff Analysis for LR, SVM, and Decision Tree
+Model Accuracy Computational
+Cost
+Interpretability Authors
+Logistic
+Regression
+Moderate
+Fits a linear decision
+boundary that often
+captures main
+effects well, but may
+miss complex
+interactions.
+Low
+Only adjusts a few
+parameters to find
+the best boundary
+between classes
+High
+Coefficients
+directly show
+feature
+contributions.
+(Prachi et al.,
+2025)
+(Arista, 2022)
+SVM Moderate
+Can model
+non-linear
+boundaries
+effectively.
+High
+Matrix operations
+scale poorly as
+dataset size
+increases.
+Moderate
+Easy to interpret,
+but harder to
+understand with
+non-linear kernels.
+(Modhugua &
+Ponnusamy,
+2024)
+Decision Tree Moderate
+Can capture
+non-linear
+relationships, but
+may underperform
+on noisy data.
+Moderate
+Training involves
+recursive splitting
+but is relatively
+efficient.
+High
+Tree of decision
+rules which helps
+to interpret
+directly.
+(Akben &
+Yumrutaş, 2025)
+(Battista et al.,
+2023)
+(Arista, 2022)
+55
+Table 3
+Tradeoff Analysis for Random Forest and XGBoost
+Model Strength Weaknesses Authors
+Random Forest High accuracy and
+robustness due to
+ensemble learning
+Handles missing values
+and outliers effectively
+Works well on both
+classification and
+regression tasks
+Computationally
+expensive with many
+trees
+Less interpretable than a
+single decision tree
+Can overfit on noisy data
+(Aria et al., 2021)
+XGBoost High predictive
+performance in structured
+data
+Built-in regularization
+prevents overfitting
+Handles missing data
+automatically
+Complex model with
+many hyperparameters
+Longer training time
+compared to simpler
+models
+Limited interpretability
+(Shwartz-Ziv & Armon,
+2021)
+(Wiens et al., 2025)
+Table 4
+Tradeoff Analysis of Hybrid Model
+Model Strength Weaknesses Authors
+Logistic Regression +
+XGBoost
+High predictive
+accuracy on
+structured medical
+data.
+Regularization
+mechanisms help
+reduce overfitting.
+More
+hyperparameters to
+tune
+More computational
+cost vs simpler
+models.
+Interpretability is less
+straightforward
+(Dey & Das, 2022)
+Logistic Regression +
+Random Forest
+Robust to noise and
+less sensitive to
+overfitting
+Random Forests are
+still less interpretable
+than simple models.
+(Rohman et al., 2025)
+56
+Good performance on
+many features
+Training time is larger
+than simple linear
+models
+Decision Tree +
+XGBoost
+Can produce high
+recall if weighting lean
+toward DT
+predictions.
+Good at detecting
+complex patterns
+Harder to maintain
+calibration and
+thresholding
+Risk of overfitting with
+deep Decision Tree
+(Sindhuja et al., 2025)
+(Idhom et at., 2025)
+Sensitivity Analysis
+This part of the study is critical in identifying the strengths and weaknesses of each
+algorithm depending on the prioritized metric: Accuracy, AUC-ROC, Recall, and F1-Score. This
+analysis will begin by conducting the predictive analysis using the said metrics. Each metric’s
+Weighted Total Score is then calculated. Simply, the algorithm which resulted with the highest
+score will be determined as the best algorithm for that specific prioritized metric. The formula for
+the Weighted Total Score is as follows:
+Weighted Total Score = Accuracy Score * Criterion Weight (CW) + AUC-ROC Score *
+Criterion Weight (CW) + Recall Score * Criterion Weight (CW) + F1-Score * Criterion Weight
+(CW)
+Where:
+Criterion Weight (CW) = The weight of the specific criteria.
+The purpose of this analysis is to determine which algorithm works best for each
+scenario. A medically-strict prediction like discontinuation requires high recall since missing the
+discontinuation will be a highly-disruptive scenario. Furthermore, to mitigate the bias for this, we
+will be limiting the total weight to 1.00.
+57
+Table 5
+Sensitivity Analysis Trial 1
+Predictive Model Scores
+Criteria Weight
+(CW)
+Logistic Regression
++ XGBoost
+Logistic Regression
++ Random Forest
+Decision Tree +
+XGBoost
+S WS S WS S WS
+Accuracy 1.00 0.7636 0.7636 0.7649 0.7649 0.7608 0.7608
+AUC-ROC 1.00 0.7683 0.7683 0.769 0.769 0.7683 0.7683
+Recall 1.00 0.8054 0.8054 0.8007 0.8007 0.8273 0.8273
+F1-Score 1.00 0.7484 0.7484 0.7483 0.7483 0.7512 0.7512
+Total Weighted
+Score
+3.0857 3.0829 3.1076
+This table shows the total weighted scores of the algorithms when the criterion weight is
+equal for each where all is set to 1 to preserve the actual data. The total weighted score
+describes the summary of all metrics. The closer it is to the score of 4.0 the more balanced the
+hybrid model is. XGBoost and Logistic Regression are best performed on Recall while the
+weakest metric for it is F1-Score with 0.7484. This makes sense because F1-Score is a
+measure between the balance of recall and precision. Since the models are prioritizing recall, it
+weakens the precision which puts an imbalance shown through F1-Score. Upon looking at the
+table there is a pattern that emerges where recall has the highest score and F1-Score remains
+relatively low. This is due to the scoring method that was used during hypertuning.
+Nevertheless, the total weighted score indicates a close performance between the first hybrid
+model, XGBoost and Logistic Regression, and the second hybrid model, Logistic Regression
+and Random Forest.
+58
+Table 6
+Sensitivity Analysis Trial 2
+Predictive Model Scores
+Criteria Weight
+(CW)
+Logistic Regression
++ XGBoost
+Logistic Regression +
+Random Forest
+Decision Tree +
+XGBoost
+S WS S WS S WS
+Accuracy 0.4 0.7636 0.30544 0.7649 0.30596 0.7608 0.30432
+AUC-ROC 0.2 0.7683 0.15366 0.769 0.1538 0.7683 0.15366
+Recall 0.2 0.8054 0.16108 0.8007 0.16014 0.8273 0.16546
+F1-Score 0.2 0.7484 0.14968 0.7483 0.14966 0.7512 0.15024
+Total Weighted Score 0.76986 0.76956 0.77368
+This table emphasizes the scores for accuracy which is the rate of all correct predictions.
+This metric shows similarity between the first two hybrid models being 0.30544 and 0.30596.
+Clearly, Logistic Regression and Random Forest performs best for this metric. But due to the
+summarization of all weighted scores, the top hybrid model remains to be Decision Tree and
+XGBoost having 0.77368. This is due to the reason that this model has higher scores in recall
+and f1-score.
+In terms of overall performance, the third, Decision Tree and XGBoost proves to be a
+better option. The least performance came from the second hybrid model consisting of
+RandomForest and Logistic Regression having 0.76956 that is only a bit lower than the first
+model. This is a sign that the model’s strength, the recall and AUC-ROC, was hindered by the
+weighted score showing that it is not viable for all situations.
+59
+Table 7
+Sensitivity Analysis Trial 3
+Predictive Model Scores
+Criteria Weight
+(CW)
+Logistic Regression
++ XGBoost
+Logistic Regression
++ Random Forest
+Decision Tree +
+XGBoost
+S WS S WS S WS
+Accuracy 0.2 0.7636 0.15272 0.7649 0.15298 0.7608 0.15216
+AUC-ROC 0.4 0.7683 0.30732 0.769 0.3076 0.7683 0.30732
+Recall 0.2 0.8054 0.16108 0.8007 0.16014 0.8273 0.16546
+F1-Score 0.2 0.7484 0.14968 0.7483 0.14966 0.7512 0.15024
+Total Weighted Score 0.7708 0.77038 0.77518
+This table aimed to assess how different predictive models perform when the weights of
+key evaluation metrics such as Accuracy, AUC-ROC, Recall, and F1-score are adjusted. In this
+trial, AUC-ROC was given a highest weight of 0.4, emphasizing the model’s ability to distinguish
+between positive and negative cases. The result shows that all three hybrid models such as
+Logistic Regression + XGBoost, Logistic Regression + Random Forest, and Decision Tree +
+XGBoost perform competitively with a total weighted scores ranging from 0.7708 to 0.77518.
+Among them, Decision Tree + XGBoost is still the best model achieving the highest total
+weighted score of 0.77518. This shows its robustness and stability even when the weighting
+scheme was adjusted.
+The results highlight that Decision Tree and XGBoost provide the best trade off
+performance across performance metrics, particularly excelling in Recall and AUC-ROC. These
+metrics are essential for accurately identifying the true positive and distinguishing between
+classes, confirming that the model remains the most reliable regardless of how evaluation
+priorities are adjusted.
+60
+Table 8
+Sensitivity Analysis Trial 4
+Predictive Model Scores
+Criteria Weight
+(CW)
+Logistic Regression
++ XGBoost
+Logistic Regression +
+Random Forest
+Decision Tree +
+XGBoost
+S WS S WS S WS
+Accuracy 0.2 0.7636 0.15272 0.7649 0.15298 0.7608 0.15216
+AUC-ROC 0.2 0.7683 0.15366 0.769 0.1538 0.7683 0.15366
+Recall 0.4 0.8054 0.32216 0.8007 0.32028 0.8273 0.33092
+F1-Score 0.2 0.7484 0.14968 0.7483 0.14966 0.7512 0.15024
+Total Weighted Score 0.77822 0.77672 0.78698
+This table assessed the model performance under a weighting scheme that emphasized
+Recall with 0.4, emphasizing the importance of identifying true positive cases which are
+essential aspects in medical related datasets. The result shows that the all three hybrid models
+performed well with a total weighted score ranging from 0.77672 to 0.78698. Among these
+models, the Decision Tree + XGBoost model achieved the highest total weighted scores of
+0.78698 with a strong anticipation of Recall score of 0.8273. This demonstrates the model’s
+effectiveness in correctly identifying positive cases which is crucial in minimizing the false
+negatives. This trial confirms that the Decision Tree + XGBoost remains the most effective and
+reliable model when Recall is prioritized, reinforcing its advantage in predictive tasks involving
+medical or health-related data.
+61
+Table 9
+Sensitivity Analysis Trial 5
+Predictive Model Scores
+Criteria Weight
+(CW)
+Logistic
+Regression +
+XGBoost
+Logistic Regression +
+Random Forest
+Decision Tree +
+XGBoost
+S WS S WS S WS
+Accuracy 0.2 0.7636 0.15272 0.7649 0.15298 0.7608 0.15216
+AUC-ROC 0.2 0.7683 0.15366 0.769 0.1538 0.7683 0.15366
+Recall 0.2 0.8054 0.16108 0.8007 0.16014 0.8273 0.16546
+F1-Score 0.4 0.7484 0.29936 0.7483 0.29932 0.7512 0.30048
+Total Weighted Score 0.76682 0.76624 0.77176
+F1-Score is essentially the combination of recall and precision making it a good criteria
+when predicting using an unbalanced dataset. Similarly, the third hybrid model remains the top
+predictive model for this metric. The table shows that finding the balance between avoiding false
+negatives and positives requires the use of Decision Tree and XGBoost. The other hybrid
+models, although similar, showed less performance than the third model. This might indicate
+that the dataset requires the combination of Decision Tree and XGBoost or the preprocessing
+and hypertuning of the other two models must be changed. Nonetheless, the development using
+the algorithms included in the third hybrid model will continue until it reaches the standard score
+of 95%.
+Algorithm Implementation
+The hybrid model for this study will use Decision Tree along with eXtreme Gradient
+Boosting to perform a binary classification between discontinued (1) and continued (0). The
+models are scored based on the recall metric as the system will prioritize avoiding false
+62
+negatives than false positives as the former can result in consequential situations. Combining
+the two algorithms will require the use of ensemble techniques, specifically VotingClassifier
+sklearn.ensemble. The study used soft voting that averages the probabilities of each classifier
+and selects the output with the highest probability. This improves accuracy, robustness, and
+reduces overfitting. Hypertuning additionally includes 10-fold cross validation which as the name
+suggests divides the input data into 10 different groups. This method puts the majority of the
+data for training which mitigate biases.
+Decision Tree
+This algorithm is a tree-like structure that is composed of the root node where the
+dataset is whole, branches that connect all the nodes, inner/decision nodes that contain the
+rules which splits the data, and leaf nodes where the predictions are located. The advantage of
+this algorithm lies in its simplicity which improves the interpretability of the model.
+Best splits are measured using the Gini impurity and Entropy. The former is a measure
+of how well the data is split into two distinct categories, the lower the Gini the better the split.
+The latter is also known as the disorder in the tree. It is a criteria that the decision tree tries to
+minimize by splitting the data based on the most important features.
+Pruning limits the decision tree to a specific depth. The deeper the tree the more
+chance for overfitting from noise in data. A rule of thumb in determining if a tree needs pruning
+is when the training accuracy greatly surpasses that of testing accuracy.
+63
+Figure 12
+Decision Tree Framework
+eXtreme Gradient Boosting
+XGBoost got its name from its chosen ensemble technique. Boosting is an ensemble
+method that sequentially trains the model. Each model boosts the weakness of its predecessor.
+XGBoost is an optimized implementation of gradient boosting that uses decision trees as its
+base learners. The cycle of this algorithm is simple, each tree will be trained, error is calculated,
+and its weaknesses are passed onto the next decision tree model. At the end, the predictions
+are summed up and given as the answer.
+64
+Figure 13
+XGBoost Framework
+Training data includes randomly sampling the training data. The yellow circles shown in
+the figure above represent the discontinued classes while the green circles represent the
+opposite. Each data group is then passed to different decision tree models which acts as the
+base learning model. Regularization happens during this part of the training making sure it
+doesn’t overfit.
+CART (classification and regression trees) represented in blue colored borders, tries to
+predict the outcome based on the input. Since this is a sequential training only the first decision
+65
+tree model will be trained normally. The rest are trained using the errors of the previous training
+model.
+Weighting increase is done by giving importance to the classes that are misclassified.
+Note that this is firstly done for the second decision tree model as the first model does not have
+any predecessor.
+Prediction is done every time CART. At this part, loss function is performed to determine
+how well the model performed or more specifically where the model performed worst. This is
+done iteratively until performance stops on improving after a number of estimators. Lastly, the
+predictions of all decision trees are summed up for the actual output.
+Data Preparation
+The raw dataset was collected from NDHS, it contains about 5493 rows and 31 columns
+including the dependent variable. The first column being “CASEID” was dropped due to its
+irrelevancy in giving information for the algorithms. The “HUSBAND_AGE” column was
+discovered to be an object data type which was made into a float, same with the other features
+that are in object data type. After conversion, the categorical columns are processed through
+one-hot encoding. The columns “KIDS” and “RESPONDENT_AGE”, didn’t reflect categorical
+values, hence the column was left as is. The dependent variable was created based on the
+“REASON_DISCONTINUED” column. From this, a new column named “DISCONTINUED”
+showing 1s and 0s was formed indicating that if there is a reason then the client discontinued.
+Lastly, the dataset was split into training and testing divisions where 80% was for training and
+the rest for testing.
+Model Training
+Four algorithms were selected for this study: Logistic Regression, Random Forest
+Classification, Decision Tree, and XGBoost. These models were chosen as they are the
+common algorithms used for classification training. Logistic Regression was included because
+66
+of its simplicity and interpretability while the Random Forest Classifier works as an ensemble
+method, combining multiple decision trees to enhance the predictive capability. Decision Tree is
+a tree-like structure algorithm commonly tasked to do both classification and regression.
+XGBoost on the other hand is a gradient boosting framework that is chosen due to its
+recognizable performance in classification problems. Hyperparameters were implemented later
+to fine-tune through different trial runs for optimizing the algorithms ensuring that the study
+received the best model at its best. The models were trained using the data and hypertuned
+using grid search cross-validation with 10 folds for optimization, a vital step in deciding which of
+these can perform well in a hybrid model. From the top performing algorithms based on recall,
+different combinations of 2 were tested using stacked and voting classifiers with each being fully
+optimized.
+Model Evaluation
+After training the models are evaluated using accuracy, AUC-ROC, recall, and
+f1-scores. This is done by comparing the outcomes of the predictions with the actual results in
+the testing data. Accuracy shows the measure of overall correctness of the models, AUC-ROC
+assessed the reliability of the model in distinguishing the difference in outcomes, recall helped in
+determining the capability of the models to capture actual discontinuation outcomes, and
+f1-score acts as a balance for both precision and recall. Preprocessing, training, and evaluation
+are fairly and equally performed for all the models ensuring that there is no bias for any
+algorithms. The evaluation part of the study is vital in ensuring that the hybrid model picked for
+the study was appropriate for this case.
+Testing and Operating Procedure
+The system will be tested using Python to evaluate model performance and ensure
+accurate prediction of contraceptive discontinuation risk. Tools such as scikit-learn will be
+67
+applied for model training, validation, and testing, while Pandas and NumPy will be used for
+handling and preprocessing the data. The backend service will be tested through Flask,
+verifying that inputs are processed correctly and outputs are generated as expected.
+The mobile application will be tested using React Native with Expo, ensuring smooth
+deployment on Android. It will be evaluated for usability, input handling, and output display,
+confirming that patient and clinical data are processed seamlessly and that recommendations
+are properly delivered to both patients and healthcare providers.
+Model Validation Strategy
+To ensure the reliability and generalizability of the predictive model for contraceptive
+discontinuation risk, appropriate validation strategies are employed. These strategies are
+selected to address the classification nature of the problem while maintaining fairness across
+different user groups and ensuring the accuracy of predicted probabilities. The following
+approaches are applied:
+Stratified k-Fold Cross-Validation (10-fold). This technique divides the dataset into ten
+folds while preserving the distribution of the target classes in each fold. It allows every data
+point to be used for both training and validation, providing a more robust and unbiased estimate
+of model performance.
+Calibration Analysis. Since the model outputs discontinuation risk as probabilities,
+calibration is assessed to evaluate how well these predicted probabilities reflect actual
+outcomes. Methods such as calibration plots and Brier scores are used to verify the reliability of
+risk predictions.
+Hold-out Test Set Evaluation. A separate portion of the dataset is set aside as a final
+test set, unseen during training and cross-validation. This ensures that the reported
+performance metrics reflect the model’s true predictive ability on new, unseen data.
+68
+Comprehensive Testing Methodology
+The proposed system will undergo a testing methodology to ensure its functionality,
+reliability, and alignment with the needs of both patients and healthcare providers. The testing
+approach will follow four levels: unit testing, integration testing, system testing, and acceptance
+testing, each designed to validate the system at increasing levels of complexity.
+Unit Testing. At this level, individual modules of the system will be tested in isolation to
+confirm that they perform as expected. This includes testing the encoding of WHO MEC rules,
+the module for discontinuation risk prediction, and the display of contraceptive information such
+as price, usage guidelines, and expected outcomes. Each function will be validated against its
+design specifications to ensure correctness.
+Integration Testing. Once individual modules are verified, integration testing will be
+conducted to examine how components work together. For instance, the linkage between the
+eligibility module (MEC-based filtering) and the discontinuation risk prediction model will be
+tested to ensure accurate and seamless data transfer. Similarly, the integration of backend
+computations with the user interface will be assessed for consistency and proper information
+flow.
+System Testing. At this stage, the complete system will be tested as a whole to validate
+compliance with functional and non-functional requirements. This includes confirming the
+accuracy of contraceptive recommendations, the responsiveness of the mobile application, and
+the consistency of predictive outputs across different user scenarios. Performance metrics such
+as processing time, reliability under concurrent users, and stability across devices will also be
+evaluated.
+Acceptance Testing. The final stage will involve end-user validation to ensure the
+system meets real-world expectations. Both healthcare providers and potential patients will
+participate in testing sessions, where they will interact with the tool in simulated healthcare
+69
+settings. Their feedback will be gathered through surveys and direct observation, focusing on
+usability, clarity of recommendations, and practical value in clinical decision-making. Acceptance
+testing ensures that the tool is both technically sound and practically useful before deployment.
+Project Evaluation
+The evaluation of the system will be conducted using the ISO/IEC 25010 model, which
+outlines the key quality characteristics for assessing software systems. This internationally
+recognized standard evaluates the functionality, reliability, usability, and overall quality of the
+system, making it ideal for a healthcare-focused mobile application that deals with sensitive
+reproductive health data. End-users will be engaged in the evaluation process to assess
+usability, accessibility, and overall experience within the application. Meanwhile, technical
+experts will review performance efficiency, maintainability, and system security. To ensure the
+medical accuracy and clinical reliability of the system’s contraceptive recommendations and
+predictions of discontinuation risk, these elements will be validated by qualified medical
+professionals. Through this multi-level evaluation approach, ContraceptIQ will be user-centered,
+technically robust, and clinically trustworthy.
+The following criteria will be used for the evaluation:
+Functional Suitability. The system is designed to address the specific needs of both
+patients and healthcare providers by delivering accurate, relevant, and reliable information on
+contraceptive methods. It integrates the WHO MEC eligibility guidelines with discontinuation risk
+predictions to ensure that recommendations are both medically appropriate. The system also
+provides essential details such as the cost, usage instructions, and possible side effects of each
+method. For patients, it serves as an accessible source of trustworthy information to support
+informed decision-making, while for healthcare providers, it functions as a clinical
+decision-support tool that enhances the effectiveness of contraceptive counseling.
+Performance Efficiency. The application will be optimized to handle data processing
+quickly and efficiently, ensuring that the discontinuation risk levels of each contraceptive method
+70
+are provided without delays. Since the system will be used in healthcare settings where time is
+critical, performance efficiency will support smooth consultations for providers and a responsive
+experience for patients using the mobile platform.
+Interaction Capability. The system is designed with usability in mind, offering an
+intuitive interface for both patients and doctors. Patients will be able to navigate the tool easily to
+review contraceptive options, while providers will have access to more detailed inputs and
+results for clinical use. Features such as clear instructions, accessible language, and structured
+data presentation will ensure that users can interact effectively with the tool regardless of their
+level of technical expertise.
+Maintainability. To ensure long-term usability, the system will be developed with
+modular and adaptable components, allowing updates to be made when new contraceptive
+guidelines, pricing data, or risk models become available. This is particularly important as
+medical recommendations evolve, and the system must remain accurate and relevant. Regular
+updates will also allow continuous improvement and incorporation of feedback from patients and
+providers.
+Compatibility. The system will be developed to operate smoothly on mobile devices,
+ensuring accessibility for its intended users. By being mobile-supported, the tool can be
+conveniently integrated into healthcare workflows and remain functional in both public and
+private health facilities. This mobile compatibility is particularly important in reaching diverse
+users, from patients in rural areas to doctors in urban hospitals, where mobile access is often
+the most practical option.
+Scale Interpretation
+The study employed a five-point Likert scale, with 1 indicating Strongly Disagree and 5
+indicating Strongly Agree.Higher values signified increasingly favorable assessments, thereby
+capturing the extent of respondents’ agreement or disagreement with the system’s performance.
+71
+Table 10
+Likert Scale Interpretation
+RANGE SCALE WEIGHT
+4.51 - 5.00 Strongly Agree (SA) 5
+3.51 - 4.50 Agree (A) 4
+2.51 - 3.50 Fairly Agree (FA) 3
+1.51 - 2.50 Disagree (D) 2
+1.00 - 1.50 Strongly Disagree (SD) 1
+Survey Questionnaire for Information Technology Respondents
+Criteria Rating
+Functional Suitability - Measures how well the system performs
+its intended functions specifically, how accurately it integrates
+WHO MEC eligibility criteria with discontinuation risk predictions to
+generate reliable contraceptive recommendations.
+5 4 3 2 1
+1. The system accurately integrates WHO MEC eligibility
+outputs with discontinuation risk predictions.
+2. The system generates correct and relevant contraceptive
+recommendations.
+3. The system ensures data accuracy and completeness in all
+outputs.
+Criteria Rating
+Performance Efficiency - Assesses how efficiently the system
+uses resources while maintaining responsiveness on mobile
+devices.
+5 4 3 2 1
+1. The system processes user inputs quickly and delivers
+results without delay.
+2. The system’s response time remains stable during multiple
+operations or large data inputs.
+3. The system consumes minimal resources while operating
+smoothly.
+72
+Criteria Rating
+Interaction Capability - System’s ability to provide an effective
+and intuitive interface that allows seamless interaction between the
+use and the system.
+5 4 3 2 1
+1. The system interface design follows usability and accessibility
+standards.
+2. The input fields, buttons, and navigation elements function
+correctly and are logically placed.
+3. The interface responds consistently across different devices
+without display or interaction errors.
+Criteria Rating
+Maintainability - Refers to how easily the system can be updated,
+debugged, or modified to include new WHO MEC guidelines,
+improved models, or new features.
+5 4 3 2 1
+1. The system’s structure allows easy integration of new WHO
+MEC revisions.
+2. The discontinuation risk prediction component can be
+updated or improved efficiently.
+3. The system can be maintained or enhanced without causing
+significant service interruptions.
+Criteria Rating
+Compatibility - Refers to the system’s ability to function effectively
+across different mobile devices and healthcare settings, ensuring
+consistent performance for both patients and providers.
+5 4 3 2 1
+1. The system performs consistently across different Android
+devices.
+2. The system adapts well to different screen sizes and device
+specifications.
+3. The application does not require specialized hardware or
+external components to function properly.
+73
+Survey Questionnaire for Non–Information Technology Respondents
+Criteria Rating
+Functional Suitability - Assesses whether the system provides
+accurate and relevant contraceptive recommendations based on
+WHO MEC guidelines and clearly explains discontinuation risks to
+support decision-making.
+5 4 3 2 1
+1. The system correctly identifies contraceptive methods that
+are safe and suitable based on WHO guidelines.
+2. The predicted risk of discontinuation is presented clearly for
+each contraceptive method.
+3. The system provides enough information to help both patients
+and healthcare providers make informed choices.
+Criteria Rating
+Performance Efficiency - Measures how fast and smoothly the
+system responds when used on mobile devices, including its
+stability and efficiency.
+5 4 3 2 1
+1. The system quickly provides results after patient and
+provider information is entered.
+2. The app runs smoothly without delays, freezing, or errors.
+3. The system works well on mobile devices without causing
+excessive battery usage.
+Criteria Rating
+Interaction Capability - Evaluates how simple, intuitive, and
+user-friendly the interface is for both patients and healthcare
+providers.
+5 4 3 2 1
+1. The system presents contraceptive options and risks in a
+clear and easy-to-understand way.
+2. It is easy to enter the required patient or provider
+information.
+3. The app interface is simple and convenient to use, even for
+users with limited technical experience.
+74
+Criteria Rating
+Maintainability - How easily the system can be updated,
+improved, or corrected to continue providing accurate and reliable
+contraceptive recommendations.
+5 4 3 2 1
+1. The system can be updated to include new contraceptive
+guidelines or information without affecting its use.
+2. The system continues to function properly after updates or
+improvements are made.
+3. The system is reliable and does not often require fixing or
+technical support.
+Criteria Rating
+Compatibility - Assesses whether the system can be easily
+accessed and used by different users in various healthcare settings
+and devices.
+5 4 3 2 1
+1. The system works well across different Android phones.
+2. The system is reliable and usable in both rural and urban
+healthcare settings.
+3. Both patients and providers can use the system effectively
+without needing special tools or training.
+Work Plan
+The work plan outlines the structured timeline for conducting the research and system
+development phases in an organized and systematic manner (see Figure 4). The project is
+divided into two major phases: Thesis 1 and Thesis 2.
+The first phase will take place from June 2025 to November 2025. This phase focuses
+on the preparation and development of the study’s initial chapters. It begins with the writing of
+Chapter 1, which took three weeks to complete, followed by a comparative analysis that guided
+the improvement of the chapter. After considering the findings, Chapter 1 was revised and was
+approved by the thesis adviser.
+Next, the researcher proceeded to the development of Chapter 2, which includes the
+review of related literature. Another comparative analysis was conducted to strengthen the
+75
+review, after which both Chapters 1 and 2 were revised according to the adviser’s feedback.
+Upon completion, the chapters were presented for further discussion and improvement. The
+writing of Chapter 3 followed, which discusses the research methodology. Once this was
+completed, Chapters 1 to 3 were consolidated and revised to ensure consistency across all
+sections.A prototype of the proposed system was also developed during this phase to provide a
+clearer visualization of the expected output. The mock defense is scheduled for the 13th week,
+followed by the finalization of Chapters 1 to 3. After receiving endorsement, the group will
+proceed to the official defense, during which further revisions may be made based on the
+panel’s recommendations. The phase will conclude with the submission of the finalized
+Chapters 1-3.
+The second phase will run from late November 2025 to April 2026 and will focus on the
+system development and implementation. During this phase, the group will begin the actual
+development of the system, followed by a series of testing procedures to ensure that the system
+functions as intended and meets performance expectations. While the development progresses,
+the group will also begin writing Chapter 4, which documents the findings and results of the
+system implementation. The chapter will undergo revisions based on both adviser feedback and
+observed outcomes. Chapter 5 will also be started to present the conclusions and
+recommendations. After the final defense, the entire manuscript will be revised in accordance
+with the panel’s comments. The phase will conclude with the submission of the final and
+complete thesis manuscript by the end of April 2026.
+76
+Figure 14
+Work Plan
+Potential for Commercialization
+Market Model
+The market model for the proposed contraceptive decision support tool in the Philippines
+can be framed using the TAMSAMSOM framework. The Total Addressable Market (TAM)
+comprises all women of reproductive age in the Philippines, estimated at 27.85 million, together
+with approximately 136,000 family planning providers, resulting in a combined potential market
+of 27.99 million users. The Serviceable Available Market (SAM) includes women who are
+currently using modern contraceptives nationwide and their corresponding providers, totaling
+around 7.63 million users. The Serviceable Obtainable Market (SOM) focuses on the pilot
+77
+deployment in Quezon City, which has the largest population in the country. This includes
+women utilizing provider-supervised methods and their associated family planning providers
+within the city, with an estimated market size of approximately 368,000 users.
+Figure 15
+TAMSAMSOM Mode
+Measurable Benefits
+The proposed system provides different benefits for both patients and healthcare
+providers in terms of family planning. For patients, the system offers improved access to reliable
+contraceptive information, allowing them to view recommended options based on the WHO
+Medical Eligibility Criteria (MEC). For providers, the system displays a discontinuation risk level
+for each patient, by using patient data with clinical assessments to improve counseling efficiency
+and align recommendations with MEC guidelines. By enabling more informed choices and
+targeted counseling, the tool supports better contraceptive adherence, reduces method
+discontinuation, and strengthens continuity of care. At the health system level, these benefits
+78
+contribute to public health goals by improving family planning outcomes, reducing unintended
+pregnancies, and advancing national reproductive health objectives.
+Table 11
+Three-year Product Roadmap
+2026 2027 2028
+Market To be initially
+launched in Quezon
+City for public family
+planning providers.
+Expand to multiple
+NCR cities and other
+high-priority regions
+for family planning
+services.
+Deploy nationwide to
+all public and private
+family planning
+providers.
+Platform Mobile application
+only.
+Mobile application
+with a web-based
+platform introduced.
+Fully integrated
+mobile and web
+platforms optimized
+for scalability.
+Features Provides
+discontinuation risk
+levels and basic
+decision support.
+aligned with the WHO
+Medical Eligibility
+Criteria (MEC).
+Adds reminders,
+multilingual support,
+and improved risk
+prediction.
+Includes advanced
+analytics and
+dashboards for
+providers.
+Go-to-Market Strategy
+The Go-to-Market strategy defines how ContraceptIQ will be introduced and scaled in
+the Philippine healthcare setting. It outlines what the system provides, how it will be delivered
+through a mobile platform integrated with provider workflows, and who will use it, namely
+women of reproductive age and family planning providers. By using this strategy, it ensures
+effective adoption, accessibility, and impact on family planning practices (see Figure 10).
+79
+Figure 16
+Go-To-Market (GTM) Strategy
+Business Model
+The market model provides a structured overview of how the proposed system creates,
+delivers, and captures value within the healthcare setting. By using the Business Model Canvas
+framework, the study identifies the key partners, activities, resources, and value propositions
+that define the system’s operation. It also highlights the target customer segments, distribution
+channels, and customer relationships that ensure accessibility and adoption. Finally, it outlines
+the cost structure and revenue streams to demonstrate sustainability. The figure below presents
+the complete Business Model Canvas for the study.
+8
+0
+F
+i
+g
+u
+r
+e
+1
+7
+B
+u
+s
+in
+e
+s
+s
+M
+o
+d
+e
+l
+C
+a
+n
+va
+s
+81
+References
+World . (2025, September 26). New study reveals sex life impacts are major reasons for
+contraceptive discontinuation. Who.int; World Health Organization: WHO.
+https://www.who.int/news/item/26-09-2025-new-study-reveals-sex-life-impacts-are-major
+-reasons-for-contraceptive-discontinuation
+Desmon, S. (2025a, June 30). ‘These Women Should be Easy to Reach.’ Johns Hopkins Center
+for Communication Programs.
+https://ccp.jhu.edu/2024/01/08/reach-women-family-plannning-philippines-discontinuatio
+n/
+Bertrand, J. T., Ross, J., & Glover, A. L. (2021). Declining yet persistent use of traditional
+contraceptive methods in low- and middle-income countries. Journal of Biosocial
+Science, 1–18. https://doi.org/10.1017/s0021932021000341
+Laksono, A. D., Rohmah, N., & Megatsari, H. (2022). Barriers for multiparous women to using
+long-term contraceptive methods in Southeast Asia: case study in Philippines and
+Indonesia. BMC Public Health, 22(1). https://doi.org/10.1186/s12889-022-13844-z
+Flores, R., Trajera, S. M., & Ching, G. S. (2025). Attitudes and barriers to family planning
+methods among reproductive-age women in Southern Philippines. Edelweiss Applied
+Science and Technology, 9(2), 1337–1352. https://doi.org/10.55214/25768484.v9i2.4767
+Philippine Statistics Authority (PSA) & ICF. (2023). 2022 Demographic and Health Survey
+Summary Report Philippines. In 2022 Philippine National Demographic and Health
+Survey (NDHS) [Report]. PSA and ICF.
+https://dhsprogram.com/pubs/pdf/SR276/SR276.pdf
+82
+Ontiri, S., Mutea, L., Naanyu, V., Kabue, M., Biesma, R., & Stekelenburg, J. (2021). A qualitative
+exploration of contraceptive use and discontinuation among women with an unmet need
+for modern contraception in Kenya. Reproductive Health, 18(1).
+https://doi.org/10.1186/s12978-021-01094-y
+World Health Organization. (2022). Medical eligibility criteria for contraceptive use: Fifth edition.
+Geneva: WHO.
+Zeng, Y., & Cheng, F. (2021). Medical and Health Data Classification Method Based on Machine
+Learning. Journal of Healthcare Engineering, 2021, e2722854.
+https://doi.org/10.1155/2021/2722854
+Rahim, F., Anoshirvan Kazemnejad, Jahangiri, M., Amal Saki Malehi, & Gohari, K. (2021).
+Diagnostic performance of classification trees and hematological functions in
+hematologic disorders: an application of multidimensional scaling and cluster analysis.
+BMC Medical Informatics and Decision Making, 21(1).
+https://doi.org/10.1186/s12911-021-01678-5
+Laar, A. S., Harris, M. L., Shifti, D. M., & Loxton, D. (2022). Perspectives of health care
+professionals’ on delivering mHealth sexual and reproductive health services in rural
+settings in low-and-middle-income countries: a qualitative systematic review. BMC
+Health Services Research, 22(1). https://doi.org/10.1186/s12913-022-08512-2
+Kabongo, E. M., Mukumbang, F. C., Delobelle, P., & Nicol, E. (2021). Explaining the impact of
+mHealth on maternal and child health care in low- and middle-income countries: a realist
+synthesis. BMC Pregnancy & Childbirth, 21(1), 1–13.
+https://doi.org/10.1186/s12884-021-03684-x
+83
+Prachi S., Lakshmi M., Ajeet S. (2025). Logistic Regression in Healthcare: Predictive Modeling
+for Enhanced Clinical Decision-Making.Journal of Neonatal Surgery,14(22s), 765-769.
+https://www.jneonatalsurg.com/index.php/jns/article/view/5603/4651
+Arista, A. (2022). Comparison Decision Tree and Logistic Regression Machine Learning
+Classification Algorithms to determine Covid-19. Sinkron, 7(1), 59–65.
+https://doi.org/10.33395/sinkron.v7i1.11243
+Modhugua, V. R., & Ponnusamy, S. (2024). Comparative analysis of machine learning
+algorithms for liver disease prediction: SVM, logistic regression, and decision tree. Asian
+Journal of Research in Computer Science. Retrieved from
+https://doi.org/10.9734/ajrcos/2024/v17i6467
+Akben, S.B., Yumrutaş, H. (2025). A simple and fast explainable artificial intelligence-based
+pre-screening tool for breast cancer tumor malignancy detection. Scientific Reports,
+15(1). https://doi.org/10.1038/s41598-025-16842-4
+Battista, K., Diao, L., Patte, K. A., Dubin, J. A., & Leatherdale, S. T. (2023). Examining the use
+of decision trees in population health surveillance research: an application to youth
+mental health survey data in the COMPASS study. Health Promotion and Chronic
+Disease Prevention in Canada: Research, Policy and Practice, 43(2), 73–86.
+https://doi.org/10.24095/hpcdp.43.2.03
+Aria, M., Cuccurullo, C., & Gnasso, A. (2021). A comparison among interpretative proposals for
+Random Forests. Machine Learning with Applications, 6, 100094.
+https://doi.org/10.1016/j.mlwa.2021.100094
+Shwartz-Ziv, R., & Armon, A. (2021). Tabular Data: Deep Learning is Not All You Need.
+ArXiv:2106.03253 [Cs]. https://arxiv.org/abs/2106.03253
+84
+Wiens, M., Verone‐Boyle, A., Henscheid, N., Podichetty, J. T., & Burton, J. (2025). A Tutorial
+and Use Case Example of the eXtreme Gradient Boosting (XGBoost) Artificial
+Intelligence Algorithm for Drug Development Applications. Clinical and Translational
+Science, 18(3). https://doi.org/10.1111/cts.70172
+Xu, H., Peng, X., Peng, Z., Wang, R., Zhou, R., & Fu, L. (2024). Construction and SHAP
+interpretability analysis of a risk prediction model for feeding intolerance in preterm
+newborns based on machine learning. BMC Medical Informatics and Decision Making,
+24(1). https://doi.org/10.1186/s12911-024-02751-5
+Islam, M. R., Ahmed, M. U., & Begum, S. (2024). iXGB: Improving the Interpretability of
+XGBoost Using Decision Rules and Counterfactuals. Proceedings of the 16th
+International Conference on Agents and Artificial Intelligence, 1345–1353.
+https://doi.org/10.5220/0012474000003636
+Selahaddin Batuhan Akben, & Hilal Yumrutaş. (2025). A simple and fast explainable artificial
+intelligence-based pre-screening tool for breast cancer tumor malignancy detection.
+Scientific Reports, 15(1). https://doi.org/10.1038/s41598-025-16842-4
+Bereku, T., Habtu, Y., Abreham, B., Ayele, M., & Eliso, M. (2022). Magnitude and factors for
+method discontinuation and switching among long acting reversible contraceptive users
+in health facilities of Southern Ethiopia. Reproductive Health, 19(1).
+https://doi.org/10.1186/s12978-022-01357-2
+Compton, S. D., Manu, A., Maya, E., Morhe, E. S. K., & Dalton, V. K. (2023). Give women what
+they want: contraceptive discontinuation and method preference in urban Ghana.
+Contraception and Reproductive Medicine, 8(1).
+https://doi.org/10.1186/s40834-022-00200-0
+85
+Gemmill, A., Sarnak, D., Bradley, S. E. K., Brecker, E., & Patierno, K. (2023). Reproductive
+outcomes following contraceptive discontinuation for method-related reasons: An
+analysis of 49 Demographic and Health Surveys. PLOS Global Public Health, 3(11),
+e0002143. https://doi.org/10.1371/journal.pgph.0002143
+Lama L.C., Villalobos, R., Tello, M., De, A., & Gutierrez, E. L. (2024). Factors associated with
+the discontinuation of hormonal contraceptives in women of Lima, Peru. European
+Journal of Midwifery, 8(January), 1–8. https://doi.org/10.18332/ejm/174478
+Coulibaly, A., Baguiya, A., Kpebo, D., Zango, A., Tougri, H., Garanet, F., & Kouanda, S. (2025).
+Factors associated with the discontinuation of modern contraceptive methods among
+lactating women in nine West African high-fertility countries: findings of the most recent
+demographic and health surveys. Archives of Public Health, 83(1).
+https://doi.org/10.1186/s13690-025-01506-6
+Marista, D., Qomaruddin, M. B., & Soedirham, O. (2022). Factors influencing discontinuation of
+Long-Term contraceptive methods. Science Midwifery, 10(5), 4407–4417.
+https://doi.org/10.35335/midwifery.v10i5.1057
+De Bortoli M. M., Kantymir, S., Pacheco-Brousseau, L., Dahl, B., Holm Hansen, E., Lewis, K. B.,
+Zhang, Q., Cole, V., Westergren, T., & Stacey, D. (2024). Decisional needs and
+interventions for young women considering contraceptive options: An umbrella review.
+BMC Women’s Health, 24(1), 336. https://doi.org/10.1186/s12905-024-03172-2
+Meekers, D., Elkins, A., & Obozekhai, V. (2024). Tools for patient-centred family planning
+counselling: A scoping review. Journal of Global Health, 14.
+https://doi.org/10.7189/jogh.14.04038
+86
+Goueth, R. C., Maki, K. G., Babatunde, A., Eden, K. B., & Darney, B. G. (2022). Effects of
+technology-based contraceptive decision aids: a systematic review and meta-analysis.
+American Journal of Obstetrics and Gynecology, 227(5), 705-713.e9.
+https://doi.org/10.1016/j.ajog.2022.06.050
+Redman, M., Brian, J., & Wang, D. (2022). Evaluation of an Online Decision Aid for Selection of
+Contraceptive Methods. Applied Clinical Informatics, 14(01), 153–163.
+https://doi.org/10.1055/a-2004-2304
+Badawy, M., Ramadan, N., & Hefny, H. A. (2023). Healthcare predictive analytics using machine
+learning and deep learning techniques: a survey. Journal of Electrical Systems and
+Information Technology, 10(1). https://doi.org/10.1186/s43067-023-00108-y
+Agbana, R. D., Michael, T. O., & Ojo, T. F. (2022). Family planning method discontinuation
+among Nigerian women: Evidence from the Nigeria Demographic and Health Survey
+2018. Journal of Taibah University Medical Sciences, 18(1), 117–124.
+https://doi.org/10.1016/j.jtumed.2022.08.003
+Adem, J. B., Tewodros Desalegn Nebi, Walle, A. D., Mamo, D. N., & Kebede, S. D. (2025).
+Explainable machine learning algorithms to identify predictors of intention to use family
+planning among women of reproductive-age in Ethiopia: Evidence from the Performance
+Monitoring and Accountability (PMA) 2021 survey data set. BMJ Public Health, 3(1), 962.
+https://doi.org/10.1136/bmjph-2024-000962
+Haq, I., Hossain, M. I., Rahman, M. M., Methun, M. I. H., Talukder, A., Habib, M. J., & Hossain,
+M. S. (2022). Machine Learning Algorithm-Based Contraceptive Practice among
+87
+Ever-Married Women in Bangladesh: A Hierarchical Machine Learning Classification
+Approach. In Artificial intelligence. https://doi.org/10.5772/intechopen.103187
+Kebede, S. D., Sebastian, Y., Yeneneh, A., Chanie, A. F., Melaku, M. S., & Walle, A. D. (2023).
+Prediction of contraceptive discontinuation among reproductive-age women in Ethiopia
+using Ethiopian Demographic and Health Survey 2016 Dataset: A Machine Learning
+Approach. BMC Medical Informatics and Decision Making, 23(1).
+https://doi.org/10.1186/s12911-023-02102-w
+Kebede, S.D., Sebastian, Y., Yeneneh, A., Ashenafi Fentahun Chanie, Mequannent Sharew
+Melaku, & Agmasie Damtew Walle. (2023). Prediction of contraceptive discontinuation
+among reproductive-age women in Ethiopia using Ethiopian Demographic and Health
+Survey 2016 Dataset: A Machine Learning Approach. BMC Medical Informatics and
+Decision Making, 23(1). https://doi.org/10.1186/s12911-023-02102-w
+Zabor, E. C., Reddy, C. A., Tendulkar, R. D., & Patil, S. (2022). Logistic Regression in Clinical
+Studies. International Journal of Radiation Oncology*Biology*Physics, 112(2), 271–277.
+https://doi.org/10.1016/j.ijrobp.2021.08.007
+Zahra Mohammadi-Pirouz, Karimollah Hajian-Tilaki, Mahmoud Sadeghi Haddat-Zavareh,
+Abazar Amoozadeh, & Bahrami, S. (2024). Development of decision tree classification
+algorithms in predicting mortality of COVID-19 patients. International Journal of
+Emergency Medicine, 17(1). https://doi.org/10.1186/s12245-024-00681-7
+Kebede, S. A., Woldemariam, H. A., & Dagne, H. A. (2023). Prediction of contraceptive
+discontinuation among reproductive-age women in Ethiopia using Ethiopian
+Demographic and Health Survey 2016 dataset: A machine learning approach. BMC
+88
+Medical Informatics and Decision Making, 23(1), 170.
+https://doi.org/10.1186/s12911-023-02102-w
+Rohman, M. G., Abdullah, Z., Kasim, S., & Rasyidah. (2025). Hybrid Logistic Regression
+Random Forest on Predicting Student Performance. JOIV International Journal on
+Informatics Visualization, 9(2), 852–852. https://doi.org/10.62527/joiv.9.2.3972
+Sindhuja P, Vinayak Reddy T, Tarun Raidu M, Raju, K. B., Sarveswara, R. S., & Srikanth, D.
+(2025). Real Time Intrusion Detection using XGBoost and Decision Tree Classifier. 2022
+6th International Conference on Computing Methodologies and Communication
+(ICCMC), 1550–1556. https://doi.org/10.1109/iccmc65190.2025.11139888
+Idhom, M., Fauzi, A., Muhaimin, A., & Caesarendra, W. (2025). *Evaluation of CART and
+XGBoost methods on customer loan risk prediction based on consumer behavior. TEM
+Journal, 14 (3), 2624-2630.
+[https://doi.org/10.18421/TEM143-64](https://doi.org/10.18421/TEM143-64)
+Cao-Van K., Minh, T. C., Minh, L. G., Thi, T., & Tan, H. M. (2024). Soft-Voting Ensemble Model:
+An Efficient Learning Approach for Predictive Prostate Cancer Risk. Vietnam Journal of
+Computer Science, 11(04), 531–552. https://doi.org/10.1142/s2196888824500155
+Dey, S., & Das, S. (2022). Slope Instability Assessment of a Hilly Terrain using Hybrid Ensemble
+Machine Learning Model. 2022 International Conference on Augmented Intelligence and
+Sustainable Systems (ICAISS). https://doi.org/10.1109/icaiss55157.2022.10010793
