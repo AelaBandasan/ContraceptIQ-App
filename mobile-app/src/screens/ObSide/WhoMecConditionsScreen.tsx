@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, useWindowDimensions,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView, useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   Check, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
 import { colors, shadows, spacing } from '../../theme';
+import { useAlert } from '../../context/AlertContext';
 import ObHeader from '../../components/ObHeader';
 import { MecTreeSelector } from '../../components/MecTreeSelector';
 
@@ -22,6 +23,7 @@ const MAX_CONDITIONS = 3;
 
 const WhoMecConditionsScreen = () => {
   const navigation = useNavigation<any>();
+  const { showAlert } = useAlert();
   const route = useRoute<any>();
 
   const [selectedAge, setSelectedAge] = useState<number | null>(null);
@@ -51,7 +53,7 @@ const WhoMecConditionsScreen = () => {
     setSelectedConditions(prev => {
       if (prev.includes(id)) return prev.filter(c => c !== id);
       if (prev.length >= MAX_CONDITIONS) {
-        Alert.alert('Maximum Conditions', `You can select up to ${MAX_CONDITIONS} conditions.`);
+        showAlert('Maximum Conditions', `You can select up to ${MAX_CONDITIONS} conditions.`);
         return prev;
       }
       return [...prev, id];
@@ -60,7 +62,7 @@ const WhoMecConditionsScreen = () => {
 
   const handleNext = () => {
     if (selectedAge === null) {
-      Alert.alert('Select Age', 'Please select an age group before continuing.');
+      showAlert('Select Age', 'Please select an age group before continuing.');
       return;
     }
     navigation.navigate('ObWhoMecPreferences', {

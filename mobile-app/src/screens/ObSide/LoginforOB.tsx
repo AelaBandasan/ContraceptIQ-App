@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -32,8 +31,10 @@ import { doc, getDoc } from "firebase/firestore";
 import Logo from "../../../assets/clearBG.png";
 import { auth, db } from "../../config/firebaseConfig";
 import { colors, shadows } from "../../theme";
+import { useAlert } from "../../context/AlertContext";
 
 const LoginforOB = ({ navigation }: any) => {
+  const { showAlert } = useAlert();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -101,7 +102,7 @@ const LoginforOB = ({ navigation }: any) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password");
+      showAlert("Error", "Please enter both email and password");
       return;
     }
 
@@ -132,7 +133,7 @@ const LoginforOB = ({ navigation }: any) => {
         }
       } else {
         await signOut(auth);
-        Alert.alert(
+        showAlert(
           "Access Denied",
           "User not found in the database. Please contact support.",
         );
@@ -152,7 +153,7 @@ const LoginforOB = ({ navigation }: any) => {
         errorMessage = "Too many failed attempts. Please try again later.";
       }
 
-      Alert.alert("Login Failed", errorMessage);
+      showAlert("Login Failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +162,7 @@ const LoginforOB = ({ navigation }: any) => {
   const handleForgotPassword = async () => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      Alert.alert(
+      showAlert(
         "Forgot Password",
         "Please enter your email address in the Email field above, then tap Forgot Password again.",
       );
@@ -170,7 +171,7 @@ const LoginforOB = ({ navigation }: any) => {
 
     try {
       await sendPasswordResetEmail(auth, trimmedEmail);
-      Alert.alert(
+      showAlert(
         "Reset Email Sent",
         `A password reset link has been sent to ${trimmedEmail}. Check your inbox and follow the instructions.`,
       );
@@ -179,7 +180,7 @@ const LoginforOB = ({ navigation }: any) => {
       if (error.code === "auth/user-not-found" || error.code === "auth/invalid-email") {
         message = "No account found with that email address.";
       }
-      Alert.alert("Error", message);
+      showAlert("Error", message);
     }
   };
 

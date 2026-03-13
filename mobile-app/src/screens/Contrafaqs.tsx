@@ -13,8 +13,6 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-
 import ObHeader from '../components/ObHeader';
 import { colors } from '../theme';
 
@@ -120,7 +118,7 @@ const FaqItemComponent = ({
   };
 
   return (
-    <Animated.View entering={FadeInDown.delay(item.id * 45).duration(350).withInitialValues({ opacity: 1 })} style={[styles.faqCard, isOpen && styles.faqCardOpen]}>
+    <View style={[styles.faqCard, isOpen && styles.faqCardOpen]}>
       <TouchableOpacity
         style={styles.faqHeader}
         onPress={onToggle}
@@ -203,7 +201,7 @@ const FaqItemComponent = ({
           ) : null}
         </View>
       )}
-    </Animated.View>
+    </View>
   );
 };
 

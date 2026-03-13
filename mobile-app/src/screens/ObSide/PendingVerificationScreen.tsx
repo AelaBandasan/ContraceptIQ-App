@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, SafeAreaView, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { Clock, ArrowLeft, RefreshCw } from 'lucide-react-native';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
+import { useAlert } from '../../context/AlertContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PendingVerification'>;
 
 const PendingVerificationScreen = ({ navigation, route }: Props) => {
+    const { showAlert } = useAlert();
     const doctorName = route.params?.doctorName || 'Doctor';
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -32,12 +34,12 @@ const PendingVerificationScreen = ({ navigation, route }: Props) => {
                         routes: [{ name: "ObMainTabs", params: { doctorName: name } }],
                     });
                 } else {
-                    Alert.alert("Still Pending", "Your account is still under review. We will notify you once it's approved.");
+                    showAlert("Still Pending", "Your account is still under review. We will notify you once it's approved.");
                 }
             }
         } catch (error) {
             console.error("Refresh error:", error);
-            Alert.alert("Error", "Could not refresh status. Please try again.");
+            showAlert("Error", "Could not refresh status. Please try again.");
         } finally {
             setIsRefreshing(false);
         }

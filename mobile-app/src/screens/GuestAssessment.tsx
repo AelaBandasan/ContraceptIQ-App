@@ -5,7 +5,8 @@ import { Menu, ChevronRight } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { UserAssessmentData, assessDiscontinuationRisk } from '../services/discontinuationRiskService';
-import { ActivityIndicator, Alert } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { useAlert } from '../context/AlertContext';
 
 // --- PHASE 1 DATA FIELDS (Guest Input) ---
 const STEPS = [
@@ -38,6 +39,7 @@ const STEPS = [
 ];
 
 const GuestAssessment = ({ navigation, route }: any) => {
+    const { showAlert } = useAlert();
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -94,7 +96,7 @@ const GuestAssessment = ({ navigation, route }: any) => {
                 navigation.navigate('ConsultationCodeScreen', { patientData, riskResult });
             } catch (error: any) {
                 console.error("Guest Assessment Error:", error);
-                Alert.alert("Submission Error",
+                showAlert("Submission Error",
                     "Message: " + (error.message || JSON.stringify(error))
                 );
             } finally {

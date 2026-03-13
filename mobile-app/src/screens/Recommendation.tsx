@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DrawerScreenProps } from '../types/navigation';
 import { colors, shadows } from '../theme';
-import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { useAssessment } from '../context/AssessmentContext';
+import { useAlert } from '../context/AlertContext';
 import { CalendarDays, Check } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -29,13 +29,16 @@ const STEPS = [
 const Recommendation: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { selectedAgeIndex } = useAssessment();
+  const { showAlert } = useAlert();
+  const { selectedAgeIndex, reset } = useAssessment();
   const [localAgeIndex, setLocalAgeIndex] = useState<number | null>(selectedAgeIndex);
 
   useFocusEffect(
     React.useCallback(() => {
-      setLocalAgeIndex(selectedAgeIndex);
-    }, [selectedAgeIndex])
+      // Automatic reset whenever starting or returning to this flow start screen
+      reset();
+      setLocalAgeIndex(null);
+    }, [reset])
   );
   const horizontalPadding = width < 360 ? 14 : 20;
   const ageChipWidth = width < 360 ? '47%' : width < 430 ? '31%' : '23%';
@@ -46,7 +49,7 @@ const Recommendation: React.FC<Props> = ({ navigation }) => {
 
   const handleNext = () => {
     if (localAgeIndex === null) {
-      Alert.alert('Select Age', 'Please select your age group before continuing.');
+      showAlert('Select Age', 'Please select your age group before continuing.');
       return;
     }
     const numericAge = AGE_RANGES[localAgeIndex].numericAge;

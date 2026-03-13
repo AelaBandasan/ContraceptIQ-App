@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -34,6 +33,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import Logo from "../../../assets/clearBG.png";
 import { auth, db } from "../../config/firebaseConfig";
 import { colors, shadows } from "../../theme";
+import { useAlert } from "../../context/AlertContext";
 
 // ── Password requirements ──────────────────────────────────────────────────────
 
@@ -60,6 +60,7 @@ const isAgeValid = (birthDate: Date): boolean => {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const SignupforOB = ({ navigation }: any) => {
+  const { showAlert } = useAlert();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,32 +113,32 @@ const SignupforOB = ({ navigation }: any) => {
   const handleSignup = async () => {
     // Field presence check
     if (!fullName.trim() || !email.trim() || !password || !confirmPassword || !prcId.trim() || !birthdate) {
-      Alert.alert("Missing Fields", "Please fill in all required fields.");
+      showAlert("Missing Fields", "Please fill in all required fields.");
       return;
     }
 
     // Password strength
     if (!isPasswordValid(password)) {
-      Alert.alert("Weak Password", "Your password does not meet the requirements. Please check the rules below the password field.");
+      showAlert("Weak Password", "Your password does not meet the requirements. Please check the rules below the password field.");
       return;
     }
 
     // Password match
     if (password !== confirmPassword) {
-      Alert.alert("Password Mismatch", "Passwords do not match. Please re-enter.");
+      showAlert("Password Mismatch", "Passwords do not match. Please re-enter.");
       return;
     }
 
     // PRC ID format — exactly 7 digits
     const prcDigits = prcId.trim();
     if (prcDigits.length !== 7 || !/^\d+$/.test(prcDigits)) {
-      Alert.alert("Invalid PRC ID", "Please enter a valid 7-digit PRC License number.");
+      showAlert("Invalid PRC ID", "Please enter a valid 7-digit PRC License number.");
       return;
     }
 
     // Birthdate validation
     if (!isAgeValid(birthdate)) {
-      Alert.alert("Invalid Birthdate", "You must be at least 18 years old to register as an OB Professional.");
+      showAlert("Invalid Birthdate", "You must be at least 18 years old to register as an OB Professional.");
       return;
     }
 
@@ -168,7 +169,7 @@ const SignupforOB = ({ navigation }: any) => {
       let message = error.message ?? "An error occurred during registration.";
       if (error.code === "auth/email-already-in-use") message = "An account with this email already exists.";
       else if (error.code === "auth/invalid-email") message = "Please enter a valid email address.";
-      Alert.alert("Registration Failed", message);
+      showAlert("Registration Failed", message);
     } finally {
       setIsLoading(false);
     }

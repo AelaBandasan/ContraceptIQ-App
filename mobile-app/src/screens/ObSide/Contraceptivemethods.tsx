@@ -6,9 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 import { UserTabScreenProps, ObTabScreenProps, DrawerScreenProps } from '../../types/navigation';
 import ObHeader from '../../components/ObHeader';
 import { colors, shadows } from '../../theme';
-import Animated, {
-  FadeIn,
-} from 'react-native-reanimated';
 
 type Props = UserTabScreenProps<'Contraceptive Methods'> | ObTabScreenProps<'ObMethods'> | DrawerScreenProps<'Contraceptive Methods'>;
 
@@ -137,9 +134,8 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
 
 
         {methods.map((item, index) => (
-          <Animated.View
+          <View
             key={item.id}
-            entering={FadeIn.delay(350 + index * 150).duration(1200).withInitialValues({ opacity: 1 })}
           >
             <TouchableOpacity
               style={styles.methodCard}
@@ -173,7 +169,7 @@ const Contraceptivemethods: React.FC<Props> = ({ route }) => {
                 <Image source={item.illustration} style={styles.illustration} />
               </View>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         ))}
       </ScrollView>
 

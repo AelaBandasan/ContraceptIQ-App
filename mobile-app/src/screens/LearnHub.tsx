@@ -23,7 +23,6 @@ import {
   Info,
 } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, shadows } from '../theme';
 
 const LEARN_DATA = [
@@ -164,7 +163,7 @@ const LearnHub = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(100).duration(500).withInitialValues({ opacity: 1 })} style={styles.introCard}>
+        <View style={styles.introCard}>
           <View style={styles.introCardHeader}>
             <View style={[styles.introIconBox, { backgroundColor: '#E0E7FF' }]}>
               <Ionicons name="information-circle" size={22} color="#6366F1" />
@@ -174,7 +173,7 @@ const LearnHub = ({ navigation }: any) => {
           <Text style={styles.introCardText}>
             Birth control methods differ in effectiveness, duration of protection, and the way they are used. The WHO Family Planning Handbook provides practical guidance on more than twenty family planning methods to help clients choose and use contraception safely and effectively.
           </Text>
-        </Animated.View>
+        </View>
 
         <View style={styles.introContainer}>
           <Text style={styles.introTitle}>Explore Topics</Text>
@@ -209,7 +208,7 @@ export const LearnHubDetail = ({ navigation, route }: any) => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {content?.sections?.map((section: any, index: number) => (
-          <Animated.View key={index} entering={FadeInDown.delay(index * 100).duration(350).withInitialValues({ opacity: 1 })} style={[styles.infoCard, section.isUrgent && styles.urgentCard]}> 
+          <View key={index} style={[styles.infoCard, section.isUrgent && styles.urgentCard]}> 
             <View style={styles.infoCardHeader}>
               <View style={[styles.infoIconBox, { backgroundColor: section.iconBg }]}>
                 <section.icon size={18} color={section.iconColor} />
@@ -240,7 +239,7 @@ export const LearnHubDetail = ({ navigation, route }: any) => {
                 ))}
               </View>
             )}
-          </Animated.View>
+          </View>
         ))}
         <View style={{ height: 40 }} />
       </ScrollView>

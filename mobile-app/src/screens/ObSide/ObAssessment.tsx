@@ -9,7 +9,6 @@ import {
   StatusBar,
   TextInput,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -52,6 +51,7 @@ import { WHO_MEC_CONDITIONS } from "../../data/whoMecData";
 import { CONTRACEPTIVE_DETAILS } from "../../data/contraceptiveData";
 import { MecTreeSelector } from "../../components/MecTreeSelector";
 import { colors, shadows } from "../../theme";
+import { useAlert } from "../../context/AlertContext";
 
 // ─── Field Definitions (9 V4 features + patient name) ───────────────────────
 
@@ -167,6 +167,7 @@ const PREFERENCES = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const ObAssessment = ({ navigation, route }: any) => {
+  const { showAlert } = useAlert();
   const hasPatientData = !!route.params?.record;
 
   // screen: 'form' → 'mec' → 'mec_results' → 'results'
@@ -205,7 +206,7 @@ const ObAssessment = ({ navigation, route }: any) => {
   };
 
   const handleExitAssessment = () => {
-    Alert.alert(
+    showAlert(
       "Exit Assessment",
       "Are you sure you want to exit?",
       [
@@ -261,7 +262,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     setMecConditionIds((prev) => {
       if (prev.includes(id)) return prev.filter((c) => c !== id);
       if (prev.length >= 3) {
-        Alert.alert("Limit Reached", "Max 3 conditions for MEC tool.");
+        showAlert("Limit Reached", "Max 3 conditions for MEC tool.");
         return prev;
       }
       return [...prev, id];
@@ -275,7 +276,7 @@ const ObAssessment = ({ navigation, route }: any) => {
       }
 
       if (prev.length >= 3) {
-        Alert.alert("Limit Reached", "You can select up to 3 preferences only.");
+        showAlert("Limit Reached", "You can select up to 3 preferences only.");
         return prev;
       }
 
@@ -306,22 +307,22 @@ const ObAssessment = ({ navigation, route }: any) => {
     // Name validation
     const name = (formData.NAME || "").trim();
     if (!name || name.length < 2) {
-      Alert.alert("Required", "Please enter the patient's full name (at least 2 characters).");
+      showAlert("Required", "Please enter the patient's full name (at least 2 characters).");
       return false;
     }
     if (/\d/.test(name)) {
-      Alert.alert("Invalid Name", "Patient name must not contain numbers.");
+      showAlert("Invalid Name", "Patient name must not contain numbers.");
       return false;
     }
 
     // Age validation — WHO reproductive age range: 15–55
     const age = Number(formData.AGE);
     if (!formData.AGE || isNaN(age)) {
-      Alert.alert("Required", "Please enter a valid patient age.");
+      showAlert("Required", "Please enter a valid patient age.");
       return false;
     }
     if (age < 15 || age > 55) {
-      Alert.alert("Invalid Age", "Patient age must be between 15 and 55 years (WHO reproductive age range).");
+      showAlert("Invalid Age", "Patient age must be between 15 and 55 years (WHO reproductive age range).");
       return false;
     }
 
@@ -329,13 +330,13 @@ const ObAssessment = ({ navigation, route }: any) => {
     if (formData.HUSBAND_AGE) {
       const hAge = Number(formData.HUSBAND_AGE);
       if (isNaN(hAge) || hAge < 15 || hAge > 80) {
-        Alert.alert("Invalid Age", "Partner age must be between 15 and 80 years.");
+        showAlert("Invalid Age", "Partner age must be between 15 and 80 years.");
         return false;
       }
     }
 
     if (!formData.ETHNICITY) {
-      Alert.alert("Required", "Please select the patient's ethnicity.");
+      showAlert("Required", "Please select the patient's ethnicity.");
       return false;
     }
     return true;
@@ -345,7 +346,7 @@ const ObAssessment = ({ navigation, route }: any) => {
 
   const generateMecResults = () => {
     if (mecPrefs.length > 3) {
-      Alert.alert("Validation", "Please select up to 3 preferences only.");
+      showAlert("Validation", "Please select up to 3 preferences only.");
       return;
     }
 
@@ -366,7 +367,7 @@ const ObAssessment = ({ navigation, route }: any) => {
       setMethodEligibility(eligibility);
       setScreen("mec_results");
     } catch (e: any) {
-      Alert.alert("MEC Calculation Failed", e.message || "Failed to calculate criteria.");
+      showAlert("MEC Calculation Failed", e.message || "Failed to calculate criteria.");
     } finally {
       setIsLoading(false);
     }
@@ -378,7 +379,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     setIsLoading(true);
     try {
       if (!mecResults) {
-        Alert.alert("Missing MEC Data", "Please run MEC check first.");
+        showAlert("Missing MEC Data", "Please run MEC check first.");
         return;
       }
 
@@ -399,7 +400,7 @@ const ObAssessment = ({ navigation, route }: any) => {
       });
 
       if (eligibleMethods.length === 0) {
-        Alert.alert("No Eligible Methods", "No methods are eligible based on MEC results.");
+        showAlert("No Eligible Methods", "No methods are eligible based on MEC results.");
         return;
       }
 
@@ -428,14 +429,14 @@ const ObAssessment = ({ navigation, route }: any) => {
       }
 
       if (Object.values(results).every((r) => r === null)) {
-        Alert.alert("Prediction Failed", "Could not generate risk predictions.");
+        showAlert("Prediction Failed", "Could not generate risk predictions.");
         return;
       }
 
       setAllMethodResults(results);
       setScreen("results");
     } catch (err: any) {
-      Alert.alert("Assessment Failed", err.message || "Something went wrong.");
+      showAlert("Assessment Failed", err.message || "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
@@ -446,7 +447,7 @@ const ObAssessment = ({ navigation, route }: any) => {
   const handleSaveAndFinish = async () => {
     const resultCount = Object.values(allMethodResults).filter((r) => r !== null).length;
     if (resultCount === 0) {
-      Alert.alert("No Assessment", "Please generate risk assessments first.");
+      showAlert("No Assessment", "Please generate risk assessments first.");
       return;
     }
 
@@ -495,10 +496,10 @@ const ObAssessment = ({ navigation, route }: any) => {
       };
 
       await saveAssessment(record);
-      Alert.alert("Saved", "Assessment saved to your records.");
+      showAlert("Saved", "Assessment saved to your records.");
       navigation.navigate("ObMainTabs", { screen: "ObHome" });
     } catch {
-      Alert.alert("Save Failed", "Could not save the assessment. Please try again.");
+      showAlert("Save Failed", "Could not save the assessment. Please try again.");
     } finally {
       setIsLoading(false);
     }

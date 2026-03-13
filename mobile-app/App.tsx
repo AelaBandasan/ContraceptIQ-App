@@ -7,6 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootStack from './src/routes/RootStack';
 import { navigationRef } from './src/navigation/NavigationService';
 import { AssessmentProvider } from './src/context/AssessmentContext';
+import { AlertProvider } from './src/context/AlertContext';
+import CustomAlert from './src/components/CustomAlert';
 import { preloadModels } from './src/services/onDeviceRiskService';
 
 export default function App() {
@@ -19,12 +21,15 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AssessmentProvider>
-          <NavigationContainer ref={navigationRef}>
-            <RootStack />
-            <StatusBar style="auto" />
-          </NavigationContainer>
-        </AssessmentProvider>
+        <AlertProvider>
+          <AssessmentProvider>
+            <NavigationContainer ref={navigationRef}>
+              <RootStack />
+              <StatusBar style="auto" />
+            </NavigationContainer>
+          </AssessmentProvider>
+          <CustomAlert />
+        </AlertProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

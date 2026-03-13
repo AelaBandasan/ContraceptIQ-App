@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, shadows } from '../theme';
 
 const WhatIsContraception = ({ navigation }: any) => {
@@ -22,7 +21,7 @@ const WhatIsContraception = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(100).duration(400).withInitialValues({ opacity: 1 })} style={styles.mainCard}>
+        <View style={styles.mainCard}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconBox, { backgroundColor: '#E0E7FF' }]}>
               <Ionicons name="heart" size={24} color="#6366F1" />
@@ -32,9 +31,9 @@ const WhatIsContraception = ({ navigation }: any) => {
           <Text style={styles.cardDescription}>
             Contraception refers to the use of methods or devices to prevent pregnancy. Family planning services enable individuals and couples to decide whether and when to have children and how many children to have.
           </Text>
-        </Animated.View>
+        </View>
 
-        <Animated.View entering={FadeInDown.delay(180).duration(400).withInitialValues({ opacity: 1 })} style={styles.quoteCard}>
+        <View style={styles.quoteCard}>
           <View style={styles.quoteHeader}>
             <Ionicons name="shield-checkmark" size={20} color="#10B981" />
             <Text style={styles.quoteTitle}>Why It Matters</Text>
@@ -45,7 +44,7 @@ const WhatIsContraception = ({ navigation }: any) => {
           <View style={styles.whoBadge}>
             <Text style={styles.whoText}>WHO</Text>
           </View>
-        </Animated.View>
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>

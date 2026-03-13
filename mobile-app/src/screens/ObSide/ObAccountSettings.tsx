@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput,
-    ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
+    ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -16,6 +16,7 @@ import {
 import { auth } from '../../config/firebaseConfig';
 import ObHeader from '../../components/ObHeader';
 import { colors, shadows } from '../../theme';
+import { useAlert } from '../../context/AlertContext';
 
 // ─── Section wrapper ─────────────────────────────────────────────────────────
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -53,6 +54,7 @@ const PasswordInput = ({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 const ObAccountSettings = ({ navigation }: any) => {
+    const { showAlert } = useAlert();
     const user = auth.currentUser;
 
     // Change password state
@@ -64,15 +66,15 @@ const ObAccountSettings = ({ navigation }: any) => {
     // ── Change password ──────────────────────────────────────────────────────
     const handleChangePassword = async () => {
         if (!currentPassword) {
-            Alert.alert('Validation', 'Please enter your current password.');
+            showAlert('Validation', 'Please enter your current password.');
             return;
         }
         if (newPassword.length < 8) {
-            Alert.alert('Validation', 'New password must be at least 8 characters.');
+            showAlert('Validation', 'New password must be at least 8 characters.');
             return;
         }
         if (newPassword !== confirmPassword) {
-            Alert.alert('Validation', 'New passwords do not match.');
+            showAlert('Validation', 'New passwords do not match.');
             return;
         }
         if (!user?.email) return;
@@ -86,14 +88,14 @@ const ObAccountSettings = ({ navigation }: any) => {
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
-            Alert.alert('Success', 'Password changed successfully.');
+            showAlert('Success', 'Password changed successfully.');
         } catch (err: any) {
             if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-                Alert.alert('Error', 'Current password is incorrect.');
+                showAlert('Error', 'Current password is incorrect.');
             } else if (err.code === 'auth/weak-password') {
-                Alert.alert('Error', 'New password is too weak. Use at least 8 characters.');
+                showAlert('Error', 'New password is too weak. Use at least 8 characters.');
             } else {
-                Alert.alert('Error', err.message || 'Could not change password.');
+                showAlert('Error', err.message || 'Could not change password.');
             }
         } finally {
             setSavingPassword(false);

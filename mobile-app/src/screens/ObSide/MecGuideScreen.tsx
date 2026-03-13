@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Info, CheckCircle2, AlertCircle, AlertTriangle, XCircle } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -71,9 +71,8 @@ const MecGuideScreen = () => {
                 {categories.map((category, index) => {
                     const IconComponent = category.icon;
                     return (
-                        <Animated.View
+                        <View
                             key={index}
-                            entering={FadeInDown.delay(120 + index * 90).duration(450).withInitialValues({ opacity: 1 })}
                             style={[styles.card, { borderLeftColor: category.color }]}
                         >
                             <View style={styles.cardHeader}>
@@ -95,7 +94,7 @@ const MecGuideScreen = () => {
                                     </Text>
                                 </View>
                             </View>
-                        </Animated.View>
+                        </View>
                     );
                 })}
 

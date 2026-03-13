@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../config/firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -9,8 +9,10 @@ import { LogOut, ChevronRight, Settings, Info, Pencil } from 'lucide-react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import ObHeader from '../../components/ObHeader';
 import { colors } from '../../theme';
+import { useAlert } from '../../context/AlertContext';
 
 const ProfileScreen = ({ navigation }: any) => {
+    const { showAlert } = useAlert();
     const { width } = useWindowDimensions();
     const horizontalPadding = width < 360 ? 14 : 20;
     const [profilePic, setProfilePic] = useState<string | null>(null);
@@ -46,22 +48,35 @@ const ProfileScreen = ({ navigation }: any) => {
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            await auth.signOut();
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'LoginforOB' }],
-            });
-        } catch (error) {
-            console.error('Logout Error:', error);
-        }
+    const handleLogout = () => {
+        showAlert(
+            'Log Out',
+            'Are you sure you want to log out of your account?',
+            [
+                { text: 'Stay', style: 'cancel' },
+                { 
+                    text: 'Log Out', 
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await auth.signOut();
+                            navigation.reset({
+                                index: 0,
+                                routes: [{ name: 'LoginforOB' }],
+                            });
+                        } catch (error) {
+                            console.error('Logout Error:', error);
+                        }
+                    }
+                },
+            ]
+        );
     };
 
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission Denied', 'We need camera roll permissions to change your profile picture.');
+            showAlert('Permission Denied', 'We need camera roll permissions to change your profile picture.');
             return;
         }
 
@@ -92,10 +107,10 @@ const ProfileScreen = ({ navigation }: any) => {
             });
 
             setProfilePic(uri);
-            Alert.alert('Success', 'Profile picture updated locally!');
+            showAlert('Success', 'Profile picture updated locally!');
         } catch (error) {
             console.error('Upload Error:', error);
-            Alert.alert('Error', 'Failed to save image locally. Please try again.');
+            showAlert('Error', 'Failed to save image locally. Please try again.');
         } finally {
             setUploading(false);
         }

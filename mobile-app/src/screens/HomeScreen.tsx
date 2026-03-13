@@ -24,11 +24,13 @@ import Animated, {
 import type { UserTabScreenProps, DrawerScreenProps } from '../types/navigation';
 import { colors, spacing, shadows, borderRadius as themeRadius } from '../theme';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { useAlert } from '../context/AlertContext';
 
 type Props = UserTabScreenProps<'Home'> | DrawerScreenProps<'Home'>;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { showAlert } = useAlert();
 
   const contraceptiveMethods = [
     { id: 'pop', name: 'POP', image: require('../../assets/image/sq_poppills.png') },
@@ -122,7 +124,19 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.primaryButtonShadow}
-            onPress={() => (navigation as any).navigate("Recommendation")}
+            onPress={() => {
+              showAlert(
+                "Disclaimer",
+                "This tool provides general guidance based on WHO Medical Eligibility Criteria. It is not a substitute for professional medical advice. Please consult with a healthcare professional before starting any contraceptive method.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { 
+                    text: "Proceed", 
+                    onPress: () => (navigation as any).navigate("Recommendation") 
+                  }
+                ]
+              );
+            }}
           >
             <View
               style={[styles.primaryButton, { backgroundColor: colors.primary }]}

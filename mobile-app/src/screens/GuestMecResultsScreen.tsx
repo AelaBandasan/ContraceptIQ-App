@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, Alert,
+  StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import {
   type WhoMecMethodResult, type MECCategory, METHOD_ATTRIBUTES,
 } from '../services/mecService';
 import { useAssessment } from '../context/AssessmentContext';
+import { useAlert } from '../context/AlertContext';
 
 // Maps numeric age value back to its 0-based chip index for context storage
 const AGE_TO_INDEX: Record<number, number> = { 16: 0, 18: 1, 30: 2, 42: 3, 50: 4 };
@@ -30,7 +31,7 @@ const PREF_LABELS: Record<string, string> = {
 };
 
 const METHOD_IMAGES: Record<string, any> = {
-  'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpatch1.png'),
+  'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpills.png'),
   'Progestogen-only Pill (POP)': require('../../assets/image/sq_poppills.png'),
   'Injectable (DMPA)': require('../../assets/image/sq_dmpainj.png'),
   'Implant (LNG/ETG)': require('../../assets/image/sq_lngetg.png'),
@@ -67,6 +68,7 @@ const CategoryIcon = ({ category }: { category: MECCategory }) => {
 
 const GuestMecResultsScreen = () => {
   const navigation = useNavigation<any>();
+  const { showAlert } = useAlert();
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
 
@@ -78,6 +80,7 @@ const GuestMecResultsScreen = () => {
   const ageLabel = AGE_LABEL[age] ?? String(age);
   const { saveGuestPreferences } = useAssessment();
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Calculate results using WHO MEC Tool with NO medical conditions
   const result = useMemo(
@@ -85,29 +88,7 @@ const GuestMecResultsScreen = () => {
     [age, preferences]
   );
 
-  const handleSave = async () => {
-    const ageIndex = AGE_TO_INDEX[age] ?? 2;
-    await saveGuestPreferences(ageIndex, preferences);
-    setSaved(true);
-    Alert.alert(
-      'Preferences Saved',
-      'Your age group and preferences have been saved. They will be remembered the next time you open the app.',
-      [{ text: 'View Preferences', onPress: () => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Preferences' } }) }]
-    );
-  };
-
-  const handleReturnHome = () => {
-    Alert.alert(
-      'Return to Home?',
-      'You will exit the assessment and return to the home screen.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Return', onPress: () => navigation.navigate('MainDrawer') },
-      ]
-    );
-  };
-
-  // ── Render helpers ────────────────────────────────────────────────────────
+  // ── Render / Logic helpers ────────────────────────────────────────────────
 
   const getMatchedPreferences = (methodId: string): string[] => {
     if (!preferences || preferences.length === 0) return [];
@@ -124,6 +105,66 @@ const GuestMecResultsScreen = () => {
       )
       .map((pref) => PREF_LABELS[pref] || pref);
   };
+
+  // ── Sorted Results ──────────────────────────────────────────────────────────
+
+  const sortedRecommended = useMemo(() => {
+    return [...result.recommended].sort((a, b) => {
+      // Primary Sort: MEC Category (ASC: 1 is best)
+      if (a.mecCategory !== b.mecCategory) return a.mecCategory - b.mecCategory;
+      
+      // Secondary Sort: Preference Match (DESC: highest match first)
+      const countA = getMatchedPreferences(a.id).length;
+      const countB = getMatchedPreferences(b.id).length;
+      return countB - countA;
+    });
+  }, [result.recommended, preferences]);
+
+  const sortedNotRecommended = useMemo(() => {
+    return [...result.notRecommended].sort((a, b) => {
+      // Primary Sort: MEC Category (ASC: 3 is better than 4)
+      if (a.mecCategory !== b.mecCategory) return a.mecCategory - b.mecCategory;
+
+      // Secondary Sort: Preference Match (DESC: highest match first)
+      const countA = getMatchedPreferences(a.id).length;
+      const countB = getMatchedPreferences(b.id).length;
+      return countB - countA;
+    });
+  }, [result.notRecommended, preferences]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const ageIndex = AGE_TO_INDEX[age] ?? 2;
+      await saveGuestPreferences(ageIndex, preferences);
+      setSaved(true);
+      showAlert(
+        'Preferences Saved',
+        'Your age group and preferences have been saved. They will be remembered the next time you open the app.',
+        [{ text: 'View Preferences', onPress: () => navigation.navigate('MainDrawer', { screen: 'MainTabs', params: { screen: 'Preferences' } }) }]
+      );
+    } catch (error) {
+      console.error('Save Preference Error:', error);
+      showAlert('Error', 'Failed to save preferences. Please try again.');
+    } finally {
+      setIsSaving(true); // Keep it "saving" state visual if needed, or false? 
+      // Actually, after alert shows, it's done.
+      setIsSaving(false);
+    }
+  };
+
+  const handleReturnHome = () => {
+    showAlert(
+      'Return to Home?',
+      'You will exit the assessment and return to the home screen.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Return', style: 'destructive', onPress: () => navigation.navigate('MainDrawer') },
+      ]
+    );
+  };
+
+  // ── Render helpers ────────────────────────────────────────────────────────
 
   const renderRecommendedCard = (method: WhoMecMethodResult) => {
     const bgColor = getMECColor(method.mecCategory);
@@ -276,7 +317,7 @@ const GuestMecResultsScreen = () => {
             <Text style={styles.resultsSectionTitle}>
               Eligible Methods ({result.recommended.length})
             </Text>
-            {result.recommended.map(renderRecommendedCard)}
+            {sortedRecommended.map(renderRecommendedCard)}
           </View>
         )}
 
@@ -286,7 +327,7 @@ const GuestMecResultsScreen = () => {
             <Text style={[styles.resultsSectionTitle, { color: colors.error ?? '#EF4444' }]}>
               Not Recommended ({result.notRecommended.length})
             </Text>
-            {result.notRecommended.map(renderNotRecommendedCard)}
+            {sortedNotRecommended.map(renderNotRecommendedCard)}
           </View>
         )}
 
@@ -302,18 +343,24 @@ const GuestMecResultsScreen = () => {
         </View>
 
         <TouchableOpacity
-          style={[styles.primaryBtn, saved && styles.primaryBtnSaved]}
-          onPress={saved ? undefined : handleSave}
-          activeOpacity={saved ? 1 : 0.85}
+          style={[styles.primaryBtn, (saved || isSaving) && styles.primaryBtnSaved]}
+          onPress={(saved || isSaving) ? undefined : handleSave}
+          activeOpacity={(saved || isSaving) ? 1 : 0.85}
         >
-          <Ionicons
-            name={saved ? 'checkmark-circle' : 'bookmark-outline'}
-            size={18}
-            color="#fff"
-          />
-          <Text style={styles.primaryBtnText}>
-            {saved ? 'Preferences Saved' : 'Save Preferences'}
-          </Text>
+          {isSaving ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Ionicons
+                name={saved ? 'checkmark-circle' : 'bookmark-outline'}
+                size={18}
+                color="#fff"
+              />
+              <Text style={styles.primaryBtnText}>
+                {saved ? 'Preferences Saved' : 'Save Preferences'}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryBtn} onPress={handleReturnHome}>
           <Ionicons name="home-outline" size={16} color="#6B4254" />
@@ -502,8 +549,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md, borderWidth: 1, borderColor: '#FDE68A',
   },
   disclaimerHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
-  disclaimerTitle: { fontSize: 14, fontWeight: '700', color: '#92400E' },
-  disclaimerText: { fontSize: 12.5, color: '#92400E', lineHeight: 18 },
+  disclaimerTitle: { fontSize: 15, fontWeight: '700', color: '#92400E' },
+  disclaimerText: { fontSize: 13, color: '#92400E', lineHeight: 19 },
 
   primaryBtn: {
     backgroundColor: colors.primary, borderRadius: 16, height: 55,
