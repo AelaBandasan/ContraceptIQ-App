@@ -136,9 +136,11 @@ const FORM_FIELDS = [
 
 // ─── Method → MEC key mapping ────────────────────────────────────────────────
 
+// 4 methods assessed by ML (5th method POP has no training data — MEC only).
+// Cu-IUD merged with LNG-IUD into one "Intrauterine Device (IUD)" entry
+// because the training dataset has a single generic "IUD" bin.
 const METHOD_NAME_TO_INDEX: Record<string, number> = {
   Pills: 1,
-  "Copper IUD": 2,
   "Intrauterine Device (IUD)": 3,
   Implant: 4,
   Injectable: 6,
@@ -148,7 +150,6 @@ const METHOD_NAME_TO_DATA_KEY: Record<string, string> = {
   Pills: "chc",
   Injectable: "dmpa",
   Implant: "implant",
-  "Copper IUD": "cu-iud",
   "Intrauterine Device (IUD)": "lng-ius",
 };
 
@@ -383,7 +384,16 @@ const ObAssessment = ({ navigation, route }: any) => {
 
       const nameToKey = MODEL_KEY_TO_MEC_ID;
 
+      // IUD eligibility: show ML card if EITHER Cu-IUD or LNG-IUD is eligible (≤ cat 3)
+      const getIudMinCat = () => {
+        if (!mecResults) return 1;
+        const cuCat = (mecResults as any)['Cu-IUD'] || 1;
+        const lngCat = (mecResults as any)['LNG-IUD'] || 1;
+        return Math.min(cuCat, lngCat);
+      };
+
       const eligibleMethods = Object.keys(METHOD_NAME_TO_INDEX).filter((m) => {
+        if (m === 'Intrauterine Device (IUD)') return getIudMinCat() <= 3;
         const cat = (mecResults as any)[nameToKey[m]] || 1;
         return cat <= 3;
       });
@@ -401,7 +411,10 @@ const ObAssessment = ({ navigation, route }: any) => {
             CONTRACEPTIVE_METHOD: methodName,
           } as unknown as UserAssessmentData);
 
-          const cat = (mecResults as any)[nameToKey[methodName]] || 1;
+          // IUD override: use the HIGHER (most conservative) of Cu-IUD vs LNG-IUD
+          const cat = methodName === 'Intrauterine Device (IUD)' && mecResults
+            ? Math.max((mecResults as any)['Cu-IUD'] || 1, (mecResults as any)['LNG-IUD'] || 1)
+            : (mecResults as any)[nameToKey[methodName]] || 1;
           if (cat >= 3 && result) {
             result.risk_level = "HIGH";
             result.recommendation = `Medical risks present (MEC Cat ${cat}). Strong clinical counseling required.`;
@@ -941,25 +954,50 @@ const ObAssessment = ({ navigation, route }: any) => {
                 })
                 .map(([methodName, result]) => {
                   if (!result) return null;
-                  const mecKey = MODEL_KEY_TO_MEC_ID[methodName];
-                const mecCat = mecResults && mecKey ? (mecResults as any)[mecKey] : null;
 
-                const mecCardStyle = mecCat
-                  ? {
-                    borderColor: getMECColor(mecCat as MECCategory),
-                    borderWidth: 1.5,
-                  }
-                  : undefined;
+                  // IUD: resolve both Cu-IUD and LNG-IUD MEC categories separately
+                  const isIUD = methodName === 'Intrauterine Device (IUD)';
+                  const cuIudCat: MECCategory | null = isIUD && mecResults
+                    ? ((mecResults as any)['Cu-IUD'] as MECCategory) || null
+                    : null;
+                  const lngIudCat: MECCategory | null = isIUD && mecResults
+                    ? ((mecResults as any)['LNG-IUD'] as MECCategory) || null
+                    : null;
+
+                  const mecKey = MODEL_KEY_TO_MEC_ID[methodName];
+                  const mecCat: MECCategory | null = !isIUD && mecResults && mecKey
+                    ? ((mecResults as any)[mecKey] as MECCategory) || null
+                    : null;
+
+                  // Card border uses most conservative category
+                  const worstCat: MECCategory | null = isIUD
+                    ? (cuIudCat !== null && lngIudCat !== null
+                        ? (Math.max(cuIudCat, lngIudCat) as MECCategory)
+                        : cuIudCat ?? lngIudCat)
+                    : mecCat;
+
+                  const mecCardStyle = worstCat
+                    ? { borderColor: getMECColor(worstCat), borderWidth: 1.5 }
+                    : undefined;
 
                 return (
                   <View key={methodName} style={{ marginBottom: 10 }}>
                     <View style={styles.methodHeader}>
                       <Text style={styles.methodName}>{getDisplayNameFromModelKey(methodName)}</Text>
-                      {mecCat && (
-                        <View style={[styles.mecBadge, { backgroundColor: getMECColor(mecCat as MECCategory) }]}>
+                      {isIUD && cuIudCat !== null && lngIudCat !== null ? (
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                          <View style={[styles.mecBadge, { backgroundColor: getMECColor(cuIudCat) }]}>
+                            <Text style={styles.mecBadgeText}>Cu-IUD {cuIudCat}</Text>
+                          </View>
+                          <View style={[styles.mecBadge, { backgroundColor: getMECColor(lngIudCat) }]}>
+                            <Text style={styles.mecBadgeText}>LNG-IUD {lngIudCat}</Text>
+                          </View>
+                        </View>
+                      ) : mecCat ? (
+                        <View style={[styles.mecBadge, { backgroundColor: getMECColor(mecCat) }]}>
                           <Text style={styles.mecBadgeText}>MEC {mecCat}</Text>
                         </View>
-                      )}
+                      ) : null}
                     </View>
                     <RiskAssessmentCard
                       riskLevel={result.risk_level}
@@ -970,7 +1008,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                       priceRange={CONTRACEPTIVE_DETAILS[METHOD_NAME_TO_DATA_KEY[methodName]]?.priceRange}
                       keyFactors={generateKeyFactors({ ...formData, CONTRACEPTIVE_METHOD: methodName }, result.risk_level)}
                       upgradedByDt={result.upgraded_by_dt}
-                      mecCategory={mecCat as 1 | 2 | 3 | 4 | undefined}
+                      mecCategory={worstCat ?? undefined}
                       style={mecCardStyle}
                     />
                   </View>
