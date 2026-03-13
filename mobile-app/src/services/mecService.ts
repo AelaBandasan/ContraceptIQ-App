@@ -20,13 +20,16 @@ export interface MECResult {
     'POP': MECCategory;
 }
 
+// Maps form entry keys → primary MEC ID used for eligibility lookup.
+// Note: 'Intrauterine Device (IUD)' covers both Cu-IUD and LNG-IUD —
+// the assessment layer checks both IUD types separately for eligibility.
+// 'Patch' and 'Copper IUD' have been removed (Patch encoded to wrong bin;
+// Cu-IUD merged with LNG-IUD into single form entry per training dataset limitations).
 export const MODEL_KEY_TO_MEC_ID: Record<string, string> = {
     'Pills': 'CHC',
-    'Patch': 'CHC',
     'Injectable': 'DMPA',
     'Implant': 'Implant',
-    'Copper IUD': 'Cu-IUD',
-    'Intrauterine Device (IUD)': 'LNG-IUD',
+    'Intrauterine Device (IUD)': 'LNG-IUD',  // primary; Cu-IUD checked in assessment
 };
 
 export interface MECInput {
@@ -209,17 +212,12 @@ export const METHOD_ATTRIBUTES: MethodAttributes[] = [
  * Get display name for model key (e.g. 'Pills' -> 'Combined Hormonal Contraceptive (CHC)')
  */
 export function getDisplayNameFromModelKey(modelKey: string): string {
+    // IUD form entry covers both Cu-IUD and LNG-IUD — return the user-facing label directly
+    if (modelKey === 'Intrauterine Device (IUD)') return 'Intrauterine Device (IUD)';
     const mecId = MODEL_KEY_TO_MEC_ID[modelKey];
     if (!mecId) return modelKey;
     const attr = METHOD_ATTRIBUTES.find(a => a.id === mecId);
-    if (!attr) return modelKey;
-
-    // Special case for CHC sub-types (Pills vs Patch) to avoid duplicate display names
-    if (mecId === 'CHC' && (modelKey === 'Pills' || modelKey === 'Patch')) {
-        return `Combined Hormonal Contraceptive (${modelKey})`;
-    }
-
-    return attr.name;
+    return attr ? attr.name : modelKey;
 }
 
 /**

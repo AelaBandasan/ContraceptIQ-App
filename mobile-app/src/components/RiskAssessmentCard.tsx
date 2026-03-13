@@ -185,13 +185,20 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
 // Display value → training value maps (mirrors featureEncoder.ts for OB form inputs)
 const _DISPLAY_TO_TRAINING: Record<string, Record<string, string>> = {
   PATTERN_USE: {
-    "Regular/consistent user": "1",
-    "Irregular/inconsistent user": "Intermittent",
-    "New user (never used before)": "New user",
+    // ── Exact form display strings from ObAssessment.tsx FORM_FIELDS ──────────
+    "Current/Regular user":             "1",              // highest SHAP (4.092)
+    "Irregular/Occasional user":        "Intermittent",
+    "New user (first time)":            "New user",
+    "Stopped using (within 12 months)": "Stopped recently",
+    // ── Legacy display strings (backward-compat with older saved records) ──────
+    "Regular/consistent user":          "1",
+    "Irregular/inconsistent user":      "Intermittent",
+    "New user (never used before)":     "New user",
     "Previously used (stopped within 12 months)": "Stopped recently",
-    "Current user": "1",
+    "Current user":                     "1",
     "Recent user (stopped within 12 months)": "Stopped recently",
-    "Past user (stopped >12 months ago)": "Stopped recently",
+    "Past user (stopped >12 months ago)": "Intermittent",  // NOT "Stopped recently" — matches featureEncoder.ts
+    // ── Pass-through (value is already the training string) ──────────────────
     "1": "1", "2": "Stopped recently", "3": "Intermittent", "4": "New user",
     "Consistent": "Consistent", "Intermittent": "Intermittent",
     "Stopped recently": "Stopped recently", "New user": "New user",
