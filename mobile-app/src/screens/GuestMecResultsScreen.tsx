@@ -304,7 +304,7 @@ const GuestMecResultsScreen = () => {
               <View key={cat} style={styles.mecPreviewItem}>
                 <View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(cat) }]} />
                 <Text style={styles.mecPreviewText}>
-                  {cat === 1 ? 'Safe' : cat === 2 ? 'Generally safe' : cat === 3 ? 'Caution' : 'Avoid'}
+                  MEC {cat} - {cat === 1 ? 'Safe' : cat === 2 ? 'Generally safe' : cat === 3 ? 'Caution' : 'Avoid'}
                 </Text>
               </View>
             ))}

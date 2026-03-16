@@ -298,19 +298,19 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     <View style={styles.mecContent}>
                                         <View style={styles.mecItem}>
                                             <View style={[styles.colorDot, { backgroundColor: '#10B981' }]} />
-                                            <Text style={styles.mecLabel}>Green — Safe to Use</Text>
+                                            <Text style={styles.mecLabel}>MEC 1 - Green — Safe to Use</Text>
                                         </View>
                                         <View style={styles.mecItem}>
                                             <View style={[styles.colorDot, { backgroundColor: '#F59E0B' }]} />
-                                            <Text style={styles.mecLabel}>Yellow — Generally Safe</Text>
+                                            <Text style={styles.mecLabel}>MEC 2 - Yellow — Generally Safe</Text>
                                         </View>
                                         <View style={styles.mecItem}>
                                             <View style={[styles.colorDot, { backgroundColor: '#FB923C' }]} />
-                                            <Text style={styles.mecLabel}>Orange — Use With Caution</Text>
+                                            <Text style={styles.mecLabel}>MEC 3 - Orange — Use With Caution</Text>
                                         </View>
                                         <View style={styles.mecItem}>
                                             <View style={[styles.colorDot, { backgroundColor: '#EF4444' }]} />
-                                            <Text style={styles.mecLabel}>Red — Not recommended</Text>
+                                            <Text style={styles.mecLabel}>MEC 4 - Red — Not recommended</Text>
                                         </View>
                                         <TouchableOpacity
                                             style={styles.mecFullBtn}

@@ -57,10 +57,16 @@ import { useAlert } from "../../context/AlertContext";
 
 const FORM_FIELDS = [
   {
-    id: "NAME",
-    label: "Patient Name",
+    id: "FIRST_NAME",
+    label: "First Name",
     type: "text",
-    placeholder: "Enter patient name",
+    placeholder: "Enter first name",
+  },
+  {
+    id: "LAST_NAME",
+    label: "Last Name",
+    type: "text",
+    placeholder: "Enter last name",
   },
   {
     id: "AGE",
@@ -192,6 +198,83 @@ const ObAssessment = ({ navigation, route }: any) => {
   // Clinical notes
   const [clinicalNotes, setClinicalNotes] = useState("");
 
+  // Field errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // ─── Field-level validation ─────────────────────────────────────────────────
+
+  const validateField = (fieldId: string, value: string): string | null => {
+    switch (fieldId) {
+      case "FIRST_NAME":
+        if (!value.trim()) return "First name is required";
+        if (/\d/.test(value)) return "First name must not contain numbers";
+        return null;
+
+      case "LAST_NAME":
+        if (!value.trim()) return "Last name is required";
+        if (/\d/.test(value)) return "Last name must not contain numbers";
+        return null;
+
+      case "AGE":
+        if (!value.trim()) return "Age is required";
+        const age = Number(value);
+        if (isNaN(age)) return "Please enter a valid age";
+        if (age < 15 || age > 55) return "Age must be between 15-55";
+        return null;
+
+      case "HUSBAND_AGE":
+        if (value.trim()) {
+          const hAge = Number(value);
+          if (isNaN(hAge)) return "Please enter a valid age";
+          if (hAge < 15 || hAge > 80) return "Partner age must be between 15-80";
+        }
+        return null;
+
+      case "ETHNICITY":
+        if (!value) return "Please select ethnicity";
+        return null;
+
+      case "HOUSEHOLD_HEAD_SEX":
+        if (!value) return "Please select household head sex";
+        return null;
+
+      case "SMOKE_CIGAR":
+        if (!value) return "Please select smoking habits";
+        return null;
+
+      case "PARITY":
+        if (!value.trim()) return "Number of children is required";
+        const parity = Number(value);
+        if (isNaN(parity)) return "Please enter a valid number";
+        if (parity < 0 || parity > 20) return "Number of children must be 0-20";
+        return null;
+
+      case "DESIRE_FOR_MORE_CHILDREN":
+        if (!value) return "Please select desire for more children";
+        return null;
+
+      case "PATTERN_USE":
+        if (!value) return "Please select pattern of use";
+        return null;
+
+      default:
+        return null;
+    }
+  };
+
+  const handleFieldChange = (fieldId: string, value: string) => {
+    updateVal(value, fieldId);
+    const error = validateField(fieldId, value);
+    setFieldErrors((prev) => {
+      if (error) {
+        return { ...prev, [fieldId]: error };
+      } else {
+        const { [fieldId]: _, ...rest } = prev;
+        return rest;
+      }
+    });
+  };
+
   // ─── Load existing record (view mode) ─────────────────────────────────────
 
   const resetToNewAssessment = () => {
@@ -202,6 +285,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     setMecConditionIds([]);
     setMecPrefs([]);
     setOpenDropdownFieldId(null);
+    setFieldErrors({});
     setScreen("form");
   };
 
@@ -227,7 +311,19 @@ const ObAssessment = ({ navigation, route }: any) => {
       return;
     }
 
-    setFormData(record.patientData || {});
+    let patientData = record.patientData || {};
+    
+    // Backward compatibility: convert old NAME to FIRST_NAME and LAST_NAME
+    if (patientData.NAME && !patientData.FIRST_NAME) {
+      const nameParts = patientData.NAME.trim().split(" ");
+      patientData = {
+        ...patientData,
+        FIRST_NAME: nameParts[0] || "",
+        LAST_NAME: nameParts.slice(1).join(" ") || "",
+      };
+    }
+
+    setFormData(patientData);
     setClinicalNotes(record.clinicalNotes || "");
     setMecConditionIds(record.mecConditionIds || []);
     setMecPrefs(record.mecPreferences || []);
@@ -304,14 +400,25 @@ const ObAssessment = ({ navigation, route }: any) => {
   // ─── Validation ───────────────────────────────────────────────────────────
 
   const validateForm = (): boolean => {
-    // Name validation
-    const name = (formData.NAME || "").trim();
-    if (!name || name.length < 2) {
-      showAlert("Required", "Please enter the patient's full name (at least 2 characters).");
+    // First Name validation
+    const firstName = (formData.FIRST_NAME || "").trim();
+    if (!firstName || firstName.length < 1) {
+      showAlert("Required", "Please enter the patient's first name.");
       return false;
     }
-    if (/\d/.test(name)) {
-      showAlert("Invalid Name", "Patient name must not contain numbers.");
+    if (/\d/.test(firstName)) {
+      showAlert("Invalid Name", "First name must not contain numbers.");
+      return false;
+    }
+
+    // Last Name validation
+    const lastName = (formData.LAST_NAME || "").trim();
+    if (!lastName || lastName.length < 1) {
+      showAlert("Required", "Please enter the patient's last name.");
+      return false;
+    }
+    if (/\d/.test(lastName)) {
+      showAlert("Invalid Name", "Last name must not contain numbers.");
       return false;
     }
 
@@ -335,10 +442,47 @@ const ObAssessment = ({ navigation, route }: any) => {
       }
     }
 
+    // Ethnicity validation
     if (!formData.ETHNICITY) {
       showAlert("Required", "Please select the patient's ethnicity.");
       return false;
     }
+
+    // Household Head Sex validation
+    if (!formData.HOUSEHOLD_HEAD_SEX) {
+      showAlert("Required", "Please select the household head sex.");
+      return false;
+    }
+
+    // Smoking Habits validation
+    if (!formData.SMOKE_CIGAR) {
+      showAlert("Required", "Please select smoking habits.");
+      return false;
+    }
+
+    // Parity validation
+    const parity = Number(formData.PARITY);
+    if (!formData.PARITY || isNaN(parity)) {
+      showAlert("Required", "Please enter the number of children (parity).");
+      return false;
+    }
+    if (parity < 0 || parity > 20) {
+      showAlert("Invalid Value", "Number of children must be between 0 and 20.");
+      return false;
+    }
+
+    // Desire for More Children validation
+    if (!formData.DESIRE_FOR_MORE_CHILDREN) {
+      showAlert("Required", "Please select desire for more children.");
+      return false;
+    }
+
+    // Pattern of Use validation
+    if (!formData.PATTERN_USE) {
+      showAlert("Required", "Please select pattern of use.");
+      return false;
+    }
+
     return true;
   };
 
@@ -479,11 +623,12 @@ const ObAssessment = ({ navigation, route }: any) => {
       }
 
       const createdAt = new Date().toISOString();
+      const fullName = `${formData.FIRST_NAME || ""} ${formData.LAST_NAME || ""}`.trim() || "Unknown Patient";
       const record: AssessmentRecord = {
         id: `${doctorId}_${Date.now()}`,
         doctorId,
         doctorName,
-        patientName: formData.NAME || "Unknown Patient",
+        patientName: fullName,
         patientData: formData,
         mecResults: mecResultsToSave,
         mecConditionIds,
@@ -507,27 +652,29 @@ const ObAssessment = ({ navigation, route }: any) => {
 
   // ─── Field renderer ───────────────────────────────────────────────────────
 
-  const renderField = (field: any) => (
+  const renderField = (field: any) => {
+    const error = fieldErrors[field.id];
+    return (
     <View key={field.id} style={styles.fieldGroup}>
       <Text style={styles.inputLabel}>{field.label}</Text>
       {field.type === "text" || field.type === "numeric" ? (
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, error && styles.textInputError]}
           placeholder={field.placeholder}
           placeholderTextColor="#94A3B8"
           value={formData[field.id] || ""}
           onChangeText={(val) => {
-            const formatted = field.id === "NAME"
+            const formatted = (field.id === "FIRST_NAME" || field.id === "LAST_NAME")
               ? val.replace(/\b\w/g, (c) => c.toUpperCase())
               : val;
-            updateVal(formatted, field.id);
+            handleFieldChange(field.id, formatted);
           }}
           keyboardType={field.type === "numeric" ? "numeric" : "default"}
         />
       ) : (
         <View>
           <TouchableOpacity
-            style={styles.dropdownButton}
+            style={[styles.dropdownButton, error && styles.dropdownButtonError]}
             onPress={() =>
               setOpenDropdownFieldId((prev) => (prev === field.id ? null : field.id))
             }
@@ -558,7 +705,7 @@ const ObAssessment = ({ navigation, route }: any) => {
                     key={option}
                     style={[styles.dropdownOption, isSelected && styles.dropdownOptionSelected]}
                     onPress={() => {
-                      updateVal(option, field.id);
+                      handleFieldChange(field.id, option);
                       setOpenDropdownFieldId(null);
                     }}
                     activeOpacity={0.8}
@@ -579,8 +726,10 @@ const ObAssessment = ({ navigation, route }: any) => {
           ) : null}
         </View>
       )}
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
+};
 
   // ─── MEC results renderer ─────────────────────────────────────────────────
 
@@ -730,7 +879,7 @@ const ObAssessment = ({ navigation, route }: any) => {
       <StatusBar barStyle="light-content" />
       <ObHeader
         title="Patient Assessment"
-        subtitle={formData?.NAME || "New Patient"}
+        subtitle={formData?.FIRST_NAME || "New Patient"}
         showBack
         onBackPress={handleExitAssessment}
       />
@@ -828,7 +977,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             />
 
             <Text style={[styles.inputLabel, { marginTop: 24, marginBottom: 12 }]}>
-              Patient Preferences
+              Patient Preferences (MAX 3)
             </Text>
             {PREFERENCES.map((pref) => {
               const isSelected = mecPrefs.includes(pref.key);
@@ -1164,6 +1313,20 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "#EFD8E5",
+  },
+  textInputError: {
+    borderColor: "#EF4444",
+    borderWidth: 1.5,
+  },
+  dropdownButtonError: {
+    borderColor: "#EF4444",
+    borderWidth: 1.5,
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 4,
   },
   dropdownTextSelected: {
     fontSize: 15,

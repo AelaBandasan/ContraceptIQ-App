@@ -37,9 +37,13 @@ const WhoMecConditionsScreen = () => {
     const conditionsFromParams = route.params?.conditionIds;
     if (typeof ageFromParams === 'number') {
       setSelectedAge(ageFromParams);
+    } else {
+      setSelectedAge(null);
     }
     if (Array.isArray(conditionsFromParams)) {
       setSelectedConditions(conditionsFromParams);
+    } else {
+      setSelectedConditions([]);
     }
   }, [route.params?.age, route.params?.conditionIds]);
 

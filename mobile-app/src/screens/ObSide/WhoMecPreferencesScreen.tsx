@@ -38,6 +38,8 @@ const WhoMecPreferencesScreen = () => {
   useEffect(() => {
     if (Array.isArray(initialPreferences)) {
       setSelectedPrefs(initialPreferences);
+    } else {
+      setSelectedPrefs([]);
     }
   }, [initialPreferences]);
 
