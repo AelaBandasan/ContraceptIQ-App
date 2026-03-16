@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   StyleSheet, View, Text, TouchableOpacity, ScrollView, Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -50,6 +51,7 @@ const WhoMecResultsScreen = () => {
   const { showAlert } = useAlert();
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
+  const [isLoading, setIsLoading] = useState(false);
 
   const { age, conditionIds, preferences = [] } = route.params as {
     age: number;
@@ -89,7 +91,13 @@ const WhoMecResultsScreen = () => {
   );
 
   const handleStartOver = () => {
-    navigation.navigate('ObWhoMecConditions');
+    setIsLoading(true);
+    setTimeout(() => {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'ObWhoMecConditions' }],
+      });
+    }, 300);
   };
 
   const handleReturnToDashboard = () => {
@@ -162,7 +170,7 @@ const WhoMecResultsScreen = () => {
                       ]}
                     >
                       <View style={styles.mecMethodRow}>
-                        <View style={styles.mecMethodImageWrap}>
+                        <View style={[styles.mecMethodImageWrap, { borderColor: getMECColor(cat) }]}>
                           {m.image ? (
                             <Image source={m.image} style={styles.mecMethodImage} resizeMode="cover" />
                           ) : null}
@@ -273,10 +281,10 @@ const WhoMecResultsScreen = () => {
           </View>
 
           <View style={styles.mecPreviewRow}>
-            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(1) }]} /><Text style={styles.mecPreviewText}>Safe</Text></View>
-            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(2) }]} /><Text style={styles.mecPreviewText}>Generally safe</Text></View>
-            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(3) }]} /><Text style={styles.mecPreviewText}>Caution</Text></View>
-            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(4) }]} /><Text style={styles.mecPreviewText}>Avoid</Text></View>
+            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(1) }]} /><Text style={styles.mecPreviewText}>MEC 1 - Safe</Text></View>
+            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(2) }]} /><Text style={styles.mecPreviewText}>MEC 2 - Generally safe</Text></View>
+            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(3) }]} /><Text style={styles.mecPreviewText}>MEC 3 - Caution</Text></View>
+            <View style={styles.mecPreviewItem}><View style={[styles.mecPreviewDot, { backgroundColor: getMECColor(4) }]} /><Text style={styles.mecPreviewText}>MEC 4 - Avoid</Text></View>
           </View>
 
         </View>
@@ -295,9 +303,15 @@ const WhoMecResultsScreen = () => {
         </View>
 
         {/* Action buttons at bottom of content */}
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleStartOver}>
-          <Text style={styles.startOverButtonText}>Start New Assessment</Text>
-          <ChevronRight size={18} color="#fff" />
+        <TouchableOpacity style={styles.primaryBtn} onPress={handleStartOver} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color="#FFF" size="small" />
+          ) : (
+            <>
+              <Text style={styles.startOverButtonText}>Start New Assessment</Text>
+              <ChevronRight size={18} color="#fff" />
+            </>
+          )}
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryBtn} onPress={handleReturnToDashboard}>
           <ChevronLeft size={16} color="#6B4254" />
@@ -468,11 +482,11 @@ const styles = StyleSheet.create({
   mecMethodImageWrap: {
     width: 60,
     height: 60,
-    borderRadius: 10,
+    borderRadius: 90,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    backgroundColor: "#F8FAFC",
+    borderWidth: 2.5,
+    borderColor: "#EBD5E1",
+    backgroundColor: "#FFF",
   },
   mecMethodImage: {
     width: "100%",
