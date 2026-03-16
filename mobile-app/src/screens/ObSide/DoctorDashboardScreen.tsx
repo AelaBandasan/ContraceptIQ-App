@@ -53,7 +53,8 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
     // Mock Data for Demo
     const doctorUid = auth.currentUser?.uid;
-    const doctorName = route?.params?.doctorName || auth.currentUser?.displayName || "Dr. Maria Santos, OB-GYN";
+    const rawName = route?.params?.doctorName || auth.currentUser?.displayName || "User";
+    const doctorName = rawName.startsWith("Dr.") ? rawName : "Dr. " + rawName;
 
     const loadAssessments = useCallback(async () => {
         if (!doctorUid) return;

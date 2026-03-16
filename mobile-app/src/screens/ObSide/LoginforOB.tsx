@@ -116,9 +116,8 @@ const LoginforOB = ({ navigation }: any) => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const doctorName =
-          userData.fullName ||
-          "Dr. " + (userData.email ? userData.email.split("@")[0] : "User");
+        const rawName = userData.fullName || (userData.email ? userData.email.split("@")[0] : "User");
+        const doctorName = rawName.startsWith("Dr.") ? rawName : "Dr. " + rawName;
 
         if (userData.verificationStatus === "verified") {
           navigation.reset({
