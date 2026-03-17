@@ -25,6 +25,7 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  XCircle,
 } from "lucide-react-native";
 
 import {
@@ -1164,6 +1165,63 @@ const ObAssessment = ({ navigation, route }: any) => {
                   </View>
                 );
               })}
+
+              {/* ── Contraindicated Methods (Cat 4 — blocked from ML) ── */}
+              {(() => {
+                if (!mecResults) return null;
+                const blocked: { name: string; cuCat?: MECCategory; lngCat?: MECCategory; cat?: MECCategory }[] = [];
+                Object.keys(METHOD_NAME_TO_INDEX).forEach((m) => {
+                  if (m === 'Intrauterine Device (IUD)') {
+                    const cuCat = ((mecResults as any)['Cu-IUD'] as MECCategory) || 1;
+                    const lngCat = ((mecResults as any)['LNG-IUD'] as MECCategory) || 1;
+                    if (Math.min(cuCat, lngCat) > 3) {
+                      blocked.push({ name: m, cuCat, lngCat });
+                    }
+                  } else {
+                    const mecKey = MODEL_KEY_TO_MEC_ID[m];
+                    const cat = ((mecResults as any)[mecKey] as MECCategory) || 1;
+                    if (cat > 3) {
+                      blocked.push({ name: m, cat });
+                    }
+                  }
+                });
+                if (blocked.length === 0) return null;
+                return (
+                  <View style={styles.blockedSection}>
+                    <View style={styles.blockedHeader}>
+                      <XCircle size={16} color="#9CA3AF" />
+                      <Text style={styles.blockedHeaderText}>Contraindicated — Not Assessed by ML</Text>
+                    </View>
+                    <Text style={styles.blockedSubtext}>
+                      The following method(s) were evaluated against WHO MEC criteria and identified as Category 4 (absolute contraindication). They were excluded from ML discontinuation risk inference.
+                    </Text>
+                    {blocked.map(({ name, cuCat, lngCat, cat }) => (
+                      <View key={name} style={styles.blockedMethodRow}>
+                        <Text style={styles.blockedMethodName}>{getDisplayNameFromModelKey(name)}</Text>
+                        <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+                          {cuCat !== undefined && lngCat !== undefined ? (
+                            <>
+                              <View style={styles.blockedBadge}>
+                                <Text style={styles.blockedBadgeText}>Cu-IUD MEC {cuCat}</Text>
+                              </View>
+                              <View style={styles.blockedBadge}>
+                                <Text style={styles.blockedBadgeText}>LNG-IUD MEC {lngCat}</Text>
+                              </View>
+                            </>
+                          ) : (
+                            <View style={styles.blockedBadge}>
+                              <Text style={styles.blockedBadgeText}>MEC {cat}</Text>
+                            </View>
+                          )}
+                          <View style={styles.blockedReasonBadge}>
+                            <Text style={styles.blockedReasonText}>Blocked — Do Not Use</Text>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                );
+              })()}
             </>
           )}
 
@@ -1643,5 +1701,71 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 12,
     fontWeight: "bold",
+  },
+
+  // ── Contraindicated / blocked methods ──
+  blockedSection: {
+    marginTop: 8,
+    marginBottom: 4,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 14,
+    opacity: 0.85,
+  },
+  blockedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 6,
+  },
+  blockedHeaderText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: 0.2,
+  },
+  blockedSubtext: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  blockedMethodRow: {
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  blockedMethodName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9CA3AF",
+  },
+  blockedBadge: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+  blockedBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#6B7280",
+  },
+  blockedReasonBadge: {
+    backgroundColor: "#FEF2F2",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  blockedReasonText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#EF4444",
   },
 });
