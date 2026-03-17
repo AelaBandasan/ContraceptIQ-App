@@ -16,6 +16,7 @@ import Animated, {
 import { ArrowRight } from 'lucide-react-native';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Logo from '../../assets/clearBG.png';
 import { colors, shadows } from '../theme';
@@ -40,6 +41,12 @@ const UserStartingScreen = ({ navigation }: any) => {
                         const userData = userDoc.data();
                         const doctorName = userData.fullName || "Dr. " + (userData.email?.split('@')[0] || "User");
 
+                        // Cache auth state for offline fallback
+                        await AsyncStorage.setItem('@ob_auth_cache', JSON.stringify({
+                            verificationStatus: userData.verificationStatus,
+                            doctorName,
+                        }));
+
                         if (userData.verificationStatus === "verified") {
                             navigation.reset({
                                 index: 0,
@@ -55,6 +62,25 @@ const UserStartingScreen = ({ navigation }: any) => {
                     }
                 } catch (error) {
                     console.error("Auth redirect error:", error);
+                    // Firestore unreachable — fall back to cached auth state
+                    try {
+                        const cached = await AsyncStorage.getItem('@ob_auth_cache');
+                        if (cached) {
+                            const { verificationStatus, doctorName } = JSON.parse(cached);
+                            if (verificationStatus === "verified") {
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: "ObMainTabs", params: { doctorName } }],
+                                });
+                            } else {
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: "PendingVerification", params: { doctorName } }],
+                                });
+                            }
+                            return;
+                        }
+                    } catch (_) {}
                 }
             }
             setIsCheckingAuth(false);

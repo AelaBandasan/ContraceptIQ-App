@@ -59,6 +59,7 @@ const ProfileScreen = ({ navigation }: any) => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
+                            await AsyncStorage.removeItem('@ob_auth_cache');
                             await auth.signOut();
                             navigation.reset({
                                 index: 0,

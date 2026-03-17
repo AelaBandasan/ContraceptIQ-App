@@ -5,6 +5,7 @@ import { RootStackParamList } from '../../types/navigation';
 import { Clock, ArrowLeft, RefreshCw } from 'lucide-react-native';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, db } from '../../config/firebaseConfig';
 import { useAlert } from '../../context/AlertContext';
 
@@ -29,6 +30,10 @@ const PendingVerificationScreen = ({ navigation, route }: Props) => {
                 const userData = userDoc.data();
                 if (userData.verificationStatus === "verified") {
                     const name = userData.fullName || "Dr. " + (userData.email?.split('@')[0] || "User");
+                    await AsyncStorage.setItem('@ob_auth_cache', JSON.stringify({
+                        verificationStatus: "verified",
+                        doctorName: name,
+                    }));
                     navigation.reset({
                         index: 0,
                         routes: [{ name: "ObMainTabs", params: { doctorName: name } }],
@@ -78,6 +83,7 @@ const PendingVerificationScreen = ({ navigation, route }: Props) => {
                     style={styles.logoutButton}
                     onPress={async () => {
                         try {
+                            await AsyncStorage.removeItem('@ob_auth_cache');
                             await signOut(auth);
                             navigation.reset({
                                 index: 0,
