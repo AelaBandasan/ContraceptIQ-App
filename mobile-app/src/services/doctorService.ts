@@ -14,16 +14,19 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { insertAssessmentAnalytics, deleteAnalyticsRows } from './database';
 import { db } from '../config/firebaseConfig';
 import {
     collection,
     doc,
     setDoc,
+    deleteDoc,
     query,
     where,
     getDocs,
     orderBy,
 } from 'firebase/firestore';
+import { isOnline } from '../utils/networkUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -90,7 +93,14 @@ export async function saveAssessment(record: AssessmentRecord): Promise<void> {
     // 1. Persist locally first
     await _writeToCache(record);
 
-    // 2. Try Firestore sync — silently queue on failure
+    // 2. Shadow-write to SQLite analytics layer (non-fatal)
+    try {
+        insertAssessmentAnalytics(record);
+    } catch {
+        // Analytics write failure must never block the primary save path
+    }
+
+    // 3. Try Firestore sync — silently queue on failure
     try {
         await _syncRecord(record);
     } catch {
@@ -171,6 +181,53 @@ export async function flushSyncQueue(doctorId: string): Promise<void> {
         await AsyncStorage.setItem(key, JSON.stringify(remaining));
     } catch {
         // Silent — will retry next time
+    }
+}
+
+/**
+ * Delete one or more assessment records.
+ *
+ * Order of operations:
+ *   1. Remove from AsyncStorage cache immediately (instant, works offline).
+ *   2. Remove from SQLite analytics so charts reflect the deletion.
+ *   3. Best-effort delete from Firestore when online — silent on failure.
+ */
+export async function deleteAssessments(doctorId: string, ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+
+    // 1. AsyncStorage
+    const key = cacheKey(doctorId);
+    try {
+        const raw = await AsyncStorage.getItem(key);
+        if (raw) {
+            const records: AssessmentRecord[] = JSON.parse(raw);
+            await AsyncStorage.setItem(
+                key,
+                JSON.stringify(records.filter(r => !idSet.has(r.id))),
+            );
+        }
+    } catch {
+        // Cache update failed — proceed anyway
+    }
+
+    // 2. SQLite analytics
+    try {
+        deleteAnalyticsRows(ids);
+    } catch {
+        // Non-fatal
+    }
+
+    // 3. Firestore (best-effort)
+    try {
+        const online = await isOnline();
+        if (online) {
+            await Promise.allSettled(
+                ids.map(id => deleteDoc(doc(db, 'assessments', id))),
+            );
+        }
+    } catch {
+        // Silent — record is gone locally regardless
     }
 }
 

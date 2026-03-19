@@ -1,8 +1,9 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { LayoutDashboard, ClipboardList, User, Shield, Book, History } from 'lucide-react-native';
+import { LayoutDashboard, ClipboardList, User, Book, History, BarChart2 } from 'lucide-react-native';
 import DoctorDashboardScreen from '../screens/ObSide/DoctorDashboardScreen';
 import ObHistoryScreen from '../screens/ObSide/ObHistoryScreen';
+import AnalyticsScreen from '../screens/ObSide/AnalyticsScreen';
 import ObAssessment from '../screens/ObSide/ObAssessment';
 import Whatsrightforme from '../screens/Whatsrightforme'; // Reusing for New Assessment
 
@@ -83,6 +84,16 @@ const ObTabNavigator = () => {
                     tabBarLabel: 'History',
                     tabBarIcon: ({ color, size }) => (
                         <History color={color} size={size} />
+                    )
+                }}
+            />
+            <Tab.Screen
+                name="ObAnalytics"
+                component={AnalyticsScreen}
+                options={{
+                    tabBarLabel: 'Analytics',
+                    tabBarIcon: ({ color, size }) => (
+                        <BarChart2 color={color} size={size} />
                     )
                 }}
             />

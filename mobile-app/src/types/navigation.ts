@@ -94,6 +94,7 @@ export type ObTabParamList = {
   ObHome: undefined;
   ObAssessment: { isDoctorAssessment: boolean };
   ObHistory: undefined;
+  ObAnalytics: undefined;
 
   ObMethods: { isDoctorAssessment?: boolean };
   ObProfile: undefined;
