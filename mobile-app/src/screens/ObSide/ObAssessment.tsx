@@ -176,9 +176,10 @@ const PREFERENCES = [
 const ObAssessment = ({ navigation, route }: any) => {
   const { showAlert } = useAlert();
   const hasPatientData = !!route.params?.record;
+  const isFollowUp = route.params?.isFollowUp === true;
 
   // screen: 'form' → 'mec' → 'mec_results' → 'results'
-  const [screen, setScreen] = useState(hasPatientData ? "results" : "form");
+  const [screen, setScreen] = useState(hasPatientData && !isFollowUp ? "results" : "form");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -188,6 +189,11 @@ const ObAssessment = ({ navigation, route }: any) => {
   >({});
   const [, setMethodEligibility] = useState<Record<string, number>>({});
   const [mecResults, setMecResults] = useState<MECResult | null>(null);
+
+  // Previous risk results for follow-up comparison
+  const [previousRiskResults, setPreviousRiskResults] = useState<
+    Record<string, RiskAssessmentResponse> | null
+  >(null);
 
   // MEC state
   const [mecConditionIds, setMecConditionIds] = useState<string[]>([]);
@@ -287,6 +293,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     setMecPrefs([]);
     setOpenDropdownFieldId(null);
     setFieldErrors({});
+    setPreviousRiskResults(null);
     setScreen("form");
   };
 
@@ -325,11 +332,26 @@ const ObAssessment = ({ navigation, route }: any) => {
     }
 
     setFormData(patientData);
-    setClinicalNotes(record.clinicalNotes || "");
+    setClinicalNotes("");
     setMecConditionIds(record.mecConditionIds || []);
     setMecPrefs(record.mecPreferences || []);
 
-    if (record.riskResults) {
+    // Store previous risk results for follow-up comparison
+    if (record.riskResults && isFollowUp) {
+      const prevResults: Record<string, RiskAssessmentResponse> = {};
+      Object.entries(record.riskResults).forEach(([method, res]) => {
+        prevResults[method] = {
+          risk_level: res.riskLevel as "LOW" | "HIGH",
+          confidence: res.confidence,
+          recommendation: res.recommendation,
+          xgb_probability: res.probability,
+          upgraded_by_dt: false,
+        };
+      });
+      setPreviousRiskResults(prevResults);
+      setAllMethodResults({});
+      setScreen("form");
+    } else if (record.riskResults) {
       const restored: Record<string, RiskAssessmentResponse> = {};
       Object.entries(record.riskResults).forEach(([method, res]) => {
         restored[method] = {
@@ -341,13 +363,15 @@ const ObAssessment = ({ navigation, route }: any) => {
         };
       });
       setAllMethodResults(restored);
+      setScreen("results");
+    } else {
+      setAllMethodResults({});
+      setScreen("form");
     }
 
     if (record.mecResults) {
       setMecResults(record.mecResults as any);
     }
-
-    setScreen("results");
   }, [route.params]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -1078,9 +1102,13 @@ const ObAssessment = ({ navigation, route }: any) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.screenTitle}>ML Risk Results</Text>
+          <Text style={styles.screenTitle}>
+            {isFollowUp && previousRiskResults ? "Follow-Up Assessment" : "ML Risk Results"}
+          </Text>
           <Text style={styles.screenSubtitle}>
-            Discontinuation risk for each eligible method.
+            {isFollowUp && previousRiskResults
+              ? "Comparing previous and current discontinuation risk."
+              : "Discontinuation risk for each eligible method."}
           </Text>
 
           {isLoading ? (
@@ -1131,6 +1159,9 @@ const ObAssessment = ({ navigation, route }: any) => {
                     ? { borderColor: getMECColor(worstCat), borderWidth: 1.5 }
                     : undefined;
 
+                  // Previous result for follow-up comparison
+                  const prevResult = isFollowUp && previousRiskResults ? previousRiskResults[methodName] : null;
+
                 return (
                   <View key={methodName} style={{ marginBottom: 10 }}>
                     <View style={styles.methodHeader}>
@@ -1150,6 +1181,36 @@ const ObAssessment = ({ navigation, route }: any) => {
                         </View>
                       ) : null}
                     </View>
+
+                    {/* Previous vs Current Comparison for Follow-Up */}
+                    {prevResult && (
+                      <View style={styles.comparisonContainer}>
+                        <View style={styles.comparisonRow}>
+                          <View style={styles.comparisonItem}>
+                            <Text style={styles.comparisonLabel}>Previous</Text>
+                            <Text style={[styles.comparisonValue, { color: prevResult.risk_level === 'HIGH' ? '#EF4444' : '#10B981' }]}>
+                              {prevResult.risk_level}
+                            </Text>
+                            <Text style={styles.comparisonProb}>
+                              {prevResult.xgb_probability ? `${(Math.min(prevResult.xgb_probability * 100, 100)).toFixed(0)}%` : '—'}
+                            </Text>
+                          </View>
+                          <View style={styles.comparisonArrow}>
+                            <Text style={styles.comparisonArrowText}>→</Text>
+                          </View>
+                          <View style={styles.comparisonItem}>
+                            <Text style={styles.comparisonLabel}>Current</Text>
+                            <Text style={[styles.comparisonValue, { color: result.risk_level === 'HIGH' ? '#EF4444' : '#10B981' }]}>
+                              {result.risk_level}
+                            </Text>
+                            <Text style={styles.comparisonProb}>
+                              {result.xgb_probability ? `${(Math.min(result.xgb_probability * 100, 100)).toFixed(0)}%` : '—'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+
                     <RiskAssessmentCard
                       riskLevel={result.risk_level}
                       confidence={result.confidence}
@@ -1240,11 +1301,22 @@ const ObAssessment = ({ navigation, route }: any) => {
 
           <View style={{ height: 24 }} />
 
+          {/* Save explanation for follow-up */}
+          {isFollowUp && previousRiskResults && (
+            <View style={styles.saveInfoBox}>
+              <Text style={styles.saveInfoText}>Save as:</Text>
+              <Text style={styles.saveInfoBold}>New consultation record (not overwrite)</Text>
+              <Text style={styles.saveInfoSubtext}>Your History becomes:{'\n'}{'  '}{route.params?.record?.createdAt ? new Date(route.params.record.createdAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'} → Initial{'\n'}{'  '}{new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} → Follow-up</Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: colors.primary, marginBottom: 12 }]}
             onPress={handleSaveAndFinish}
           >
-            <Text style={styles.primaryBtnText}>Save & Finish</Text>
+            <Text style={styles.primaryBtnText}>
+              {isFollowUp && previousRiskResults ? 'Save as New History Entry' : 'Save & Finish'}
+            </Text>
             <CheckCircle2 color="#FFF" size={20} style={{ marginLeft: 6 }} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setScreen("mec_results")}>
@@ -1701,6 +1773,75 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 12,
     fontWeight: "bold",
+  },
+
+  // ── Previous vs Current Comparison ──
+  comparisonContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  comparisonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  comparisonItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  comparisonLabel: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  comparisonValue: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  comparisonProb: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  comparisonArrow: {
+    paddingHorizontal: 12,
+  },
+  comparisonArrowText: {
+    fontSize: 20,
+    color: '#CBD5E1',
+    fontWeight: '600',
+  },
+
+  // Save info box
+  saveInfoBox: {
+    backgroundColor: '#FFF7ED',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+  },
+  saveInfoText: {
+    fontSize: 13,
+    color: '#9A3412',
+    marginBottom: 2,
+  },
+  saveInfoBold: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#9A3412',
+    marginBottom: 6,
+  },
+  saveInfoSubtext: {
+    fontSize: 12,
+    color: '#C2410C',
+    lineHeight: 18,
   },
 
   // ── Contraindicated / blocked methods ──

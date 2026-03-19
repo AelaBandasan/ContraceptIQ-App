@@ -41,11 +41,11 @@ const EmergencyContraception = () => {
         <View style={styles.safeArea}>
             <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
                 <TouchableOpacity
-                    onPress={() => (navigation as any).openDrawer()}
+                    onPress={() => (navigation as any).navigate('ObHome')}
                     style={styles.menuButton}
                 >
                     <View style={styles.menuButtonSolid}>
-                        <Ionicons name="menu" size={26} color="#FFF" />
+                        <Ionicons name="chevron-back" size={26} color="#FFF" />
                     </View>
                 </TouchableOpacity>
                 <View style={styles.headerTitleContainer}>
