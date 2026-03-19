@@ -31,7 +31,8 @@
     },
     "plugins": [
       "./plugins/with-onnxruntime-react-native",
-      "expo-asset"
+      "expo-asset",
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {
