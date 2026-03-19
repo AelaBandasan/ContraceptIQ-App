@@ -34,7 +34,7 @@ const STEPS = [
     { id: 'WANT_LAST_CHILD', label: "Do you want your last child?", type: 'select', options: ['Yes', 'No', 'Not Sure'] },
     { id: 'WANT_LAST_PREGNANCY', label: "Do you want your last pregnancy?", type: 'select', options: ['Yes', 'No', 'Not Sure'] },
 
-    { id: 'LAST_METHOD_DISCONTINUED', label: 'Last Method Discontinued', type: 'select', options: ['Pills', 'Condom', 'Copper IUD', 'Intrauterine Device (IUD)', 'Implant', 'Patch', 'Injectable', 'Withdrawal', 'None'] },
+    { id: 'LAST_METHOD_DISCONTINUED', label: 'Last Method Discontinued', type: 'select', options: ['Pills', 'Condom', 'Copper IUD', 'Intrauterine Device (IUD)', 'Implant', 'POP', 'Injectable', 'Withdrawal', 'None'] },
     { id: 'REASON_DISCONTINUED', label: "Reason Discontinued", type: 'select', options: ['Side effects', 'Health concerns', 'Desire to become pregnant', 'None / Not Applicable'] },
 ];
 
@@ -76,7 +76,7 @@ const GuestAssessment = ({ navigation, route }: any) => {
                         'Implant': 1,
                         'Condom': 1,
                         'Injectable': 1,
-                        'Patch': 2,
+                        'POP': 2,
                         'Copper IUD': 1,
                         'Intrauterine Device (IUD)': 1
                     },

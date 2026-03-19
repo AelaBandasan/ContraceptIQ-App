@@ -114,7 +114,8 @@ const CONTRACEPTIVE_METHOD_MAP: Record<string, string> = {
     "NFP/Periodic abstinence":      "Withdrawal",
     "SDM":                          "Withdrawal",
     "LAM":                          "Withdrawal",
-    "Patch":                        "Withdrawal",
+    "Patch":                        "Withdrawal",  // Legacy key - maps to POP
+    "POP":                          "Withdrawal",
     "Other modern":                 "Withdrawal",
     "Other traditional":            "Withdrawal",
     "Withdrawal":                   "Withdrawal",
@@ -126,7 +127,7 @@ const CONTRACEPTIVE_METHOD_MAP: Record<string, string> = {
     "4": "IUD",
     "5": "IUD",
     "6": "Implants",
-    "7": "Withdrawal",   // Patch
+    "7": "Withdrawal",   // Legacy code for POP
     "8": "Injectables",
     "9": "Withdrawal",
 };

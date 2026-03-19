@@ -3,12 +3,12 @@ import {
     StyleSheet, View, Text, TouchableOpacity, FlatList,
     RefreshControl, ActivityIndicator, LayoutAnimation, UIManager, Platform
 } from 'react-native';
-import { useFocusEffect, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useRoute, useNavigation } from '@react-navigation/native';
 import {
     ChevronDown, ChevronUp,
     User as UserIcon, Baby, Cigarette, Calendar,
     Activity, Stethoscope, BookOpen,
-    Clock, MessageSquare, WifiOff,
+    Clock, MessageSquare, WifiOff, PlusCircle,
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
 import { fetchDoctorAssessments, loadAssessmentsCache, AssessmentRecord } from '../../services/doctorService';
@@ -41,6 +41,7 @@ const formatDate = (iso?: string) => {
 // ─── Expandable Card ────────────────────────────────────────────────────────
 const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord; initialExpanded?: boolean }) => {
     const [expanded, setExpanded] = useState(initialExpanded);
+    const navigation = useNavigation<any>();
 
     const pd = item.patientData || {};
     const riskColor = '#E45A92';
@@ -52,6 +53,13 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
         setExpanded(prev => !prev);
     };
 
+    const handleStartFollowUp = () => {
+        navigation.navigate('ObAssessment', {
+            record: item,
+            isFollowUp: true,
+        });
+    };
+
     return (
         <View style={[styles.card, expanded && styles.cardExpanded]}>
             {/* Color Strip */}
@@ -59,50 +67,54 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
 
             <View style={styles.cardBody}>
                 {/* ── Header Row ── */}
-                <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={styles.cardHeader}>
-                    <View style={{ flex: 1 }}>
+                <View style={styles.cardHeader}>
+                    <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={{ flex: 1 }}>
                         <Text style={styles.patientName}>{item.patientName || pd.NAME || 'Unknown Patient'}</Text>
                         <View style={styles.metaChips}>
                             <View style={styles.metaChip}>
-                                <Calendar size={10} color="#94A3B8" />
+                                <Calendar size={15} color="#94A3B8" />
                                 <Text style={styles.metaChipText}>{formatDate(item.createdAt)}</Text>
                             </View>
                             {item.pendingSync && (
                                 <View style={styles.metaChip}>
-                                    <Clock size={10} color="#F59E0B" />
+                                    <Clock size={15} color="#F59E0B" />
                                     <Text style={[styles.metaChipText, { color: '#F59E0B' }]}>Pending sync</Text>
                                 </View>
                             )}
                         </View>
-                    </View>
+                    </TouchableOpacity>
                     <View style={styles.headerRight}>
-                        <View style={[styles.chevronBtn, { backgroundColor: riskColor + '12' }]}>
+                        <TouchableOpacity style={styles.followUpBtn} onPress={handleStartFollowUp}>
+                            <PlusCircle size={15} color="#FFF" />
+                            <Text style={styles.followUpBtnText}>Follow-Up</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={[styles.chevronBtn, { backgroundColor: riskColor + '12' }]}>
                             {expanded
                                 ? <ChevronUp size={16} color={riskColor} />
                                 : <ChevronDown size={16} color={riskColor} />
                             }
-                        </View>
+                        </TouchableOpacity>
                     </View>
-                </TouchableOpacity>
+                </View>
 
                 {/* ── Collapsed Summary Pill Row ── */}
                 {!expanded && (
                     <View style={styles.pillRow}>
                         <View style={styles.pill}>
-                            <UserIcon size={11} color="#64748B" />
+                            <UserIcon size={15} color="#64748B" />
                             <Text style={styles.pillText}>{pd.AGE ? pd.AGE + 'y' : '—'}</Text>
                         </View>
                         <View style={styles.pill}>
-                            <Cigarette size={11} color="#64748B" />
+                            <Cigarette size={15} color="#64748B" />
                             <Text style={styles.pillText}>{smokerLabel}</Text>
                         </View>
                         <View style={styles.pill}>
-                            <Baby size={11} color="#64748B" />
+                            <Baby size={15} color="#64748B" />
                             <Text style={styles.pillText}>P{pd.PARITY ?? '0'}</Text>
                         </View>
                         {item.mecConditionIds && item.mecConditionIds.length > 0 && (
                             <View style={[styles.pill, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
-                                <Stethoscope size={11} color="#0369A1" />
+                                <Stethoscope size={15} color="#0369A1" />
                                 <Text style={[styles.pillText, { color: '#0369A1' }]}>
                                     {item.mecConditionIds.length} MEC
                                 </Text>
@@ -114,7 +126,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                 {/* ── OB Note Snippet (collapsed only) ── */}
                 {!expanded && item.clinicalNotes ? (
                     <View style={styles.noteSnippet}>
-                        <MessageSquare size={11} color="#94A3B8" />
+                        <MessageSquare size={15} color="#94A3B8" />
                         <Text style={styles.noteSnippetText} numberOfLines={1}>{item.clinicalNotes}</Text>
                     </View>
                 ) : null}
@@ -126,7 +138,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                         {/* ─ Patient Profile ─ */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
-                                <UserIcon size={14} color="#E45A92" />
+                                <UserIcon size={17} color="#E45A92" />
                                 <Text style={styles.sectionTitle}>Patient Profile</Text>
                             </View>
                             <View style={styles.profileGrid}>
@@ -152,18 +164,18 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                         {item.mecConditionIds && item.mecConditionIds.length > 0 && (
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
-                                    <Stethoscope size={14} color="#E45A92" />
+                                    <Stethoscope size={17} color="#E45A92" />
                                     <Text style={styles.sectionTitle}>Medical Conditions (MEC)</Text>
                                 </View>
-                                <View style={styles.notesBox}>
-                                    {item.mecConditionIds.map((id, idx) => {
+                                <View style={styles.historyChipList}>
+                                    {item.mecConditionIds.map((id) => {
                                         const entry = WHO_MEC_CONDITIONS.find(c => c.id === id);
                                         let label = entry ? entry.condition : id;
                                         if (entry?.subCondition) label += ` — ${entry.subCondition}`;
                                         return (
-                                            <Text key={id} style={[styles.notesText, idx > 0 && { marginTop: 4 }]}>
-                                                • {label}
-                                            </Text>
+                                            <View key={id} style={styles.historyChipItem}>
+                                                <Text style={styles.historyChipText}>{label}</Text>
+                                            </View>
                                         );
                                     })}
                                 </View>
@@ -174,7 +186,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                         {Object.keys(riskResults).length > 0 && (
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
-                                    <Activity size={14} color="#E45A92" />
+                                    <Activity size={17} color="#E45A92" />
                                     <Text style={styles.sectionTitle}>Discontinuation Risk</Text>
                                 </View>
                                 {Object.entries(riskResults).map(([method, result]) => {
@@ -203,7 +215,7 @@ const HistoryCard = ({ item, initialExpanded = false }: { item: AssessmentRecord
                         {/* ─ OB Clinical Notes ─ */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
-                                <Stethoscope size={14} color="#E45A92" />
+                                <Stethoscope size={17} color="#E45A92" />
                                 <Text style={styles.sectionTitle}>OB Clinical Notes</Text>
                             </View>
                             <View style={styles.notesBox}>
@@ -422,7 +434,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 8,
         borderBottomWidth: 1, borderBottomColor: '#FDE68A',
     },
-    offlineBannerText: { fontSize: 12, color: '#92400E', fontWeight: '500' },
+    offlineBannerText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
 
     // FILTER BAR
     filterBar: {
@@ -466,8 +478,8 @@ const styles = StyleSheet.create({
 
     // Card Header
     cardHeader: { flexDirection: 'row', alignItems: 'flex-start' },
-    patientName: { fontSize: 17, fontWeight: '800', color: colors.text.primary, marginBottom: 6 },
-    metaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    patientName: { fontSize: 19, fontWeight: '800', color: colors.text.primary, marginBottom: 6 },
+    metaChips: { flexDirection: 'row', flexWrap: 'nowrap', gap: 6 },
     metaChip: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -479,16 +491,30 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         paddingVertical: 6,
     },
-    metaChipText: { fontSize: 11.5, color: '#94A3B8', fontWeight: '500' },
-    headerRight: { alignItems: 'flex-end', gap: 6, marginLeft: 10 },
+    metaChipText: { fontSize: 12.5, color: '#94A3B8', fontWeight: '500' },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 10 },
     statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, gap: 4 },
-    statusLabel: { fontSize: 12, fontWeight: '800' },
+    statusLabel: { fontSize: 12.5, fontWeight: '800' },
     chevronBtn: { padding: 5, borderRadius: 8 },
+    followUpBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#E45A92',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    followUpBtnText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#FFF',
+    },
 
     // Collapsed
     pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
     pill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F8FAFC', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#F1F5F9' },
-    pillText: { fontSize: 11.5, color: '#64748B', fontWeight: '500' },
+    pillText: { fontSize: 12.5, color: '#64748B', fontWeight: '500' },
     noteSnippet: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -510,7 +536,7 @@ const styles = StyleSheet.create({
     // Section
     section: { marginBottom: 18 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 10 },
-    sectionTitle: { fontSize: 14, fontWeight: '800', color: '#334155', textTransform: 'uppercase', letterSpacing: 0.6 },
+    sectionTitle: { fontSize: 15, fontWeight: '800', color: '#334155', textTransform: 'uppercase', letterSpacing: 0.6 },
 
     // Profile grid (2-col table)
     profileGrid: { borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#F1F5F9' },
@@ -528,6 +554,18 @@ const styles = StyleSheet.create({
     },
     prefLabel: { fontSize: 13, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
     prefValue: { fontSize: 13.5, color: '#1E293B', fontWeight: '700' },
+
+    // Chip list (for conditions)
+    historyChipList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    historyChipItem: {
+        backgroundColor: '#F8FAFC',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    historyChipText: { fontSize: 13, color: '#334155', fontWeight: '500' },
 
     // Risk bars
     riskRow: { marginBottom: 12 },
