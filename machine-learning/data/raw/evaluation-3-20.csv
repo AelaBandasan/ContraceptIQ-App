@@ -1,0 +1,57 @@
+Name,Age,Sex,Occupation,F1,F2,F3,P1,P2,P3,I1,I2,I3,M1,M2,M3,C1,C2,C3,Comment #1,Comment #2,Department
+M LIgad,25,f,CLA,5,5,5,5,5,5,4,5,5,5,5,5,5,5,5,na,na,IT
+Jacob,24,m,ITSO,5,5,5,5,5,5,5,5,5,4,5,5,5,5,5,na,na,IT
+S Coral,25,m,CLA,4,3,5,4,4,5,4,4,5,4,5,4,4,5,4,na,na,IT
+R Lagdaan,24,m,CLA,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,IT
+MJ Cuady,23,m,fullstack dev,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,more ui consistentcy,IT
+L Babelonia,26,m,fullstack dev,5,4,5,5,5,5,5,5,5,5,4,5,5,5,5,na,na,IT
+B Fernandez,41,f,ITSR Manager,3,3,3,4,4,4,4,4,4,4,2,3,4,4,4,na,link to clinics and hospital databases,IT
+JC Yapchapco,39,m,IT Manager,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,na,na,IT
+M Sembrano,26,m,web dev,5,5,4,5,5,4,4,4,4,5,5,5,5,4,5,na,na,IT
+EJ Sembrano,28,f,technical project manager,5,5,4,5,4,5,4,3,4,5,5,5,5,4,5,na,further enchancements listed,IT
+IL Opon,51,f,ACFS Officer,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,na,na,IT
+Rusty,31,m,ITSO,5,5,5,5,5,5,5,5,5,5,4,5,5,5,5,na,na,IT
+I Falalimpa,25,m,ITSO,5,4,4,4,4,5,5,5,4,5,4,5,4,5,4,na,na,IT
+Gelo,22,m,ITSO,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,IT
+RP Manalo,28,m,it business analyst,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,ui improvements,na,IT
+J Cadelina,30,f,analytics team leader,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,ui improvements,IT
+E Oborro,27,f,IT associate consultant,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,na,na,IT
+LA Conullies,29,m,ITSO,5,4,4,5,5,5,5,4,5,5,5,5,5,5,5,na,na,IT
+JN Dela Cruz,26,f,medical secretary,5,5,5,5,4,5,5,5,5,5,5,5,4,5,5,na,na,HP
+MJ Piperno-Suguitan,35,f,OB Gyn,5,3,4,5,5,5,4,5,5,4,5,5,5,5,5,na,improve discontinuation risk,HP
+A Macabuhay,23,f,Midwife,5,5,4,4,5,5,5,5,5,5,4,5,5,5,5,Include NORIFAM injectable contraceptive.,same as #1,HP
+V Dela Cruz,58,f,Midwife 2,5,5,5,5,5,5,5,5,5,5,5,5,5,4,4,na,natural family planning,HP
+P Mendoza,35,f,midwife,5,5,5,5,4,4,5,5,5,5,4,5,4,5,5,na,natural family planning,HP
+G Padilla,35,F,midwife,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,HP
+K Cruz,38,M,nurse-midwife,5,5,4,4,5,5,5,5,5,5,5,5,5,5,5,na,na,HP
+M Cruz,52,F,midwife,5,5,5,5,5,4,5,5,5,5,5,5,5,5,4,Information on implant frequency,Availability of the app on iOS in the future,HP
+KM Quines,24,f,midwife,4,5,4,5,5,5,4,5,4,5,5,4,5,5,5,na,na,HP
+C Dela Torre,22,f,midwife,5,4,5,5,5,5,5,4,4,4,5,5,5,5,5,na,na,HP
+MA Teves,32,f,midwife,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,HP
+E Palmaria,44,f,midwife,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,HP
+A Desulo,48,f,midwife,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,HP
+PA Balbido,21,f,va,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+ZA Zamora,20,f,student,4,4,5,5,4,4,5,4,5,4,5,4,5,3,4,na,na,GU
+A Montemayor,22,f,student,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+K,18,f,student,4,5,5,5,5,5,5,4,4,5,5,5,5,5,5,na,na,GU
+J Anincula,46,f,canteen staff,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+D Detablan,21,f,student,5,5,4,5,5,5,5,5,5,5,5,5,5,5,5,na,add where user can get the contraceptive,GU
+K Ramos,22,f,student,4,5,5,5,4,5,5,4,4,5,5,4,5,5,4,na,notification when using pill,GU
+D Idigpio,23,f,student,5,4,4,5,5,5,5,4,4,4,4,4,4,4,4,na,na,GU
+V Paguntalan,21,f, student,4,3,5,4,4,4,5,5,3,5,5,5,3,5,5,na,add price,GU
+MF Renoballes,24,f,none,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,confusion in guest mode,na,GU
+ME Renoballes,19,f,student,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+P Penaroyo,28,f,student,5,4,5,4,5,4,5,5,4,4,4,4,5,4,5,na,na,GU
+M Marata,36,f,insurance admin,5,5,5,5,5,5,5,5,5,4,4,5,5,5,5,na,list of clinics/hospitals that provides these contraceptives,GU
+JM de Jesus,21,f,student,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+M Renoballes,25,f,accounting office,4,5,5,4,4,5,5,5,5,4,5,4,5,5,5,na,na,GU
+RL Libpo,23,m,student,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+L Quirante,26,f,marketing services officer,5,5,3,5,5,5,5,5,5,5,5,5,5,5,5,na,more information,GU
+M Quirante,28,f,instructor analyst,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+B Castanas,45,f,housewife,4,5,4,4,5,5,4,5,5,4,3,4,5,5,5,unresponsive ,simplify terms,GU
+A Gemoto,29,f,housewife,4,5,4,5,4,5,4,5,4,4,5,5,4,5,4,cut-off some at some parts ,tutorial on how to use the app,GU
+A Villarosa,28,f,travel consultant,4,5,4,4,5,5,5,4,5,4,5,5,5,4,5,some test not readable,more description,GU
+M Castanas,43,f,housewife,4,5,5,5,5,5,5,3,3,4,4,4,5,3,5,confusing at some parts,tutorial on how to use the app,GU
+J Rivera,22,f,student,5,5,5,5,5,5,5,5,5,5,5,5,5,4,5,heading overlaps,add video about the topic and how to use the system,GU
+KN Lasaten,22,f,student,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,na,na,GU
+C Mangasar,45,f,va,5,5,5,5,5,5,5,5,5,4,5,4,4,4,4,na,menstrual monitoring,GU
