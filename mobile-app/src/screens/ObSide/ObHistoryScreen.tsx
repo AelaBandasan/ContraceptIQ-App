@@ -9,7 +9,7 @@ import {
     ChevronDown, ChevronUp,
     User as UserIcon, Baby, Cigarette, Calendar,
     Activity, Stethoscope, BookOpen,
-    Clock, MessageSquare, WifiOff, PlusCircle,
+    Clock, MessageSquare, WifiOff, PlusCircle, X, Trash2,
 } from 'lucide-react-native';
 import { auth } from '../../config/firebaseConfig';
 import {
@@ -84,38 +84,35 @@ const HistoryCard = ({
     };
 
     return (
-        <View style={[styles.card, expanded && styles.cardExpanded]}>
+        <TouchableOpacity
+            onPress={handlePress}
+            onLongPress={() => onLongPress(item.id)}
+            activeOpacity={0.8}
+            style={[styles.card, expanded && styles.cardExpanded, isSelected && styles.cardSelected]}
+        >
             {/* Color Strip */}
             <View style={[styles.strip, { backgroundColor: riskColor }]} />
 
             <View style={styles.cardBody}>
                 {/* ── Header Row ── */}
                 <View style={styles.cardHeader}>
-                    <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={{ flex: 1 }}>
+                    <View style={{ flex: 1 }}>
                         <Text style={styles.patientName}>{item.patientName || pd.NAME || 'Unknown Patient'}</Text>
                         <View style={styles.metaChips}>
                             <View style={styles.metaChip}>
                                 <Calendar size={15} color="#94A3B8" />
                                 <Text style={styles.metaChipText}>{formatDate(item.createdAt)}</Text>
                             </View>
-                        )}
-
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.patientName}>{item.patientName || pd.NAME || 'Unknown Patient'}</Text>
-                            <View style={styles.metaChips}>
-                                <View style={styles.metaChip}>
-                                    <Clock size={15} color="#F59E0B" />
-                                    <Text style={[styles.metaChipText, { color: '#F59E0B' }]}>Pending sync</Text>
-                                </View>
-                            )}
                         </View>
-                    </TouchableOpacity>
+                    </View>
                     <View style={styles.headerRight}>
-                        <TouchableOpacity style={styles.followUpBtn} onPress={handleStartFollowUp}>
-                            <PlusCircle size={15} color="#FFF" />
-                            <Text style={styles.followUpBtnText}>Follow-Up</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={toggle} activeOpacity={0.8} style={[styles.chevronBtn, { backgroundColor: riskColor + '12' }]}>
+                        {!isSelectMode && (
+                            <TouchableOpacity style={styles.followUpBtn} onPress={handleStartFollowUp}>
+                                <PlusCircle size={15} color="#FFF" />
+                                <Text style={styles.followUpBtnText}>Follow-Up</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={handlePress} activeOpacity={0.8} style={[styles.chevronBtn, { backgroundColor: riskColor + '12' }]}>
                             {expanded
                                 ? <ChevronUp size={16} color={riskColor} />
                                 : <ChevronDown size={16} color={riskColor} />
@@ -151,7 +148,7 @@ const HistoryCard = ({
                 )}
 
                 {/* ── OB Note Snippet (collapsed only) ── */}
-                {!expanded && item.clinicalNotes ? (
+                {!expanded && !isSelectMode && item.clinicalNotes ? (
                     <View style={styles.noteSnippet}>
                         <MessageSquare size={15} color="#94A3B8" />
                         <Text style={styles.noteSnippetText} numberOfLines={1}>{item.clinicalNotes}</Text>
@@ -159,7 +156,7 @@ const HistoryCard = ({
                 ) : null}
 
                 {/* ── EXPANDED CONTENT ── */}
-                {expanded && (
+                {expanded && !isSelectMode && (
                     <View style={styles.expandedContent}>
 
                         {/* ─ Patient Profile ─ */}
@@ -168,38 +165,28 @@ const HistoryCard = ({
                                 <UserIcon size={17} color="#E45A92" />
                                 <Text style={styles.sectionTitle}>Patient Profile</Text>
                             </View>
-                            <View style={styles.pill}>
-                                <Cigarette size={11} color="#64748B" />
-                                <Text style={styles.pillText}>{smokerLabel}</Text>
-                            </View>
-                            <View style={styles.pill}>
-                                <Baby size={11} color="#64748B" />
-                                <Text style={styles.pillText}>P{pd.PARITY ?? '0'}</Text>
-                            </View>
-                            {item.mecConditionIds && item.mecConditionIds.length > 0 && (
-                                <View style={[styles.pill, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
-                                    <Stethoscope size={11} color="#0369A1" />
-                                    <Text style={[styles.pillText, { color: '#0369A1' }]}>
-                                        {item.mecConditionIds.length} MEC
-                                    </Text>
+                            <View style={styles.pillRow}>
+                                <View style={styles.pill}>
+                                    <Cigarette size={11} color="#64748B" />
+                                    <Text style={styles.pillText}>{smokerLabel}</Text>
                                 </View>
-                            )}
+                                <View style={styles.pill}>
+                                    <Baby size={11} color="#64748B" />
+                                    <Text style={styles.pillText}>P{pd.PARITY ?? '0'}</Text>
+                                </View>
+                                {item.mecConditionIds && item.mecConditionIds.length > 0 && (
+                                    <View style={[styles.pill, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
+                                        <Stethoscope size={11} color="#0369A1" />
+                                        <Text style={[styles.pillText, { color: '#0369A1' }]}>
+                                            {item.mecConditionIds.length} MEC
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                         </View>
-                    )}
 
-                    {/* ── OB Note Snippet (collapsed only) ── */}
-                    {!expanded && !isSelectMode && item.clinicalNotes ? (
-                        <View style={styles.noteSnippet}>
-                            <MessageSquare size={11} color="#94A3B8" />
-                            <Text style={styles.noteSnippetText} numberOfLines={1}>{item.clinicalNotes}</Text>
-                        </View>
-                    ) : null}
-
-                    {/* ── EXPANDED CONTENT ── */}
-                    {expanded && !isSelectMode && (
-                        <View style={styles.expandedContent}>
-
-                            {/* ─ Patient Profile ─ */}
+                        {/* ─ Medical Conditions (MEC) ─ */}
+                        {item.mecConditionIds && item.mecConditionIds.length > 0 && (
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
                                     <Stethoscope size={17} color="#E45A92" />
@@ -217,36 +204,36 @@ const HistoryCard = ({
                                         );
                                     })}
                                 </View>
-                            )}
-
-                            {/* ─ OB Clinical Notes ─ */}
-                            <View style={styles.section}>
-                                <View style={styles.sectionHeader}>
-                                    <Activity size={17} color="#E45A92" />
-                                    <Text style={styles.sectionTitle}>Discontinuation Risk</Text>
-                                </View>
-                                {Object.entries(riskResults).map(([method, result]) => {
-                                    const mColor = result.riskLevel?.toLowerCase() === 'high' ? '#EF4444' : '#10B981';
-                                    const pct = result.probability != null
-                                        ? Math.min(result.probability * 100, 100)
-                                        : 0;
-                                    return (
-                                        <View key={method} style={styles.riskRow}>
-                                            <View style={styles.riskRowTop}>
-                                                <Text style={styles.riskMethodName}>{getDisplayNameFromModelKey(method)}</Text>
-                                                <Text style={[styles.riskPct, { color: mColor }]}>{pct.toFixed(0)}%</Text>
-                                            </View>
-                                            <View style={styles.barBg}>
-                                                <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: mColor }]} />
-                                            </View>
-                                            {result.recommendation
-                                                ? <Text style={styles.riskNote}>{result.recommendation}</Text>
-                                                : null}
-                                        </View>
-                                    );
-                                })}
                             </View>
                         )}
+
+                        {/* ─ Discontinuation Risk ─ */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <Activity size={17} color="#E45A92" />
+                                <Text style={styles.sectionTitle}>Discontinuation Risk</Text>
+                            </View>
+                            {Object.entries(riskResults).map(([method, result]) => {
+                                const mColor = result.riskLevel?.toLowerCase() === 'high' ? '#EF4444' : '#10B981';
+                                const pct = result.probability != null
+                                    ? Math.min(result.probability * 100, 100)
+                                    : 0;
+                                return (
+                                    <View key={method} style={styles.riskRow}>
+                                        <View style={styles.riskRowTop}>
+                                            <Text style={styles.riskMethodName}>{getDisplayNameFromModelKey(method)}</Text>
+                                            <Text style={[styles.riskPct, { color: mColor }]}>{pct.toFixed(0)}%</Text>
+                                        </View>
+                                        <View style={styles.barBg}>
+                                            <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: mColor }]} />
+                                        </View>
+                                        {result.recommendation
+                                            ? <Text style={styles.riskNote}>{result.recommendation}</Text>
+                                            : null}
+                                    </View>
+                                );
+                            })}
+                        </View>
 
                         {/* ─ OB Clinical Notes ─ */}
                         <View style={styles.section}>
@@ -266,18 +253,10 @@ const HistoryCard = ({
                                     <Clock size={11} color="#94A3B8" />
                                     <Text style={styles.obNameText}>{formatDate(item.createdAt)}</Text>
                                 </View>
-                                {item.doctorName ? (
-                                    <View style={styles.obRow}>
-                                        <Stethoscope size={11} color="#94A3B8" />
-                                        <Text style={styles.obNameText}>{item.doctorName}</Text>
-                                        <Clock size={11} color="#94A3B8" />
-                                        <Text style={styles.obNameText}>{formatDate(item.createdAt)}</Text>
-                                    </View>
-                                ) : null}
-                            </View>
+                            ) : null}
                         </View>
-                    )}
-                </View>
+                    </View>
+                )}
             </View>
         </TouchableOpacity>
     );
@@ -573,7 +552,6 @@ const styles = StyleSheet.create({
         marginTop: 2, fontSize: 22,
         color: colors.text.primary, fontWeight: '800',
     },
-    offlineBannerText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
 
     // Select button (normal mode)
     selectBtn: {

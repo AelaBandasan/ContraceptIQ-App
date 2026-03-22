@@ -1,23 +1,32 @@
 """
 generate_signed_shap.py
 
-Generates risk_factors_v4_signed.json — a per-value signed mean SHAP lookup
-table for on-device directional explainability (Option A).
+Generates risk_factors_v4_signed.json — a per-value signed SHAP lookup table
+for on-device directional explainability.
 
-Unlike mean |SHAP| (which only gives magnitude), this stores the SIGNED mean
-SHAP contribution for each OHE feature-value bin.  Positive = increases
-discontinuation risk, negative = decreases risk.
+Uses conditional mean SHAP:
+  - Categorical OHE bins (cat__*): mean SHAP only for rows where that bin = 1,
+    i.e., only patients who actually have that value.  This avoids diluting the
+    signal with zeros from patients in other categories.
+  - Numeric features (num__AGE, num__PARITY): values are binned into clinically
+    meaningful ranges, then conditional mean SHAP is computed per bin.  A
+    20-year-old therefore gets a different SHAP signal than a 40-year-old.
 
 Output format:
 {
-  "baseline": 0.053,           # expected P(discontinue) across training set
+  "baseline_log_odds": 0.755,
+  "baseline_probability": 0.680,
   "features": {
-    "cat__PATTERN_USE_1":          0.312,
+    "cat__PATTERN_USE_1":           0.312,
     "cat__PATTERN_USE_Intermittent": 0.041,
-    "cat__PATTERN_USE_Consistent": -0.021,
     ...
-    "num__AGE":                   -0.018,   # signed mean SHAP for numeric (when > median)
-    "num__PARITY":                 0.009,
+    "num__AGE_15_24":              -0.112,   # conditional mean SHAP for ages 15–24
+    "num__AGE_25_34":              -0.298,   # conditional mean SHAP for ages 25–34
+    "num__AGE_35_49":              -0.451,   # conditional mean SHAP for ages 35–49
+    "num__PARITY_0":                0.082,   # nulliparous
+    "num__PARITY_1_2":             -0.095,
+    "num__PARITY_3_4":             -0.187,
+    "num__PARITY_5_plus":          -0.231,
     ...
   }
 }
@@ -57,6 +66,23 @@ V4_FEATURES = [
     "HOUSEHOLD_HEAD_SEX", "CONTRACEPTIVE_METHOD", "SMOKE_CIGAR",
     "DESIRE_FOR_MORE_CHILDREN", "PARITY",
 ]
+
+# Bin definitions for numeric features: (low_inclusive, high_inclusive, bin_label)
+# Must cover the full observed range; any out-of-range value is skipped.
+NUMERIC_BINS: dict[str, list[tuple[float, float, str]]] = {
+    "num__AGE": [
+        (0,  19, "under_20"),
+        (20, 29, "20_29"),
+        (30, 39, "30_39"),
+        (40, 99, "40_plus"),
+    ],
+    "num__PARITY": [
+        (0, 0,   "0"),
+        (1, 2,   "1_2"),
+        (3, 4,   "3_4"),
+        (5, 99,  "5_plus"),
+    ],
+}
 
 # ============================================================================
 # MAIN
@@ -118,16 +144,43 @@ def main():
     baseline_prob = float(1 / (1 + np.exp(-baseline)))
     print(f"  Baseline probability: {baseline_prob:.4f} ({baseline_prob*100:.1f}%)")
 
-    # ── Compute signed mean SHAP per feature ──────────────────────────────────
-    # For each OHE bin: mean SHAP across ALL rows (not just rows where bin=1).
-    # This gives the population-average directional contribution per feature bin.
-    print("\nComputing signed mean SHAP per feature ...")
-    mean_signed_shap = shap_values.mean(axis=0)             # shape: (n_features,)
+    # ── Compute conditional mean SHAP per feature ────────────────────────────
+    # Categorical OHE bins: average only rows where bin == 1 (patients in that
+    # category), not across all patients.  Avoids diluting signal with zeros.
+    #
+    # Numeric features: bin first, then conditional mean SHAP per bin so that
+    # different values (e.g. age 20 vs age 45) produce different SHAP signals.
+    print("\nComputing conditional mean SHAP per feature ...")
 
-    features_dict = {
-        name: round(float(val), 7)
-        for name, val in zip(feature_names, mean_signed_shap)
-    }
+    features_dict: dict = {}
+    n_cols = shap_values.shape[1]
+
+    for i in range(n_cols):
+        name     = feature_names[i]
+        col_shap = shap_values[:, i]
+        col_vals = X_transformed_df.iloc[:, i].values
+
+        if name in NUMERIC_BINS:
+            # ── Numeric: one entry per bin ────────────────────────────────────
+            for lo, hi, bin_label in NUMERIC_BINS[name]:
+                mask = (col_vals >= lo) & (col_vals <= hi)
+                if mask.sum() == 0:
+                    continue  # no training samples in this bin; omit key
+                bin_mean = float(col_shap[mask].mean())
+                features_dict[f"{name}_{bin_label}"] = round(bin_mean, 7)
+        else:
+            # ── Categorical OHE: conditional mean for rows where bin == 1 ────
+            mask = col_vals == 1
+            if mask.sum() == 0:
+                # Bin never appears in test set; fall back to population mean
+                features_dict[name] = round(float(col_shap.mean()), 7)
+            else:
+                features_dict[name] = round(float(col_shap[mask].mean()), 7)
+
+    _total_bins = sum(len(v) for v in NUMERIC_BINS.values())
+    print(f"  {len(features_dict)} entries "
+          f"({len(feature_names) - len(NUMERIC_BINS)} categorical + "
+          f"~{_total_bins} numeric bins)")
 
     # Sort by absolute value descending for readability
     features_sorted = dict(
