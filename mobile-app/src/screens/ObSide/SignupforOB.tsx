@@ -138,7 +138,7 @@ const SignupforOB = ({ navigation }: any) => {
 
     // Birthdate validation
     if (!isAgeValid(birthdate)) {
-      showAlert("Invalid Birthdate", "You must be at least 18 years old to register as an OB Professional.");
+      showAlert("Invalid Birthdate", "You must be at least 18 years old to register as an FP Provider.");
       return;
     }
 
@@ -200,7 +200,7 @@ const SignupforOB = ({ navigation }: any) => {
                 <Image source={Logo} style={styles.logo} resizeMode="contain" />
               </Animated.View>
               <Text style={styles.title}>ContraceptIQ</Text>
-              <Text style={styles.welcomeText}>Create OB Professional Account</Text>
+              <Text style={styles.welcomeText}>Create Family Planning Provider Account</Text>
               <Text style={styles.subtext}>Your expertise, now powered by guided risk insights.</Text>
             </View>
 
