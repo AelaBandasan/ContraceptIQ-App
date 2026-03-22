@@ -212,7 +212,7 @@ const LoginforOB = ({ navigation }: any) => {
                 <Image source={Logo} style={styles.logo} resizeMode="contain" />
               </Animated.View>
               <Text style={styles.title}>ContraceptIQ</Text>
-              <Text style={styles.welcomeText}>OB Professional Sign In</Text>
+              <Text style={styles.welcomeText}>Family Planning Provider Sign In</Text>
               <Text style={styles.subtext}>Secure access for smarter contraceptive care.</Text>
             </View>
 

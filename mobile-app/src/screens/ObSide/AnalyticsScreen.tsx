@@ -84,8 +84,10 @@ interface StatCardProps {
 }
 const StatCard: React.FC<StatCardProps> = ({ icon, label, value, accent, border }) => (
     <View style={[styles.kpiCard, { backgroundColor: accent, borderColor: border }]}>
-        <View style={styles.kpiIcon}>{icon}</View>
-        <Text style={styles.kpiLabel}>{label}</Text>
+        <View style={styles.kpiTopContent}>
+            <View style={styles.kpiIcon}>{icon}</View>
+            <Text style={styles.kpiLabel}>{label}</Text>
+        </View>
         <Text style={styles.kpiValue} numberOfLines={2} adjustsFontSizeToFit>{value}</Text>
     </View>
 );
@@ -339,7 +341,7 @@ const AnalyticsScreen: React.FC = () => {
 
     return (
         <View style={styles.root}>
-            <ObHeader title="Analytics" subtitle="Aggregate Patient Insights" />
+            <ObHeader title="Analytics" subtitle="Patient Overview Analytics" />
 
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                 <View style={styles.blobOne} />
@@ -499,7 +501,7 @@ const styles = StyleSheet.create({
         borderRadius: 10, alignItems: 'center',
     },
     toggleBtnActive: { backgroundColor: colors.primary },
-    toggleLabel: { fontSize: 13, fontWeight: '600', color: colors.text.secondary },
+    toggleLabel: { fontSize: 15, fontWeight: '600', color: colors.text.secondary },
     toggleLabelActive: { color: '#FFFFFF', fontWeight: '700' },
 
     // ── Seeding banner ────────────────────────────────────────────────────────
@@ -507,9 +509,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', gap: 8,
         backgroundColor: '#FFF7ED', borderRadius: 10,
         paddingHorizontal: 14, paddingVertical: 8,
-        marginBottom: 12, borderWidth: 1, borderColor: '#FED7AA',
+        marginBottom: 10, borderWidth: 1, borderColor: '#FED7AA',
     },
-    seedingText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
+    seedingText: { fontSize: 14, color: '#92400E', fontWeight: '500' },
 
     // ── State views ───────────────────────────────────────────────────────────
     centeredState: { alignItems: 'center', paddingTop: 80, gap: 12 },
@@ -521,18 +523,24 @@ const styles = StyleSheet.create({
     kpiCard: {
         width: (SCREEN_WIDTH - 42) / 2,
         borderRadius: 14, borderWidth: 1,
-        padding: 14, gap: 6,
+        padding: 14,
     },
+    kpiTopContent: { flex: 1 },
     kpiIcon: {
-        width: 34, height: 34, borderRadius: 9,
+        width: 40, height: 40, borderRadius: 9,
         backgroundColor: 'rgba(255,255,255,0.7)',
         justifyContent: 'center', alignItems: 'center',
+        marginBottom: 6,
     },
     kpiLabel: {
-        fontSize: 11, fontWeight: '700', color: '#64748B',
+        fontSize: 13, fontWeight: '700', color: '#64748B',
         textTransform: 'uppercase', letterSpacing: 0.4,
+        marginBottom: 6,
     },
-    kpiValue: { fontSize: 16, fontWeight: '800', color: '#1E293B', flexShrink: 1 },
+    kpiValue: {
+        fontSize: 18, fontWeight: '800', color: '#1E293B',
+        marginTop: 'auto',
+    },
 
     // ── Chart card wrapper ────────────────────────────────────────────────────
     chartCard: {
@@ -544,8 +552,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 18, paddingTop: 16, paddingBottom: 12,
         borderBottomWidth: 1, borderBottomColor: '#F8FAFC',
     },
-    chartTitle:    { fontSize: 16, fontWeight: '800', color: '#1E293B', marginBottom: 2 },
-    chartSubtitle: { fontSize: 12, color: '#94A3B8', fontWeight: '500' },
+    chartTitle:    { fontSize: 18, fontWeight: '800', color: '#1E293B', marginBottom: 2 },
+    chartSubtitle: { fontSize: 14, color: '#94A3B8', fontWeight: '500' },
     chartBody:     { paddingVertical: 8, paddingHorizontal: 4 },
 
     // ── Shared list layout (used by all three charts) ─────────────────────────
@@ -555,34 +563,34 @@ const styles = StyleSheet.create({
         width: 28, height: 28, borderRadius: 8,
         alignItems: 'center', justifyContent: 'center',
     },
-    factorRankText:  { fontSize: 13, fontWeight: '800' },
+    factorRankText:  { fontSize: 15, fontWeight: '800' },
     factorBarWrap:   { flex: 1, gap: 5 },
-    factorLabel:     { fontSize: 13, fontWeight: '600', color: '#334155' },
+    factorLabel:     { fontSize: 15, fontWeight: '600', color: '#334155' },
     factorTrack:     { height: 8, backgroundColor: '#F1F5F9', borderRadius: 999, overflow: 'hidden' },
     factorFill:      { height: '100%', borderRadius: 999 },
     factorCount:     { minWidth: 32, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-    factorCountText: { fontSize: 13, fontWeight: '800' },
+    factorCountText: { fontSize: 15, fontWeight: '800' },
 
     // ── Chart 2: avg prob extras ──────────────────────────────────────────────
     probLabelRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     probValue:     { fontSize: 15, fontWeight: '800' },
-    probSampleSize:{ fontSize: 11, color: '#94A3B8', fontWeight: '500', marginTop: 2 },
+    probSampleSize:{ fontSize: 12.5, color: '#94A3B8', fontWeight: '500', marginTop: 2 },
 
     // ── Chart 1: method risk breakdown ────────────────────────────────────────
     riskLegendRow: { flexDirection: 'row', gap: 16, marginBottom: 4 },
     legendDot:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
     dot:           { width: 10, height: 10, borderRadius: 5 },
-    legendText:    { fontSize: 12, color: '#64748B', fontWeight: '600' },
+    legendText:    { fontSize: 14, color: '#64748B', fontWeight: '600' },
 
     methodRow:       { gap: 8 },
     methodBadge:     { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-    methodBadgeText: { fontSize: 12, fontWeight: '700' },
+    methodBadgeText: { fontSize: 14, fontWeight: '700' },
     stackedBars:     { gap: 5 },
     barLine:         { flexDirection: 'row', alignItems: 'center', gap: 8 },
     barTrack:        { flex: 1, height: 10, backgroundColor: '#F1F5F9', borderRadius: 999, overflow: 'hidden' },
     barFill:         { height: '100%', borderRadius: 999 },
     countBadge:      { minWidth: 30, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-    countBadgeText:  { fontSize: 12, fontWeight: '700' },
+    countBadgeText:  { fontSize: 14, fontWeight: '700' },
 
     // ── Empty chart ───────────────────────────────────────────────────────────
     emptyChart:     { height: 120, alignItems: 'center', justifyContent: 'center', gap: 10 },
@@ -590,7 +598,7 @@ const styles = StyleSheet.create({
 
     // ── Legend note ───────────────────────────────────────────────────────────
     legendNote: {
-        fontSize: 11, color: '#94A3B8', fontStyle: 'italic',
+        fontSize: 13, color: '#94A3B8', fontStyle: 'italic',
         textAlign: 'center', paddingHorizontal: 8, marginTop: 4, lineHeight: 17,
     },
 });

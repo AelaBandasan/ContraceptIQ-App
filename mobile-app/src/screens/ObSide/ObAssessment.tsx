@@ -133,9 +133,9 @@ const FORM_FIELDS = [
     label: "Pattern of Use",
     type: "select",
     options: [
+      "New user (first time)",
       "Current/Regular user",
       "Irregular/Occasional user",
-      "New user (first time)",
       "Stopped using (within 12 months)",
     ],
   },
@@ -792,7 +792,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.summarySectionLabel}>Status</Text>
-              <Text style={styles.summaryValue}>OB Assessment</Text>
+              <Text style={styles.summaryValue}>Family Planning Assessment</Text>
             </View>
           </View>
 
