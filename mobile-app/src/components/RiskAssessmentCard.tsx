@@ -332,17 +332,47 @@ export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LO
     }
   }
 
-  // ── Numeric features ──────────────────────────────────────────────────────
+  // ── Numeric features (bin-conditional SHAP) ──────────────────────────────
+  // Bins must mirror NUMERIC_BINS in generate_signed_shap.py exactly.
+  const AGE_BINS: Array<[number, number, string]> = [
+    [0,  19, "under_20"],
+    [20, 29, "20_29"],
+    [30, 39, "30_39"],
+    [40, 99, "40_plus"],
+  ];
+  const PARITY_BINS: Array<[number, number, string]> = [
+    [0, 0,  "0"],
+    [1, 2,  "1_2"],
+    [3, 4,  "3_4"],
+    [5, 99, "5_plus"],
+  ];
+  const getBinnedShap = (
+    baseKey: string,
+    value: number,
+    bins: Array<[number, number, string]>,
+  ): number | null => {
+    for (const [lo, hi, label] of bins) {
+      if (value >= lo && value <= hi) return featureMap[`${baseKey}_${label}`] ?? null;
+    }
+    return null;
+  };
+
   if (formData.AGE != null && formData.AGE !== "") {
-    const shapVal = featureMap["num__AGE"];
-    if (shapVal != null) {
-      factors.push({ label: `Patient age (${formData.AGE})`, shap: shapVal });
+    const ageNum = parseFloat(String(formData.AGE));
+    if (!isNaN(ageNum)) {
+      const shapVal = getBinnedShap("num__AGE", ageNum, AGE_BINS);
+      if (shapVal != null) {
+        factors.push({ label: `Patient age (${formData.AGE})`, shap: shapVal });
+      }
     }
   }
   if (formData.PARITY != null && formData.PARITY !== "") {
-    const shapVal = featureMap["num__PARITY"];
-    if (shapVal != null) {
-      factors.push({ label: `No. of children (${formData.PARITY})`, shap: shapVal });
+    const parityNum = parseFloat(String(formData.PARITY));
+    if (!isNaN(parityNum)) {
+      const shapVal = getBinnedShap("num__PARITY", parityNum, PARITY_BINS);
+      if (shapVal != null) {
+        factors.push({ label: `No. of children (${formData.PARITY})`, shap: shapVal });
+      }
     }
   }
 
