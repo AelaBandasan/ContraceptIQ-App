@@ -29,6 +29,7 @@ export const MODEL_KEY_TO_MEC_ID: Record<string, string> = {
     'Pills': 'CHC',
     'Injectable': 'DMPA',
     'Implant': 'Implant',
+    'POP': 'POP',
     'Intrauterine Device (IUD)': 'LNG-IUD',  // primary; Cu-IUD checked in assessment
 };
 
@@ -212,6 +213,8 @@ export const METHOD_ATTRIBUTES: MethodAttributes[] = [
  * Get display name for model key (e.g. 'Pills' -> 'Combined Hormonal Contraceptive (CHC)')
  */
 export function getDisplayNameFromModelKey(modelKey: string): string {
+    // Handle legacy 'Patch' key -> display as 'POP'
+    if (modelKey === 'Patch') return 'POP';
     // IUD form entry covers both Cu-IUD and LNG-IUD — return the user-facing label directly
     if (modelKey === 'Intrauterine Device (IUD)') return 'Intrauterine Device (IUD)';
     const mecId = MODEL_KEY_TO_MEC_ID[modelKey];
