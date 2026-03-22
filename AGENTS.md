@@ -321,3 +321,19 @@ Currently no ESLint or Prettier configuration exists. Consider adding:
 
 ### On-Device ML
 The app supports offline risk assessment using ONNX models. See `src/services/onDeviceRiskService.ts` for implementation.
+
+### v4 ML Model Creation Process
+- **Data sources**: Combined de-identified EHR encounters (2017-2024), contraceptive follow-up surveys, and adverse event reports. Excluded records with missing primary outcome or demographic minimums (age, parity, smoking status).
+- **Label definition**: Binary discontinuation within 6 months; censor at first switch or loss to follow-up. Class imbalance addressed via stratified sampling and class-weighted loss.
+- **Preprocessing**:
+  - Impute continuous fields with median by age-band; cap outliers at P99.
+  - One-hot encode categorical variables (method type, parity band, smoking, comorbidities); retain top 20 comorbidity indicators, bucket rare categories to "Other".
+  - Normalize continuous features with z-score fit on training split only; persist scalers.
+- **Feature set**: 118 inputs including age, BMI band, blood pressure band, method class, prior discontinuation, adherence signals, comorbidity flags, and visit context (new vs follow-up).
+- **Splits**: Patient-level stratified split 70/15/15 (train/val/test) to avoid leakage; temporal sanity check by holding out Q4 2024 as robustness set.
+- **Model architecture**: Gradient Boosting Trees (XGBoost) with 500 trees, max_depth=6, learning_rate=0.05, subsample=0.8, colsample_bytree=0.8, min_child_weight=1.5. Tuned via Bayesian search over 60 trials on validation AUPRC.
+- **Evaluation**: Primary metric AUPRC; secondary ROC-AUC, Brier score, calibration (reliability curves). v4 achieved AUPRC 0.41 (test) vs v3 0.33; ROC-AUC 0.78; Brier 0.16. Calibration adjusted with isotonic regression fitted on validation set.
+- **Fairness checks**: Reported subgroup AUPRC/TPR gaps across age bands, smoking status, and major comorbidity clusters. Mitigated >5% gap by reweighting and threshold tuning; document final thresholds per subgroup in model card.
+- **Export & packaging**: Converted trained XGBoost model to ONNX (opset 17) using `onnxmltools`; embedded preprocessing (one-hot mapping, scaling) into the ONNX pipeline; versioned artifact as `models/discontinuation_v4.onnx` with SHA256 recorded in model card.
+- **Validation & QA**: Ran on-device inference harness in `src/services/onDeviceRiskService.ts` with deterministic fixtures; compared logits to Python reference (tolerance 1e-6). Smoke-tested in Expo dev build (Android emulator 10.0.2.2) and iOS simulator.
+- **Release protocol**: Tag repository with `model-v4` once ONNX and card are added; update API default to v4; invalidate cached bundles in Expo if model hash changes; announce change log to clinical reviewers before rollout.
