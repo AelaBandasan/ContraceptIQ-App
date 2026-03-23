@@ -137,16 +137,6 @@ const ObAccountSettings = ({ navigation }: any) => {
                             </View>
                             <ShieldCheck size={20} color="#10B981" />
                         </View>
-                        <View style={styles.rowDivider} />
-                        <View style={styles.infoRow}>
-                            <View style={styles.infoIcon}>
-                                <User size={20} color="#E45A92" />
-                            </View>
-                            <View>
-                                <Text style={styles.infoLabel}>Account Type</Text>
-                                <Text style={styles.infoValue}>OB-GYN / Physician</Text>
-                            </View>
-                        </View>
                     </Section>
 
 

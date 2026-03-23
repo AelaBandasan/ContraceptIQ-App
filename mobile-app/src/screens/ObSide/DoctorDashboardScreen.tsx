@@ -54,7 +54,7 @@ const DoctorDashboardScreen = ({ route }: any) => {
     // Mock Data for Demo
     const doctorUid = auth.currentUser?.uid;
     const rawName = route?.params?.doctorName || auth.currentUser?.displayName || "User";
-    const doctorName = rawName.startsWith("Dr.") ? rawName : "Dr. " + rawName;
+    const doctorName = rawName.startsWith("Dr.") ? rawName.replace(/^Dr\.\s*/, "") : rawName;
 
     const loadAssessments = useCallback(async () => {
         if (!doctorUid) return;
