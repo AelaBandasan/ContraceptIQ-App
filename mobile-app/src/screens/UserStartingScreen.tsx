@@ -39,7 +39,7 @@ const UserStartingScreen = ({ navigation }: any) => {
                     const userDoc = await getDoc(doc(db, "users", user.uid));
                     if (userDoc.exists()) {
                         const userData = userDoc.data();
-                        const doctorName = userData.fullName || "Dr. " + (userData.email?.split('@')[0] || "User");
+                        const doctorName = (userData.fullName || userData.email?.split('@')[0] || "User").replace(/^Dr\.\s*/i, "");
 
                         // Cache auth state for offline fallback
                         await AsyncStorage.setItem('@ob_auth_cache', JSON.stringify({

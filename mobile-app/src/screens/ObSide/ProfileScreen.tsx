@@ -117,7 +117,7 @@ const ProfileScreen = ({ navigation }: any) => {
         }
     };
 
-    const doctorName = 'Dr. ' + (email.split('@')[0] || 'Bandasan');
+    const doctorName = email.split('@')[0] || 'Bandasan';
 
     const handleChangePhoto = () => {
         pickImage();
@@ -167,7 +167,7 @@ const ProfileScreen = ({ navigation }: any) => {
                             </TouchableOpacity>
                         </View>
                         <Text style={styles.name}>{doctorName}</Text>
-                        <Text style={styles.role}>Obstetrician - ContraceptIQ</Text>
+                        <Text style={styles.role}>Family Planning Provider</Text>
                         <Text style={styles.email}>{email}</Text>
                     </LinearGradient>
 
