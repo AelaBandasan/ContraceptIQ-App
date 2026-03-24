@@ -76,7 +76,6 @@ const DoctorDashboardScreen = ({ route }: any) => {
 
     const renderCard = (item: AssessmentRecord) => {
         const smoker = item.patientData?.SMOKE_CIGAR && item.patientData.SMOKE_CIGAR !== 'Never' && item.patientData.SMOKE_CIGAR !== 'No';
-        const topMethod = Object.keys(item.riskResults || {})[0] || '—';
 
         return (
             <View key={item.id}>
@@ -97,6 +96,14 @@ const DoctorDashboardScreen = ({ route }: any) => {
                                     {item.pendingSync ? ' · Pending sync' : ''}
                                 </Text>
                             </View>
+                            <View style={styles.cardActions}>
+                                <TouchableOpacity
+                                    style={[styles.miniActionBtn, { backgroundColor: '#E45A9215' }]}
+                                    onPress={() => navigation.navigate('ObHistory', { recordId: item.id })}
+                                >
+                                    <Eye size={18} color="#E45A92" />
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View style={styles.summaryGrid}>
@@ -114,20 +121,6 @@ const DoctorDashboardScreen = ({ route }: any) => {
                             </View>
                         </View>
 
-                        <View style={styles.rowBetween}>
-                            <View style={styles.recBox}>
-                                <Text style={styles.recTitle}>Assessed Method:</Text>
-                                <Text style={styles.recValue}>{topMethod}</Text>
-                            </View>
-                            <View style={styles.cardActions}>
-                                <TouchableOpacity
-                                    style={[styles.miniActionBtn, { backgroundColor: '#E45A9215' }]}
-                                    onPress={() => navigation.navigate('ObHistory', { recordId: item.id })}
-                                >
-                                    <Eye size={18} color="#E45A92" />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
                     </View>
                 </TouchableOpacity>
             </View>

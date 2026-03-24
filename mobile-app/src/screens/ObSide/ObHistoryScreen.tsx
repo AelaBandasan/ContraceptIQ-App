@@ -14,7 +14,7 @@ import {
 import { auth } from '../../config/firebaseConfig';
 import {
     fetchDoctorAssessments, loadAssessmentsCache,
-    deleteAssessments, AssessmentRecord,
+    deleteAssessments, flushSyncQueue, AssessmentRecord,
 } from '../../services/doctorService';
 import { isOnline } from '../../utils/networkUtils';
 import ObHeader from '../../components/ObHeader';
@@ -299,6 +299,7 @@ const ObHistoryScreen = () => {
 
         if (online) {
             try {
+                await flushSyncQueue(doctorUid);
                 const fresh = await fetchDoctorAssessments(doctorUid);
                 setHistory(fresh);
                 setCachedAt(Date.now());

@@ -220,7 +220,7 @@ const UserStartingScreen = ({ navigation }: any) => {
                             activeOpacity={0.6}
                         >
                             <Text style={styles.obText}>
-                                Sign in as <Text style={styles.obTextActive}>FP Provider</Text>
+                                Login as <Text style={styles.obTextActive}>Family Planning Provider</Text>
                             </Text>
                         </TouchableOpacity>
                     </Animated.View>
