@@ -16,6 +16,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { insertAssessmentAnalytics, deleteAnalyticsRows } from './database';
 import { db } from '../config/firebaseConfig';
+import { createModuleLogger } from '../utils/loggerUtils';
 import {
     collection,
     doc,
@@ -24,7 +25,6 @@ import {
     query,
     where,
     getDocs,
-    orderBy,
 } from 'firebase/firestore';
 import { isOnline } from '../utils/networkUtils';
 
@@ -79,6 +79,7 @@ const QUEUE_PREFIX  = '@sync_queue_';
 
 const cacheKey = (doctorId: string) => `${CACHE_PREFIX}${doctorId}`;
 const queueKey  = (doctorId: string) => `${QUEUE_PREFIX}${doctorId}`;
+const logger = createModuleLogger('DoctorService');
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -103,8 +104,13 @@ export async function saveAssessment(record: AssessmentRecord): Promise<void> {
     // 3. Try Firestore sync — silently queue on failure
     try {
         await _syncRecord(record);
-    } catch {
+    } catch (error: any) {
         await _enqueue(record.doctorId, record.id);
+        logger.warn('Immediate sync failed; record queued', {
+            recordId: record.id,
+            doctorId: record.doctorId,
+            reason: error?.message ?? 'unknown',
+        });
     }
 }
 
@@ -131,10 +137,10 @@ export async function loadAssessmentsCache(doctorId: string): Promise<Assessment
 export async function fetchDoctorAssessments(doctorId: string): Promise<AssessmentRecord[]> {
     const local = await loadAssessmentsCache(doctorId);
 
+    // Keep query index-light: filter by doctor only, then sort in memory.
     const q = query(
         collection(db, 'assessments'),
         where('doctorId', '==', doctorId),
-        orderBy('createdAt', 'desc'),
     );
     const snap = await getDocs(q);
     const remote: AssessmentRecord[] = [];
@@ -179,6 +185,13 @@ export async function flushSyncQueue(doctorId: string): Promise<void> {
         }
 
         await AsyncStorage.setItem(key, JSON.stringify(remaining));
+        if (pendingIds.length > 0) {
+            logger.info('Sync queue flush completed', {
+                doctorId,
+                attempted: pendingIds.length,
+                remaining: remaining.length,
+            });
+        }
     } catch {
         // Silent — will retry next time
     }

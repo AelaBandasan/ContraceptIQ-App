@@ -24,7 +24,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { ChevronDown, ChevronUp, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import { sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -39,7 +39,6 @@ const LoginforOB = ({ navigation }: any) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showDemoDetails, setShowDemoDetails] = useState(false);
 
   const logoScale = useSharedValue(0.9);
   const blob1Pos = useSharedValue(0);
@@ -183,12 +182,6 @@ const LoginforOB = ({ navigation }: any) => {
     }
   };
 
-  const fillDemoCredentials = () => {
-    setEmail("ob@gmail.com");
-    setPassword("password");
-    setShowPassword(true);
-  };
-
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar barStyle="dark-content" />
@@ -215,30 +208,6 @@ const LoginforOB = ({ navigation }: any) => {
               <Text style={styles.welcomeText}>Family Planning Provider Sign In</Text>
               <Text style={styles.subtext}>Secure access for smarter contraceptive care.</Text>
             </View>
-
-            <Animated.View entering={FadeInUp.delay(80).duration(650).withInitialValues({ opacity: 1 })} style={styles.demoBannerOutside}>
-              <Pressable style={styles.demoBannerTop} onPress={fillDemoCredentials}>
-                <Text style={styles.demoTitle}>Use Demo Credentials</Text>
-                <Text style={styles.demoHintInline}>Tap to auto-fill</Text>
-              </Pressable>
-              <Pressable
-                style={styles.demoToggle}
-                onPress={() => setShowDemoDetails((prev) => !prev)}
-              >
-                <Text style={styles.demoToggleText}>Show credentials</Text>
-                {showDemoDetails ? (
-                  <ChevronUp size={16} color={colors.primary} />
-                ) : (
-                  <ChevronDown size={16} color={colors.primary} />
-                )}
-              </Pressable>
-              {showDemoDetails ? (
-                <View style={styles.demoDetails}>
-                  <Text style={styles.demoText}>Email: ob@gmail.com</Text>
-                  <Text style={styles.demoText}>Password: password</Text>
-                </View>
-              ) : null}
-            </Animated.View>
 
             <Animated.View entering={FadeInUp.delay(120).duration(700).withInitialValues({ opacity: 1 })} style={styles.formSection}>
               <View style={styles.inputContainer}>
@@ -397,51 +366,6 @@ const styles = StyleSheet.create({
   },
   formSection: {
     paddingHorizontal: 2,
-  },
-  demoBannerOutside: {
-    backgroundColor: "rgba(255, 247, 237, 0.95)",
-    borderWidth: 1,
-    borderColor: "#FED7AA",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 5,
-  },
-  demoBannerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  demoToggle: {
-    marginTop: 3,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  demoToggleText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  demoDetails: {
-    marginTop: 5,
-  },
-  demoHintInline: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  demoTitle: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  demoText: {
-    color: colors.primary,
-    fontSize: 14,
-    marginBottom: 2,
-    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   inputContainer: {
     marginBottom: 10,

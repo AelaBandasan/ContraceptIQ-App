@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "thesis_contraceptIQ",
-    "slug": "contraceptiq-app",
+    "slug": "contracept-iq",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/adaptive-icon.png",
@@ -40,9 +40,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "3228905c-dd98-4556-9dfa-e085bb818f22"
+        "projectId": "3a3190e9-edf6-46b7-b932-8d4b59ec7e32"
       }
     },
-    "owner": "ghoniichan"
+    "owner": "ceptiq"
   }
 }
