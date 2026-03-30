@@ -454,11 +454,6 @@ const AnalyticsScreen: React.FC = () => {
                             }
                         </ChartCard>
 
-                        <Text style={styles.legendNote}>
-                            Risk drivers are derived from risk_factors_v4_signed.json and match
-                            the Key Factors shown on each patient's assessment card. Patient count
-                            reflects unique visits, not individual method predictions.
-                        </Text>
                     </>
                 )}
             </ScrollView>

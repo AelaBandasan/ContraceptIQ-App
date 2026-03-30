@@ -1301,15 +1301,6 @@ const ObAssessment = ({ navigation, route }: any) => {
 
           <View style={{ height: 24 }} />
 
-          {/* Save explanation for follow-up */}
-          {isFollowUp && previousRiskResults && (
-            <View style={styles.saveInfoBox}>
-              <Text style={styles.saveInfoText}>Save as:</Text>
-              <Text style={styles.saveInfoBold}>New consultation record (not overwrite)</Text>
-              <Text style={styles.saveInfoSubtext}>Your History becomes:{'\n'}{'  '}{route.params?.record?.createdAt ? new Date(route.params.record.createdAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'} → Initial{'\n'}{'  '}{new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} → Follow-up</Text>
-            </View>
-          )}
-
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: colors.primary, marginBottom: 12 }]}
             onPress={handleSaveAndFinish}
