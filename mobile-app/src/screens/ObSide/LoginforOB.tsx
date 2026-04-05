@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 5,
     paddingBottom: 20,
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
   },
   blob: {
     position: "absolute",
@@ -366,6 +366,7 @@ const styles = StyleSheet.create({
   },
   formSection: {
     paddingHorizontal: 2,
+    marginTop: hp("2%"),
   },
   inputContainer: {
     marginBottom: 10,
