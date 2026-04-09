@@ -299,8 +299,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 5,
-    paddingBottom: 20,
+    paddingTop: 50,
+    paddingBottom: 30,
     justifyContent: "space-between",
   },
   blob: {
