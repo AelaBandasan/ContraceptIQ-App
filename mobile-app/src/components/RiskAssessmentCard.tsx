@@ -274,115 +274,80 @@ const _VAL_LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-/**
- * Generate OB-readable directional key factors using signed per-value SHAP.
- *
- * Each returned string is formatted as:
- *   "↑ Use pattern: irregular use — raises discontinuation risk"
- *   "↓ Smoking status: non-smoker — lowers discontinuation risk"
- *
- * Sign of SHAP (log-odds space):
- *   positive → this patient feature pushes risk UP from baseline
- *   negative → this patient feature pushes risk DOWN from baseline
- *
- * Returns top 4 factors by |SHAP| magnitude, noise-filtered.
- */
-export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LOW' | 'HIGH'): string[] {
-  const shapData = SIGNED_SHAP_DATA as {
-    baseline_log_odds: number;
-    baseline_probability: number;
-    features: Record<string, number>;
-  };
-  const featureMap = shapData.features;
+import { WHO_MEC_CONDITIONS } from '../data/whoMecData';
 
-  type Factor = { label: string; shap: number };
-  const factors: Factor[] = [];
+type MethodCategories = Record<string, number>;
 
-  // ── Categorical features ──────────────────────────────────────────────────
-  const CAT_FEATS = [
-    "PATTERN_USE", "SMOKE_CIGAR", "HOUSEHOLD_HEAD_SEX",
-    "DESIRE_FOR_MORE_CHILDREN", "ETHNICITY", "CONTRACEPTIVE_METHOD",
-  ];
+const PREFERENCES_MAP: Record<string, string> = {
+  regular: "Regular Bleeding",
+  effectiveness: "Highly Effective",
+  longterm: "Long Lasting",
+  privacy: "Privacy",
+  client: "Client Controlled",
+  nonhormonal: "No Hormones",
+};
 
-  for (const feat of CAT_FEATS) {
-    const displayVal = formData[feat];
-    if (displayVal == null || displayVal === "") continue;
+interface KeyFactorInput {
+  mecConditionIds: string[];
+  preferences: string[];
+  mecResults: MethodCategories | null;
+  methodName: string;
+  riskLevel: 'LOW' | 'HIGH';
+}
 
-    const trainingMap = _DISPLAY_TO_TRAINING[feat];
-    const trainingVal = trainingMap
-      ? (trainingMap[String(displayVal)] ?? String(displayVal))
-      : String(displayVal);
+export type { MethodCategories };
 
-    const shapVal = featureMap[`cat__${feat}_${trainingVal}`];
-    if (shapVal == null) continue;
+export function generateKeyFactors(input: KeyFactorInput): string[] {
+  const { mecConditionIds, preferences, mecResults, methodName, riskLevel } = input;
+  const factors: { label: string; direction: 'up' | 'down' }[] = [];
 
-    const featLabel = _FEAT_LABELS[feat] || feat;
-    const valLabel = _VAL_LABELS[feat]?.[trainingVal] ?? String(displayVal).toLowerCase();
-    factors.push({ label: `${featLabel}: ${valLabel}`, shap: shapVal });
-  }
-
-  // ── HUSBAND_AGE (bucketed categorical in model) ────────────────────────────
-  if (formData.HUSBAND_AGE != null && formData.HUSBAND_AGE !== "") {
-    const ageNum = Math.round(parseFloat(String(formData.HUSBAND_AGE)));
-    if (!isNaN(ageNum)) {
-      const shapVal = featureMap[`cat__HUSBAND_AGE_${ageNum}`];
-      if (shapVal != null) {
-        factors.push({ label: `Partner age (${ageNum})`, shap: shapVal });
-      }
-    }
-  }
-
-  // ── Numeric features (bin-conditional SHAP) ──────────────────────────────
-  // Bins must mirror NUMERIC_BINS in generate_signed_shap.py exactly.
-  const AGE_BINS: Array<[number, number, string]> = [
-    [0,  19, "under_20"],
-    [20, 29, "20_29"],
-    [30, 39, "30_39"],
-    [40, 99, "40_plus"],
-  ];
-  const PARITY_BINS: Array<[number, number, string]> = [
-    [0, 0,  "0"],
-    [1, 2,  "1_2"],
-    [3, 4,  "3_4"],
-    [5, 99, "5_plus"],
-  ];
-  const getBinnedShap = (
-    baseKey: string,
-    value: number,
-    bins: Array<[number, number, string]>,
-  ): number | null => {
-    for (const [lo, hi, label] of bins) {
-      if (value >= lo && value <= hi) return featureMap[`${baseKey}_${label}`] ?? null;
-    }
-    return null;
+  const methodNameToMecKey: Record<string, string> = {
+    'Intrauterine Device (IUD)': 'Cu-IUD',
+    'Pills': 'CHC',
+    'Injectables': 'DMPA',
+    'Injectable': 'DMPA',
+    'Implants': 'Implant',
+    'Implant': 'Implant',
+    'POP': 'POP',
   };
 
-  if (formData.AGE != null && formData.AGE !== "") {
-    const ageNum = parseFloat(String(formData.AGE));
-    if (!isNaN(ageNum)) {
-      const shapVal = getBinnedShap("num__AGE", ageNum, AGE_BINS);
-      if (shapVal != null) {
-        factors.push({ label: `Patient age (${formData.AGE})`, shap: shapVal });
+  const mecKey = methodNameToMecKey[methodName] || '';
+
+  const methodCat = mecResults ? (mecResults[mecKey] ?? 1) : 1;
+
+  if (mecConditionIds.length > 0) {
+    const criticalConditions = mecConditionIds.filter(id => {
+      const cond = WHO_MEC_CONDITIONS.find(c => c.id === id);
+      if (!cond) return false;
+      const cats = cond.categories as unknown as MethodCategories;
+      const catForMethod = mecKey === 'Cu-IUD' 
+        ? Math.max(cats['Cu-IUD'] ?? 1, cats['LNG-IUD'] ?? 1)
+        : (cats[mecKey] ?? 1);
+      return catForMethod >= 3;
+    });
+    
+    criticalConditions.slice(0, 2).forEach(id => {
+      const cond = WHO_MEC_CONDITIONS.find(c => c.id === id);
+      if (cond) {
+        factors.push({
+          label: `Medical condition: ${cond.condition}`,
+          direction: 'up',
+        });
       }
-    }
-  }
-  if (formData.PARITY != null && formData.PARITY !== "") {
-    const parityNum = parseFloat(String(formData.PARITY));
-    if (!isNaN(parityNum)) {
-      const shapVal = getBinnedShap("num__PARITY", parityNum, PARITY_BINS);
-      if (shapVal != null) {
-        factors.push({ label: `No. of children (${formData.PARITY})`, shap: shapVal });
-      }
-    }
+    });
   }
 
-  // ── Sort by |SHAP|, filter noise, take top 4 ─────────────────────────────
-  const top = factors
-    .filter(f => Math.abs(f.shap) > 0.005)
-    .sort((a, b) => Math.abs(b.shap) - Math.abs(a.shap))
-    .slice(0, 4);
+  if (preferences.length > 0) {
+    preferences.slice(0, 2).forEach(prefKey => {
+      const prefLabel = PREFERENCES_MAP[prefKey] || prefKey;
+      factors.push({
+        label: `Preference: ${prefLabel}`,
+        direction: 'down',
+      });
+    });
+  }
 
-  if (top.length === 0) {
+  if (factors.length === 0) {
     return [
       riskLevel === 'HIGH'
         ? 'Overall profile suggests higher likelihood of discontinuation'
@@ -390,9 +355,11 @@ export function generateKeyFactors(formData: Record<string, any>, riskLevel: 'LO
     ];
   }
 
-  return top.map(f => {
-    const arrow = f.shap > 0 ? '↑' : '↓';
-    const direction = f.shap > 0 ? 'raises discontinuation risk' : 'lowers discontinuation risk';
+  return factors.map(f => {
+    const arrow = f.direction === 'up' ? '↑' : '↓';
+    const direction = f.direction === 'up' 
+      ? 'raises discontinuation risk' 
+      : 'lowers discontinuation risk';
     return `${arrow} ${f.label} — ${direction}`;
   });
 }
