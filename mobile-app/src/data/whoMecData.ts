@@ -57,7 +57,7 @@ export function getBaseByAge(age: number): MethodCategories {
 // Alphabetical by parent condition name, matching WHO MEC App
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const WHO_MEC_CONDITIONS: MecConditionEntry[] = [
+const WHO_MEC_CONDITIONS_RAW: MecConditionEntry[] = [
 
   // ── Anticonvulsant Therapy ──
   { id: 'anticonv_phenytoin', condition: 'Anticonvulsant Therapy', subCondition: 'Phenytoin, carbamazepine, barbiturates, primidone, topiramate, oxcarbazepine', categories: mc(1,1,2,1,3,3) },
@@ -344,6 +344,24 @@ export const WHO_MEC_CONDITIONS: MecConditionEntry[] = [
   { id: 'hepatitis_carrier', condition: 'Viral hepatitis', subCondition: 'Carrier', categories: mc(1,1,1,1,1,1) },
   { id: 'hepatitis_chronic', condition: 'Viral hepatitis', subCondition: 'Chronic', categories: mc(1,1,1,1,1,1) },
 ];
+
+// Philippines-focused curation:
+// Keep WHO MEC clinical conditions used in local practice and remove
+// ARV options that are non-routine/deprecated in current PH implementation.
+const PH_EXCLUDED_CONDITION_IDS = new Set<string>([
+  'arv_nrti_ddi',
+  'arv_nrti_ftc',
+  'arv_nrti_d4t',
+  'arv_nnrti_etr',
+  'arv_nnrti_nvp',
+  'arv_pi_rtv',
+  'arv_pi_rtv_solo',
+  'arv_insti_ral',
+]);
+
+export const WHO_MEC_CONDITIONS: MecConditionEntry[] = WHO_MEC_CONDITIONS_RAW.filter(
+  entry => !PH_EXCLUDED_CONDITION_IDS.has(entry.id),
+);
 
 // ─── Utility functions ───────────────────────────────────────────────────────
 

@@ -12,15 +12,21 @@ import {
 import { colors, shadows, spacing } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
 import { useAlert } from '../context/AlertContext';
+import { MEC_PREFERENCE_OPTIONS } from '../data/mecPreferences';
 
-const PREFERENCES = [
-  { key: 'effectiveness', label: 'Highly Effective',       description: 'Most reliable at preventing pregnancy',       icon: ShieldCheck },
-  { key: 'nonhormonal',  label: 'No Hormones',            description: 'Hormone-free contraceptive option',           icon: Leaf },
-  { key: 'regular',      label: 'Regular Bleeding',       description: 'Helps regulate periods and reduce cramps',    icon: Heart },
-  { key: 'privacy',      label: 'Privacy',                description: 'Can be used discreetly without others knowing', icon: EyeOff },
-  { key: 'client',       label: 'Client Controlled',      description: 'I can start or stop it myself',              icon: UserCheck },
-  { key: 'longterm',     label: 'Long Lasting',           description: 'Lasts for years with minimal maintenance',    icon: Clock },
-];
+const PREF_ICONS: Record<string, any> = {
+  effectiveness: ShieldCheck,
+  nonhormonal: Leaf,
+  regular: Heart,
+  privacy: EyeOff,
+  client: UserCheck,
+  longterm: Clock,
+};
+
+const PREFERENCES = MEC_PREFERENCE_OPTIONS.map((pref) => ({
+  ...pref,
+  icon: PREF_ICONS[pref.key] || Shield,
+}));
 
 const STEPS = [
   { id: 1, label: 'Age' },
@@ -78,7 +84,7 @@ const GuestMecPreferencesScreen = () => {
         </TouchableOpacity>
         <View style={styles.headerTitleWrap}>
           <Text style={styles.headerTitle}>What's Right for Me?</Text>
-          <Text style={styles.headerSubtitle}>Step 2: Preferences</Text>
+          <Text style={styles.headerSubtitle}>Step 2: Preferences (Optional)</Text>
         </View>
         <View style={styles.headerBtn} />
       </View>

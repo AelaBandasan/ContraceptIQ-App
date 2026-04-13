@@ -10,15 +10,7 @@ import { RootStackScreenProps, DrawerScreenProps } from '../types/navigation';
 import { typography, spacing, colors, borderRadius, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
 import { calculateWhoMecTool, getMECColor } from '../services/mecService';
-
-const prefLabels: Record<string, string> = {
-  effectiveness: "Effectiveness",
-  nonhormonal: "Non-hormonal",
-  regular: "Regular Bleeding",
-  privacy: "Privacy",
-  client: "Client controlled",
-  longterm: "Long-term protection",
-};
+import { getMecPreferenceLabel } from '../data/mecPreferences';
 
 type Props = DrawerScreenProps<"Preferences">;
 
@@ -99,7 +91,7 @@ const Preferences = ({ navigation }: Props) => {
                   key={p}
                   style={styles.prefChip}
                 >
-                  <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
+                  <Text style={styles.prefChipText}>{getMecPreferenceLabel(p)}</Text>
                 </View>
               )) : <Text style={styles.emptyText}>No preferences selected.</Text>}
             </View>

@@ -13,6 +13,7 @@ import {
   calculateWhoMecTool, getMECColor, getMECLabel,
   type WhoMecMethodResult, type MECCategory, METHOD_ATTRIBUTES,
 } from '../services/mecService';
+import { getMecPreferenceLabel } from '../data/mecPreferences';
 import { useAssessment } from '../context/AssessmentContext';
 import { useAlert } from '../context/AlertContext';
 
@@ -20,15 +21,6 @@ import { useAlert } from '../context/AlertContext';
 const AGE_TO_INDEX: Record<number, number> = { 16: 0, 18: 1, 30: 2, 42: 3, 50: 4 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-
-const PREF_LABELS: Record<string, string> = {
-  regular: 'Regular Bleeding',
-  effectiveness: 'Highly Effective',
-  longterm: 'Long Lasting',
-  privacy: 'Privacy',
-  client: 'Client Controlled',
-  nonhormonal: 'No Hormones',
-};
 
 const METHOD_IMAGES: Record<string, any> = {
   'Combined Hormonal Contraceptive (CHC)': require('../../assets/image/sq_chcpills.png'),
@@ -103,7 +95,7 @@ const GuestMecResultsScreen = () => {
         (pref === "client" && attrs.isClientControlled) ||
         (pref === "longterm" && attrs.isLongActing)
       )
-      .map((pref) => PREF_LABELS[pref] || pref);
+      .map((pref) => getMecPreferenceLabel(pref));
   };
 
   // ── Sorted Results ──────────────────────────────────────────────────────────
@@ -278,7 +270,7 @@ const GuestMecResultsScreen = () => {
               <View style={styles.prefChipRow}>
                 {preferences.map(p => (
                   <View key={p} style={styles.prefChip}>
-                    <Text style={styles.prefChipText}>{PREF_LABELS[p] || p}</Text>
+                    <Text style={styles.prefChipText}>{getMecPreferenceLabel(p)}</Text>
                   </View>
                 ))}
               </View>
