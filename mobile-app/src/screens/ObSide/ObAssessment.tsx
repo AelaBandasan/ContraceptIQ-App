@@ -45,6 +45,7 @@ import {
 } from "../../services/mecService";
 import RiskAssessmentCard, {
   generateKeyFactors,
+  MethodCategories,
 } from "../../components/RiskAssessmentCard";
 import { auth } from "../../config/firebaseConfig";
 import { saveAssessment, AssessmentRecord } from "../../services/doctorService";
@@ -1254,7 +1255,13 @@ const ObAssessment = ({ navigation, route }: any) => {
                       recommendation={result.recommendation}
                       contraceptiveMethod={methodName}
                       priceRange={CONTRACEPTIVE_DETAILS[METHOD_NAME_TO_DATA_KEY[methodName]]?.priceRange}
-                      keyFactors={generateKeyFactors({ ...formData, CONTRACEPTIVE_METHOD: methodName }, result.risk_level)}
+                      keyFactors={generateKeyFactors({
+                        mecConditionIds,
+                        preferences: mecPrefs,
+                        mecResults: mecResults as unknown as MethodCategories | null,
+                        methodName,
+                        riskLevel: result.risk_level,
+                      })}
                       upgradedByDt={result.upgraded_by_dt}
                       mecCategory={worstCat ?? undefined}
                       style={mecCardStyle}

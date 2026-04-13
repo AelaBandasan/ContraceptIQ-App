@@ -131,7 +131,18 @@ function getDb(): SQLite.SQLiteDatabase {
  */
 function deriveTopFactor(patientData: Record<string, any>, riskLevel: 'HIGH' | 'LOW'): string {
     try {
-        const factors = generateKeyFactors(patientData, riskLevel);
+        const mecConditionIds = (patientData as any).mecConditionIds || [];
+        const preferences = (patientData as any).preferences || [];
+        const mecResults = (patientData as any).mecResults || null;
+        const methodName = (patientData as any).CONTRACEPTIVE_METHOD || 'Pills';
+        
+        const factors = generateKeyFactors({
+            mecConditionIds,
+            preferences,
+            mecResults,
+            methodName,
+            riskLevel,
+        });
         if (factors.length === 0) return 'Unknown';
         return factors[0]
             .replace(/^[↑↓] /, '')
