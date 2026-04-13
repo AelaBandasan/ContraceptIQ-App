@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ChevronUp,
   XCircle,
+  HelpCircle,
 } from "lucide-react-native";
 
 import {
@@ -62,28 +63,32 @@ const FORM_FIELDS = [
     label: "First Name",
     type: "text",
     placeholder: "Enter first name",
+    meaning: "The patient's given first name.",
   },
   {
     id: "LAST_NAME",
     label: "Last Name",
     type: "text",
     placeholder: "Enter last name",
+    meaning: "The patient's family name or surname.",
   },
   {
     id: "AGE",
     label: "Patient Age",
     type: "numeric",
     placeholder: "e.g. 28",
+    meaning: "Enter the patient's current age in years.",
   },
   {
     id: "HUSBAND_AGE",
     label: "Husband / Partner Age",
     type: "numeric",
     placeholder: "e.g. 32",
+    meaning: "Enter the patient's partner's current age in years.",
   },
   {
     id: "ETHNICITY",
-    label: "Ethnicity",
+    label: "Ethnic Group",
     type: "select",
     options: [
       "Tagalog",
@@ -97,47 +102,53 @@ const FORM_FIELDS = [
       "Other Filipinos",
       "Other ethnicity",
     ],
+    meaning: "Select the ethnic or cultural group the patient identifies with.",
   },
   {
     id: "HOUSEHOLD_HEAD_SEX",
-    label: "Household Head Sex",
+    label: "Head of the Family",
     type: "select",
     options: ["Male", "Female", "Shared/Both", "Others"],
+    meaning: "Select the sex of the decision-maker in the household.",
   },
   {
     id: "SMOKE_CIGAR",
-    label: "Smoking Habits",
+    label: "How often do you Smoke?",
     type: "select",
-    options: ["Never", "Former smoker", "Occasional smoker", "Current daily"],
+    options: ["Never Smoked", "Former Smoker", "Occasional Smoker", "Daily Smoker"],
+    meaning: "Indicate if you currently smoke or have a history of smoking.",
   },
   {
     id: "PARITY",
-    label: "Number of Children (Parity)",
+    label: "Number of Children",
     type: "numeric",
     placeholder: "e.g. 2",
+    meaning: "Enter the patient's total number of children.",
   },
   {
     id: "DESIRE_FOR_MORE_CHILDREN",
-    label: "Desire for More Children",
+    label: "Plans for more children",
     type: "select",
     options: [
-      "Wants more children",
-      "Wants no more children",
-      "Undecided/ambivalent",
-      "Sterilised (self or partner)",
-      "Not applicable",
+      "Wants More Children",
+      "Does Not Want More Children",
+      "Undecided",
+      "Sterilized (Self or Partner)",
+      "Not Applicable",
     ],
+    meaning: "The patient's plan to have more children in the future.",
   },
   {
     id: "PATTERN_USE",
-    label: "Pattern of Use",
+    label: "How often Contraceptive is Used",
     type: "select",
     options: [
-      "New user (first time)",
-      "Current/Regular user",
-      "Irregular/Occasional user",
-      "Stopped using (within 12 months)",
+      "First Time User",
+      "Current User",
+      "Occasional User",
+      "Discontinued (within 12 months)",
     ],
+    meaning: "The patient's historical or current pattern of contraceptive use.",
   },
 ];
 
@@ -201,6 +212,9 @@ const ObAssessment = ({ navigation, route }: any) => {
 
   // Modal selector
   const [openDropdownFieldId, setOpenDropdownFieldId] = useState<string | null>(null);
+
+  // Tooltip selector
+  const [activeTooltipFieldId, setActiveTooltipFieldId] = useState<string | null>(null);
 
   // Clinical notes
   const [clinicalNotes, setClinicalNotes] = useState("");
@@ -292,6 +306,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     setMecConditionIds([]);
     setMecPrefs([]);
     setOpenDropdownFieldId(null);
+    setActiveTooltipFieldId(null);
     setFieldErrors({});
     setPreviousRiskResults(null);
     setScreen("form");
@@ -450,7 +465,7 @@ const ObAssessment = ({ navigation, route }: any) => {
     // Age validation — WHO reproductive age range: 15–55
     const age = Number(formData.AGE);
     if (!formData.AGE || isNaN(age)) {
-      showAlert("Required", "Please enter a valid patient age.");
+      showAlert("Required", "Please enter the patient's age.");
       return false;
     }
     if (age < 15 || age > 55) {
@@ -681,7 +696,22 @@ const ObAssessment = ({ navigation, route }: any) => {
     const error = fieldErrors[field.id];
     return (
     <View key={field.id} style={styles.fieldGroup}>
-      <Text style={styles.inputLabel}>{field.label}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+        <Text style={[styles.inputLabel, { marginBottom: 0 }]}>{field.label}</Text>
+        {field.meaning ? (
+          <TouchableOpacity
+            onPress={() => setActiveTooltipFieldId(activeTooltipFieldId === field.id ? null : field.id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <HelpCircle size={16} color={activeTooltipFieldId === field.id ? colors.primary : "#64748B"} style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      {activeTooltipFieldId === field.id && field.meaning ? (
+        <View style={styles.inlineTooltip}>
+          <Text style={styles.inlineTooltipText}>{field.meaning}</Text>
+        </View>
+      ) : null}
       {field.type === "text" || field.type === "numeric" ? (
         <TextInput
           style={[styles.textInput, error && styles.textInputError]}
@@ -1764,6 +1794,20 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  inlineTooltip: {
+    backgroundColor: "#FFF0F6",
+    borderWidth: 1,
+    borderColor: "#F7B8D3",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  inlineTooltipText: {
+    fontSize: 13,
+    color: "#D81B60",
+    lineHeight: 18,
   },
 
   // ── Previous vs Current Comparison ──
