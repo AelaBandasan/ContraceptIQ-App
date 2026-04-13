@@ -51,6 +51,7 @@ import { saveAssessment, AssessmentRecord } from "../../services/doctorService";
 import ObHeader from "../../components/ObHeader";
 import { WHO_MEC_CONDITIONS } from "../../data/whoMecData";
 import { CONTRACEPTIVE_DETAILS } from "../../data/contraceptiveData";
+import { MEC_PREFERENCE_OPTIONS } from "../../data/mecPreferences";
 import { MecTreeSelector } from "../../components/MecTreeSelector";
 import { colors, shadows } from "../../theme";
 import { useAlert } from "../../context/AlertContext";
@@ -173,14 +174,19 @@ const METHOD_NAME_TO_DATA_KEY: Record<string, string> = {
 
 // ─── Preferences ─────────────────────────────────────────────────────────────
 
-const PREFERENCES = [
-  { key: "regular", label: "Regular Bleeding", description: "Helps regulate periods and reduce cramps", icon: Heart },
-  { key: "effectiveness", label: "Highly Effective", description: "Most reliable at preventing pregnancy", icon: ShieldCheck },
-  { key: "longterm", label: "Long Lasting", description: "Lasts for years with minimal maintenance", icon: Clock },
-  { key: "privacy", label: "Privacy", description: "Can be used discreetly without others knowing", icon: EyeOff },
-  { key: "client", label: "Client Controlled", description: "Patient can start or stop it themselves", icon: UserCheck },
-  { key: "nonhormonal", label: "No Hormones", description: "Hormone-free contraceptive option", icon: Leaf },
-];
+const PREF_ICONS: Record<string, any> = {
+  effectiveness: ShieldCheck,
+  nonhormonal: Leaf,
+  regular: Heart,
+  privacy: EyeOff,
+  client: UserCheck,
+  longterm: Clock,
+};
+
+const PREFERENCES = MEC_PREFERENCE_OPTIONS.map((pref) => ({
+  ...pref,
+  icon: PREF_ICONS[pref.key] || ShieldCheck,
+}));
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -1021,7 +1027,7 @@ const ObAssessment = ({ navigation, route }: any) => {
         >
           <Text style={styles.screenTitle}>MEC Assessment</Text>
           <Text style={styles.screenSubtitle}>
-            Select up to 3 medical conditions, then choose patient preferences.
+            Optionally select up to 3 medical conditions, then choose patient preferences.
           </Text>
 
           <View style={styles.cardSection}>
@@ -1032,7 +1038,7 @@ const ObAssessment = ({ navigation, route }: any) => {
             />
 
             <Text style={[styles.inputLabel, { marginTop: 24, marginBottom: 12 }]}>
-              Patient Preferences (MAX 3)
+              Patient Preferences (Optional, max 3)
             </Text>
             {PREFERENCES.map((pref) => {
               const isSelected = mecPrefs.includes(pref.key);

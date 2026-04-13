@@ -37,6 +37,22 @@ export const MecTreeSelector: React.FC<MecTreeSelectorProps> = ({
         return parentConditions.filter(name => name.toLowerCase().includes(q));
     }, [searchQuery, parentConditions]);
 
+    const groupedParents = useMemo(() => {
+        const grouped: Record<string, string[]> = {};
+        filteredParents.forEach((name) => {
+            const first = name.charAt(0).toUpperCase();
+            const groupKey = /^[A-Z]$/.test(first) ? first : '#';
+            if (!grouped[groupKey]) grouped[groupKey] = [];
+            grouped[groupKey].push(name);
+        });
+        return grouped;
+    }, [filteredParents]);
+
+    const groupKeys = useMemo(
+        () => Object.keys(groupedParents).sort((a, b) => a.localeCompare(b)),
+        [groupedParents],
+    );
+
     const toggleParent = (name: string) => setExpandedParents(p => ({ ...p, [name]: !p[name] }));
     const toggleSub = (key: string) => setExpandedSubs(p => ({ ...p, [key]: !p[key] }));
 
@@ -142,7 +158,7 @@ export const MecTreeSelector: React.FC<MecTreeSelectorProps> = ({
 
     return (
         <View style={styles.container}>
-            <Text style={styles.inputLabel}>Medical Conditions (Max {maxConditions})</Text>
+            <Text style={styles.inputLabel}>Medical Conditions (Optional, max {maxConditions})</Text>
 
             {selectedConditions.length > 0 && (
                 <View style={{ marginBottom: 12 }}>
@@ -176,32 +192,44 @@ export const MecTreeSelector: React.FC<MecTreeSelectorProps> = ({
             </View>
 
             <View style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden' }}>
-                {filteredParents.map(condName => {
-                    const node = tree[condName];
-                    if (!node) return null;
-
-                    const subKeys = Object.keys(node.subs);
-                    const isSimple = node.directEntry && subKeys.length === 0 && !node.initiation;
-
-                    if (isSimple) {
-                        return (
-                            <View key={condName} style={styles.parentContainer}>
-                                {renderCheckbox(node.directEntry!.id, condName, 0)}
-                            </View>
-                        );
-                    }
-
-                    const isExpanded = expandedParents[condName];
-                    return (
-                        <View key={condName} style={styles.parentContainer}>
-                            <TouchableOpacity style={styles.parentHeader} onPress={() => toggleParent(condName)}>
-                                {isExpanded ? <ChevronDown size={18} color={colors.text.primary} /> : <ChevronRight size={18} color={colors.text.primary} />}
-                                <Text style={styles.parentLabel}>{condName}</Text>
-                            </TouchableOpacity>
-                            {isExpanded && renderNode(condName, node)}
+                {groupKeys.map((groupKey) => (
+                    <View key={`group_${groupKey}`} style={styles.groupSection}>
+                        <View style={styles.groupHeader}>
+                            <Text style={styles.groupHeaderText}>
+                                {groupKey}
+                            </Text>
+                            <Text style={styles.groupCountText}>
+                                {groupedParents[groupKey].length}
+                            </Text>
                         </View>
-                    );
-                })}
+                        {groupedParents[groupKey].map(condName => {
+                            const node = tree[condName];
+                            if (!node) return null;
+
+                            const subKeys = Object.keys(node.subs);
+                            const isSimple = node.directEntry && subKeys.length === 0 && !node.initiation;
+
+                            if (isSimple) {
+                                return (
+                                    <View key={condName} style={styles.parentContainer}>
+                                        {renderCheckbox(node.directEntry!.id, condName, 0)}
+                                    </View>
+                                );
+                            }
+
+                            const isExpanded = expandedParents[condName];
+                            return (
+                                <View key={condName} style={styles.parentContainer}>
+                                    <TouchableOpacity style={styles.parentHeader} onPress={() => toggleParent(condName)}>
+                                        {isExpanded ? <ChevronDown size={18} color={colors.text.primary} /> : <ChevronRight size={18} color={colors.text.primary} />}
+                                        <Text style={styles.parentLabel}>{condName}</Text>
+                                    </TouchableOpacity>
+                                    {isExpanded && renderNode(condName, node)}
+                                </View>
+                            );
+                        })}
+                    </View>
+                ))}
             </View>
         </View>
     );
@@ -212,6 +240,19 @@ const styles = StyleSheet.create({
     inputLabel: { fontSize: 13, fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 },
     searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8F9FB', borderRadius: 12, paddingHorizontal: 12, marginBottom: 16, borderWidth: 1, borderColor: '#E2E8F0' },
     searchInput: { flex: 1, height: 44, marginLeft: 8, fontSize: 15, color: '#1E293B' },
+    groupSection: { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+    groupHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#F8FAFC',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#E2E8F0',
+    },
+    groupHeaderText: { fontSize: 12, fontWeight: '800', color: '#64748B' },
+    groupCountText: { fontSize: 11, fontWeight: '700', color: '#94A3B8' },
     parentContainer: { borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
     parentHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
     parentLabel: { fontSize: 15, fontWeight: '800', color: colors.text.primary, flex: 1, marginLeft: 6 },

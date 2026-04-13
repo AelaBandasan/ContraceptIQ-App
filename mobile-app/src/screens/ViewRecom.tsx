@@ -7,16 +7,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getMECColor, getMECLabel, MECCategory, calculateMatchScore, calculateMEC } from '../services/mecService';
 import { colors, shadows } from '../theme';
 import { useAssessment } from '../context/AssessmentContext';
-
-
-const prefLabels: Record<string, string> = {
-  effectiveness: "Effectiveness",
-  nonhormonal: "Non-hormonal",
-  regular: "Regular Bleeding",
-  privacy: "Privacy",
-  client: "Client controlled",
-  longterm: "Long-term protection",
-};
+import { getMecPreferenceLabel } from '../data/mecPreferences';
 
 type Props = DrawerScreenProps<'ViewRecommendation'>;
 
@@ -221,7 +212,7 @@ const ViewRecom: React.FC<Props> = ({ navigation, route }) => {
               {finalPrefs.map((p) => (
                 <View key={p} style={styles.prefChip}>
                   <Ionicons name="checkmark-circle" size={12} color={colors.primary} style={{ marginRight: 5 }} />
-                  <Text style={styles.prefChipText}>{prefLabels[p] || p}</Text>
+                  <Text style={styles.prefChipText}>{getMecPreferenceLabel(p)}</Text>
                 </View>
               ))}
             </View>

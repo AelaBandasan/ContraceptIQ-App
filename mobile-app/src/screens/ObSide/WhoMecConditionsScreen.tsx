@@ -134,7 +134,7 @@ const WhoMecConditionsScreen = () => {
 
         {/* Conditions (match ObAssessment MEC section) */}
         <View style={styles.cardSection}>
-          <Text style={styles.conditionsTitle}>Medical Conditions</Text>
+          <Text style={styles.conditionsTitle}>Medical Conditions (Optional)</Text>
           <MecTreeSelector
             selectedConditions={selectedConditions}
             onToggleCondition={toggleCondition}

@@ -11,16 +11,22 @@ import {
 import { colors, shadows, spacing, borderRadius } from '../../theme';
 import { WHO_MEC_CONDITIONS } from '../../data/whoMecData';
 import { useAlert } from '../../context/AlertContext';
+import { MEC_PREFERENCE_OPTIONS } from '../../data/mecPreferences';
 import ObHeader from '../../components/ObHeader';
 
-const PREFERENCES = [
-  { key: 'regular', label: 'Regular Bleeding', description: 'Helps regulate periods and reduce cramps', icon: Heart },
-  { key: 'effectiveness', label: 'Highly Effective', description: 'Most reliable at preventing pregnancy', icon: ShieldCheck },
-  { key: 'longterm', label: 'Long Lasting', description: 'Lasts for years with minimal maintenance', icon: Clock },
-  { key: 'privacy', label: 'Privacy', description: 'Can be used discreetly without others knowing', icon: EyeOff },
-  { key: 'client', label: 'Client Controlled', description: 'Patient can start or stop it themselves', icon: UserCheck },
-  { key: 'nonhormonal', label: 'No Hormones', description: 'Hormone-free contraceptive option', icon: Leaf },
-];
+const PREF_ICONS: Record<string, any> = {
+  effectiveness: ShieldCheck,
+  nonhormonal: Leaf,
+  regular: Heart,
+  privacy: EyeOff,
+  client: UserCheck,
+  longterm: Clock,
+};
+
+const PREFERENCES = MEC_PREFERENCE_OPTIONS.map((pref) => ({
+  ...pref,
+  icon: PREF_ICONS[pref.key] || Shield,
+}));
 
 const WhoMecPreferencesScreen = () => {
   const navigation = useNavigation<any>();
@@ -90,7 +96,7 @@ const WhoMecPreferencesScreen = () => {
     <View style={styles.container}>
       <ObHeader
         title="WHO MEC Tool"
-        subtitle="Step 2: Preferences"
+        subtitle="Step 2: Preferences (Optional)"
         showBack
         onBackPress={() =>
           navigation.navigate('ObWhoMecConditions', { age, conditionIds, preferences: selectedPrefs })
@@ -136,7 +142,7 @@ const WhoMecPreferencesScreen = () => {
 
         {/* Instructions */}
          <Text style={styles.instructionText}>
-           Select patient preferences (all that apply):
+           Select patient preferences (optional, up to 3):
          </Text>
 
         {/* Preference Cards */}

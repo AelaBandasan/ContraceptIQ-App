@@ -11,22 +11,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, shadows, spacing, borderRadius } from '../../theme';
 import { WHO_MEC_CONDITIONS } from '../../data/whoMecData';
+import { getMecPreferenceLabel } from '../../data/mecPreferences';
 import {
   calculateWhoMecTool, getMECColor, getMECLabel,
   type WhoMecMethodResult, type MECCategory, METHOD_ATTRIBUTES,
 } from '../../services/mecService';
 import { useAlert } from '../../context/AlertContext';
 import ObHeader from '../../components/ObHeader';
-
-const PREF_LABELS: Record<string, string> = {
-  regular: 'Regular Bleeding',
-  effectiveness: 'Highly Effective',
-  longterm: 'Long Lasting',
-  privacy: 'Privacy',
-  client: 'Client Controlled',
-  nonhormonal: 'No Hormones',
-  sti: 'STI Prevention',
-};
 
 const METHOD_IMAGES: Record<string, any> = {
   'Combined Hormonal Contraceptive (CHC)': require('../../../assets/image/sq_chcpills.png'),
@@ -126,7 +117,7 @@ const WhoMecResultsScreen = () => {
           (pref === "client" && attrs.isClientControlled) ||
           (pref === "longterm" && attrs.isLongActing)
         )
-        .map((pref) => PREF_LABELS[pref] || pref);
+        .map((pref) => getMecPreferenceLabel(pref));
     };
 
     return (
@@ -258,7 +249,7 @@ const WhoMecResultsScreen = () => {
               <View style={styles.prefChipRow}>
                 {preferences.map(p => (
                   <View key={p} style={styles.prefChip}>
-                    <Text style={styles.prefChipText}>{PREF_LABELS[p] || p}</Text>
+                    <Text style={styles.prefChipText}>{getMecPreferenceLabel(p)}</Text>
                   </View>
                 ))}
               </View>
