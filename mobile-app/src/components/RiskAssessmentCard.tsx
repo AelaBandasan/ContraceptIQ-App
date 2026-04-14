@@ -25,7 +25,6 @@ export interface RiskAssessmentCardProps {
   keyFactors?: string[]; // Plain-language factors explaining the result
   upgradedByDt?: boolean; // Whether Decision Tree upgraded the prediction
   mecCategory?: 1 | 2 | 3 | 4;
-  priceRange?: string; // Price range from contraceptiveData
   onPress?: () => void;
   style?: ViewStyle;
 }
@@ -68,7 +67,6 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   keyFactors = [],
   upgradedByDt,
   mecCategory,
-  priceRange,
   onPress,
   style,
 }) => {
@@ -135,21 +133,13 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
         </View>
       </View>
 
-      {/* Method & Price */}
-      {(contraceptiveMethod || priceRange) && (
+      {/* Method */}
+      {contraceptiveMethod && (
         <View style={styles.infoRow}>
-          {contraceptiveMethod && (
-            <View style={{ flex: 1, alignItems: "center" }}>
-              <Text style={styles.infoLabel}>Method</Text>
-              <Text style={styles.infoValue}>{contraceptiveMethod}</Text>
-            </View>
-          )}
-          {priceRange && (
-            <View style={{ flex: 1, alignItems: "center", borderLeftWidth: contraceptiveMethod ? 1 : 0, borderLeftColor: COLORS.border }}>
-              <Text style={styles.infoLabel}>Price Range</Text>
-              <Text style={styles.infoValue}>{priceRange}</Text>
-            </View>
-          )}
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={styles.infoLabel}>Method</Text>
+            <Text style={styles.infoValue}>{contraceptiveMethod}</Text>
+          </View>
         </View>
       )}
 
@@ -316,22 +306,17 @@ export function generateKeyFactors(input: KeyFactorInput): string[] {
   const methodCat = mecResults ? (mecResults[mecKey] ?? 1) : 1;
 
   if (mecConditionIds.length > 0) {
-    const criticalConditions = mecConditionIds.filter(id => {
-      const cond = WHO_MEC_CONDITIONS.find(c => c.id === id);
-      if (!cond) return false;
-      const cats = cond.categories as unknown as MethodCategories;
-      const catForMethod = mecKey === 'Cu-IUD' 
-        ? Math.max(cats['Cu-IUD'] ?? 1, cats['LNG-IUD'] ?? 1)
-        : (cats[mecKey] ?? 1);
-      return catForMethod >= 3;
-    });
-    
-    criticalConditions.slice(0, 2).forEach(id => {
+    mecConditionIds.forEach(id => {
       const cond = WHO_MEC_CONDITIONS.find(c => c.id === id);
       if (cond) {
+        const cats = cond.categories as unknown as MethodCategories;
+        const catForMethod = mecKey === 'Cu-IUD' 
+          ? Math.max(cats['Cu-IUD'] ?? 1, cats['LNG-IUD'] ?? 1)
+          : (cats[mecKey] ?? 1);
+        const direction = catForMethod >= 3 ? 'up' : 'down';
         factors.push({
-          label: `Medical condition: ${cond.condition}`,
-          direction: 'up',
+          label: `${cond.condition} (MEC ${catForMethod})`,
+          direction,
         });
       }
     });
@@ -358,8 +343,8 @@ export function generateKeyFactors(input: KeyFactorInput): string[] {
   return factors.map(f => {
     const arrow = f.direction === 'up' ? '↑' : '↓';
     const direction = f.direction === 'up' 
-      ? 'raises discontinuation risk' 
-      : 'lowers discontinuation risk';
+      ? 'may increase risk' 
+      : 'medically safe for this method';
     return `${arrow} ${f.label} — ${direction}`;
   });
 }

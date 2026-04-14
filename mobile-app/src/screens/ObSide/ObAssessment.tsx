@@ -1254,7 +1254,6 @@ const ObAssessment = ({ navigation, route }: any) => {
                       probability={result.xgb_probability}
                       recommendation={result.recommendation}
                       contraceptiveMethod={methodName}
-                      priceRange={CONTRACEPTIVE_DETAILS[METHOD_NAME_TO_DATA_KEY[methodName]]?.priceRange}
                       keyFactors={generateKeyFactors({
                         mecConditionIds,
                         preferences: mecPrefs,
