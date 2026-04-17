@@ -12,9 +12,7 @@ import { View, Text, StyleSheet, ViewStyle } from "react-native";
 import { colors as themeColors } from "../theme";
 import SIGNED_SHAP_DATA from "../../assets/models/risk_factors_v4_signed.json";
 
-// ============================================================================
 // TYPES
-// ============================================================================
 
 export interface RiskAssessmentCardProps {
   riskLevel: "LOW" | "HIGH";
@@ -30,9 +28,7 @@ export interface RiskAssessmentCardProps {
   style?: ViewStyle;
 }
 
-// ============================================================================
 // DESIGN SYSTEM
-// ============================================================================
 
 const COLORS = {
   background: "#FFFFFF",
@@ -55,9 +51,7 @@ const COLORS = {
 
 const RADIUS = { sm: 4, md: 8, lg: 12, xl: 16, full: 9999 };
 
-// ============================================================================
 // COMPONENT
-// ============================================================================
 
 export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   riskLevel,
@@ -178,9 +172,7 @@ export const RiskAssessmentCard: React.FC<RiskAssessmentCardProps> = ({
   );
 };
 
-// ============================================================================
-// FACTOR GENERATOR — call this from the assessment screen
-// ============================================================================
+// FACTOR GENERATOR
 
 // Display value → training value maps (mirrors featureEncoder.ts for OB form inputs)
 const _DISPLAY_TO_TRAINING: Record<string, Record<string, string>> = {
@@ -364,9 +356,7 @@ export function generateKeyFactors(input: KeyFactorInput): string[] {
   });
 }
 
-// ============================================================================
 // STYLES
-// ============================================================================
 
 const styles = StyleSheet.create({
   container: {

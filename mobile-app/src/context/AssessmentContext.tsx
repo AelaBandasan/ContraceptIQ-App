@@ -17,9 +17,7 @@ const STORAGE_KEY = '@contraceptiq_assessment_state';
 // Only these two fields survive app restarts — all ML/assessment data still resets.
 const GUEST_PREFS_KEY = '@contraceptiq_guest_mec_prefs';
 
-// ============================================================================
 // TYPES
-// ============================================================================
 
 /**
  * User assessment data - contains all 26 required features for ML prediction
@@ -133,9 +131,7 @@ export interface AssessmentContextType extends AssessmentState {
   saveGuestPreferences: (ageIndex: number, prefs: string[]) => Promise<void>;
 }
 
-// ============================================================================
 // CONTEXT & PROVIDER
-// ============================================================================
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(
   undefined,
@@ -396,9 +392,7 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// ============================================================================
 // HOOKS
-// ============================================================================
 
 /**
  * Hook to use the Assessment Context
@@ -458,8 +452,6 @@ export const useAssessmentError = (): string | null => {
   return error;
 };
 
-// ============================================================================
 // EXPORTS
-// ============================================================================
 
 export default AssessmentContext;

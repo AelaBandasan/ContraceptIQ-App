@@ -18,10 +18,7 @@
  * Unknown categories encode as all-zeros (sklearn handle_unknown='ignore').
  */
 
-// ============================================================================
-// OHE SCHEMA — exact categories from the fitted OneHotEncoder (sorted)
-// Any value not in a category list → all-zero block (unknown → ignore)
-// ============================================================================
+// OHE SCHEMA
 
 interface OheCol { feat: string; cats: string[] }
 interface NumCol { feat: string; isNum: true }
@@ -42,10 +39,7 @@ const OHE_SCHEMA: SchemaEntry[] = [
 // Total OHE output length (must equal 133)
 const N_OHE_FEATURES = OHE_SCHEMA.reduce((acc, e) => acc + ("isNum" in e ? 1 : e.cats.length), 0);
 
-// ============================================================================
-// DISPLAY → TRAINING CATEGORY MAPS
-// Maps form display strings to the exact string values the model was trained on.
-// ============================================================================
+// DISPLAY → TRAINING MAPS
 
 /** PATTERN_USE: how the patient currently uses contraception */
 const PATTERN_USE_MAP: Record<string, string> = {
@@ -161,9 +155,7 @@ const DESIRE_FOR_MORE_CHILDREN_MAP: Record<string, string> = {
     "9": "No",
 };
 
-// ============================================================================
-// HUSBAND_AGE: round to integer string, clamp to known range
-// ============================================================================
+// HUSBAND_AGE
 
 const HUSBAND_AGE_KNOWN = new Set([
     "16","17","18","19","20","21","22","23","24","25","26","27","28","29","30",
@@ -179,9 +171,7 @@ function encodeHusbandAge(raw: any): string {
     return HUSBAND_AGE_KNOWN.has(s) ? s : "  "; // unknown → all-zeros
 }
 
-// ============================================================================
-// MAIN ENCODER: buildOHEVector
-// ============================================================================
+// buildOHEVector
 
 /**
  * Build the 133-dim float32 OHE vector from raw form data.
@@ -245,9 +235,7 @@ const DISPLAY_MAPS: Record<string, Record<string, string>> = {
     DESIRE_FOR_MORE_CHILDREN: DESIRE_FOR_MORE_CHILDREN_MAP,
 };
 
-// ============================================================================
-// VALIDATION HELPER
-// ============================================================================
+// VALIDATION
 
 /**
  * Validate that minimum required v4 features are present.
@@ -263,8 +251,6 @@ export function validateFeaturesV4(formData: Record<string, any>): string[] {
     );
 }
 
-// ============================================================================
-// LEGACY EXPORTS (kept for any remaining imports — now unused for inference)
-// ============================================================================
+// LEGACY EXPORTS
 
 export const N_FLAT_FEATURES = N_OHE_FEATURES; // 133

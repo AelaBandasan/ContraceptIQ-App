@@ -85,7 +85,7 @@ export function calculateMEC(input: MECInput): MECResult {
         postpartumUnder6Weeks = false,
     } = input;
 
-    // ========== BASE CATEGORIES BY AGE ==========
+    // BASE CATEGORIES BY AGE
 
     let cuIUD: MECCategory = age < 18 ? 2 : 1;
     let lngIUD: MECCategory = age < 18 ? 2 : 1;
@@ -94,7 +94,7 @@ export function calculateMEC(input: MECInput): MECResult {
     let pop: MECCategory = 1;
     let chc: MECCategory = age >= 40 ? 2 : 1;
 
-    // ========== CHC - Smoking Rules ==========
+    // CHC - Smoking Rules
     const isCurrentSmoker = smokingStatus === 'current_daily' || smokingStatus === 'occasional';
     if (isCurrentSmoker) {
         if (age < 35) {
@@ -104,7 +104,7 @@ export function calculateMEC(input: MECInput): MECResult {
         }
     }
 
-    // ========== MEDICAL CONDITION OVERRIDES (WHO 5th Ed.) ==========
+    // MEDICAL CONDITION OVERRIDES
 
     // Hypertension: CHC → 3, DMPA → 2, POP → 2
     if (hypertension) {
@@ -243,9 +243,7 @@ export function calculateMatchScore(methodId: string, userPrefs: string[]): numb
     return Math.round((matches / userPrefs.length) * 100);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// WHO MEC Tool — Full condition-based calculation (OB side only)
-// ═══════════════════════════════════════════════════════════════════════════════
+// WHO MEC Tool
 
 import { getBaseByAge, combineConditions, type MethodCategories } from '../data/whoMecData';
 

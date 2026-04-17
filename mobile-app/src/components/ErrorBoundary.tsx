@@ -22,9 +22,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-// ============================================================================
 // TYPES
-// ============================================================================
 
 interface Props {
   children: ReactNode;
@@ -40,9 +38,7 @@ interface State {
   errorInfo: { componentStack: string } | null;
 }
 
-// ============================================================================
 // DESIGN SYSTEM
-// ============================================================================
 
 const COLORS = {
   background: "#FFFFFF",
@@ -83,9 +79,7 @@ const TYPOGRAPHY = {
   small: { fontSize: 11, fontWeight: "400" as const, letterSpacing: 0.2 },
 };
 
-// ============================================================================
 // COMPONENT
-// ============================================================================
 
 class ErrorBoundary extends React.Component<Props, State> {
   private previousResetKeys: Array<string | number> = [];
@@ -265,9 +259,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-// ============================================================================
 // STYLES
-// ============================================================================
 
 const styles = StyleSheet.create({
   container: {
@@ -406,8 +398,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// ============================================================================
 // EXPORTS
-// ============================================================================
 
 export default ErrorBoundary;

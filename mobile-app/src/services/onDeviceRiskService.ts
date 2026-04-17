@@ -30,9 +30,7 @@ const { InferenceSession, Tensor } = _onnxAvailable
   ? (require('onnxruntime-react-native') as typeof import('onnxruntime-react-native'))
   : ({ InferenceSession: null, Tensor: null } as unknown as typeof import('onnxruntime-react-native'));
 
-// ============================================================================
-// CONFIGURATION (matches hybrid_v4_config.json)
-// ============================================================================
+// CONFIG
 
 const HYBRID_CONFIG = {
     threshold: 0.25,
@@ -40,9 +38,7 @@ const HYBRID_CONFIG = {
     model_version: 'v4-offline',
 };
 
-// ============================================================================
 // MODEL MANAGEMENT
-// ============================================================================
 
 let xgbSession: OrtInferenceSession | null = null;
 let dtSession: OrtInferenceSession | null = null;
@@ -95,9 +91,7 @@ async function loadModels(): Promise<void> {
     return loadingPromise;
 }
 
-// ============================================================================
 // PREDICTION LOGIC
-// ============================================================================
 
 /**
  * Assess discontinuation risk using on-device flat ONNX v4 models.
@@ -178,9 +172,9 @@ export async function assessOffline(
         isLowConfidence,
     });
 
-    // Confidence: how far the prediction is from the decision boundary (threshold=0.25),
-    // normalized to [0, 1].  0 = borderline case, 1 = maximally certain.
-    // This is always distinct from xgb_probability (which is the raw discontinuation %).
+    // Confidence: how far the prediction is from the decision boundary.
+    // Normalized to [0, 1]. 0 = borderline, 1 = certain.
+    // Different from xgb_probability which shows raw discontinuation %.
     const distFromThreshold = Math.abs(xgbProbability - HYBRID_CONFIG.threshold);
     const maxDist = hybridPred === 1
         ? (1 - HYBRID_CONFIG.threshold)   // HIGH: max distance = 1.0 − 0.25 = 0.75

@@ -7,9 +7,7 @@
 
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
-// ============================================================================
 // TYPES
-// ============================================================================
 
 export enum NetworkType {
   WiFi = 'wifi',
@@ -27,9 +25,7 @@ export interface NetworkStatus {
   details: NetInfoState;
 }
 
-// ============================================================================
 // NETWORK UTILITIES
-// ============================================================================
 
 /**
  * Get current network status

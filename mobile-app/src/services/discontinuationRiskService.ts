@@ -14,9 +14,7 @@ import { createAppError } from '../utils/errorHandler';
 import { isOnline } from '../utils/networkUtils';
 import { assessOffline } from './onDeviceRiskService';
 
-// ============================================================================
 // TYPE DEFINITIONS
-// ============================================================================
 
 export interface UserAssessmentData {
   // Demographic features (13)
@@ -125,9 +123,7 @@ export interface RequiredFeaturesResponse {
   };
 }
 
-// ============================================================================
 // SERVICE CLASS
-// ============================================================================
 
 class DiscontinuationRiskService {
   private client: AxiosInstance;
@@ -330,9 +326,7 @@ class DiscontinuationRiskService {
   }
 }
 
-// ============================================================================
 // SINGLETON INSTANCE & EXPORTS
-// ============================================================================
 
 // Create singleton instance
 let serviceInstance: DiscontinuationRiskService | null = null;

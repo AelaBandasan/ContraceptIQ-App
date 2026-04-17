@@ -52,10 +52,8 @@ export function getBaseByAge(age: number): MethodCategories {
   return mc(1,1,1,2,1,2);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// COMPLETE WHO MEC CONDITION DATABASE
-// Alphabetical by parent condition name, matching WHO MEC App
-// ═══════════════════════════════════════════════════════════════════════════════
+// WHO MEC CONDITIONS DATABASE
+// Alphabetical by condition name
 
 const WHO_MEC_CONDITIONS_RAW: MecConditionEntry[] = [
 
